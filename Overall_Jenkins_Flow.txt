@@ -1,0 +1,13 @@
+Git push
+  ↓
+Jenkins pipeline
+  ↓
+Flash ESP32 with MicroPython
+  ↓
+Upload WiFi test files
+  ↓
+Run test_wifi_runner.py on ESP32
+  ↓
+Read serial output
+  ↓
+PASS / FAIL decision
