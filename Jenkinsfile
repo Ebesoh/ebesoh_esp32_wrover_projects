@@ -44,7 +44,7 @@ pipeline {
                 bat '''
                 echo === Flashing ESP32-WROVER ===
                 python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
-                python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 firmware\\esp32-micropython.bin
+                python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
                 '''
             }
         }
