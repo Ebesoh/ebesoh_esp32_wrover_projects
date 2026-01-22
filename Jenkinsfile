@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        ESP_PORT = 'COM5'        // CHANGE THIS
+        ESP_PORT = 'COM5'          // 🔧 CHANGE if needed
         PYTHONUNBUFFERED = '1'
     }
 
@@ -18,12 +18,13 @@ pipeline {
             }
         }
 
-        stage('Verify Tools') {
+        stage('Verify Python Environment') {
             steps {
                 bat '''
+                echo === Python Environment ===
+                where python
                 python --version
                 pip --version
-                where python
                 '''
             }
         }
@@ -31,17 +32,19 @@ pipeline {
         stage('Install CI Tools') {
             steps {
                 bat '''
-                pip install --upgrade pip
-                pip install pyserial esptool mpremote
+                echo === Installing CI tools ===
+                python -m pip install --upgrade pip
+                python -m pip install esptool mpremote pyserial
                 '''
             }
         }
 
-        stage('Flash MicroPython') {
+        stage('Flash MicroPython Firmware') {
             steps {
                 bat '''
-                esptool.py --chip esp32 --port %ESP_PORT% erase_flash
-                esptool.py --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 firmware\\esp32-micropython.bin
+                echo === Flashing ESP32-WROVER ===
+                python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
+                python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 firmware\\esp32-micropython.bin
                 '''
             }
         }
@@ -49,8 +52,8 @@ pipeline {
         stage('Upload WiFi Test Suite') {
             steps {
                 bat '''
-                mpremote connect %ESP_PORT% fs mkdir tests || exit /b 0
-                mpremote connect %ESP_PORT% fs cp tests/*.py :
+                echo === Uploading WiFi test files ===
+                python -m mpremote connect %ESP_PORT% fs cp tests\\*.py :
                 '''
             }
         }
@@ -58,6 +61,7 @@ pipeline {
         stage('Run ESP32 WiFi Tests') {
             steps {
                 bat '''
+                echo === Running ESP32 WiFi Test Runner ===
                 python ci\\run_wifi_tests.py
                 '''
             }
@@ -66,13 +70,13 @@ pipeline {
 
     post {
         success {
-            echo '✅ WIFI CI SUCCESS: ESP32 WiFi is healthy'
+            echo '✅ WIFI CI SUCCESS: ESP32 WiFi tests passed'
         }
         failure {
-            echo '❌ WIFI CI FAILURE: WiFi tests failed'
+            echo '❌ WIFI CI FAILURE: One or more WiFi tests failed'
         }
         always {
-            echo 'ESP32 WiFi CI run completed'
+            echo 'ESP32 WiFi CI pipeline completed'
         }
     }
 }
