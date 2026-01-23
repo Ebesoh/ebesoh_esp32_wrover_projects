@@ -7,6 +7,7 @@ pipeline {
         PYTHONUNBUFFERED = '1'
 
         SYSTEM_RESULT = 'PASS'
+        TEMP_RESULT   = 'PASS'
         WIFI_RESULT   = 'PASS'
         BT_RESULT     = 'PASS'
     }
@@ -25,7 +26,7 @@ pipeline {
             }
         }
 
-        /* ---------------- ENVIRONMENT ---------------- */
+        /* ---------------- HOST ENV ---------------- */
 
         stage('Verify Python Environment') {
             steps {
@@ -75,13 +76,18 @@ pipeline {
             }
         }
 
-        /* ---------------- UPLOAD TESTS ---------------- */
+        /* ---------------- UPLOAD TEST FILES ---------------- */
 
         stage('Upload Test Files') {
             steps {
                 bat '''
                 echo === Uploading System tests ===
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+
+                echo === Uploading DS18B20 / Temperature tests ===
+                for %%f in (test_temp\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
 
@@ -102,25 +108,44 @@ pipeline {
 
         stage('Run System Self-Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat '''
-                    echo === Running System Self-Tests ===
+                bat '''
+                echo === Running System Self-Tests ===
 
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_system; test_runner_system.main()" ^
-                    > esp32_system_output.txt
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_runner_system; test_runner_system.main()" ^
+                > esp32_system_output.txt
 
-                    type esp32_system_output.txt
+                type esp32_system_output.txt
 
-                    findstr /C:"CI_RESULT: FAIL" esp32_system_output.txt && exit /b 1
-                    '''
-                }
+                findstr /C:"CI_RESULT: FAIL" esp32_system_output.txt && exit /b 1
+                '''
             }
             post {
                 failure {
-                    script {
-                        env.SYSTEM_RESULT = 'FAIL'
-                    }
+                    script { env.SYSTEM_RESULT = 'FAIL' }
+                }
+            }
+        }
+
+        /* ---------------- DS18B20 / TEMP TESTS ---------------- */
+
+        stage('Run DS18B20 Temperature Tests') {
+            steps {
+                bat '''
+                echo === Running DS18B20 Temperature Tests ===
+
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                > esp32_temp_output.txt
+
+                type esp32_temp_output.txt
+
+                findstr /C:"CI_RESULT: FAIL" esp32_temp_output.txt && exit /b 1
+                '''
+            }
+            post {
+                failure {
+                    script { env.TEMP_RESULT = 'FAIL' }
                 }
             }
         }
@@ -129,25 +154,21 @@ pipeline {
 
         stage('Run WiFi Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat '''
-                    echo === Running WiFi Tests ===
+                bat '''
+                echo === Running WiFi Tests ===
 
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                    > esp32_wifi_output.txt
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                > esp32_wifi_output.txt
 
-                    type esp32_wifi_output.txt
+                type esp32_wifi_output.txt
 
-                    findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && exit /b 1
-                    '''
-                }
+                findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && exit /b 1
+                '''
             }
             post {
                 failure {
-                    script {
-                        env.WIFI_RESULT = 'FAIL'
-                    }
+                    script { env.WIFI_RESULT = 'FAIL' }
                 }
             }
         }
@@ -156,25 +177,21 @@ pipeline {
 
         stage('Run Bluetooth Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat '''
-                    echo === Running Bluetooth Tests ===
+                bat '''
+                echo === Running Bluetooth Tests ===
 
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-                    > esp32_bt_output.txt
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                > esp32_bt_output.txt
 
-                    type esp32_bt_output.txt
+                type esp32_bt_output.txt
 
-                    findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && exit /b 1
-                    '''
-                }
+                findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && exit /b 1
+                '''
             }
             post {
                 failure {
-                    script {
-                        env.BT_RESULT = 'FAIL'
-                    }
+                    script { env.BT_RESULT = 'FAIL' }
                 }
             }
         }
@@ -184,17 +201,19 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "System result    : ${env.SYSTEM_RESULT}"
-                    echo "WiFi result      : ${env.WIFI_RESULT}"
-                    echo "Bluetooth result : ${env.BT_RESULT}"
+                    echo "System     : ${env.SYSTEM_RESULT}"
+                    echo "Temperature: ${env.TEMP_RESULT}"
+                    echo "WiFi       : ${env.WIFI_RESULT}"
+                    echo "Bluetooth  : ${env.BT_RESULT}"
 
                     if (env.SYSTEM_RESULT == 'FAIL' ||
+                        env.TEMP_RESULT   == 'FAIL' ||
                         env.WIFI_RESULT   == 'FAIL' ||
                         env.BT_RESULT     == 'FAIL') {
-                        error('❌ CI FAILED — One or more test suites failed')
+                        error('❌ CI FAILED — One or more subsystems failed')
                     }
 
-                    echo '✅ CI PASSED — All test suites successful'
+                    echo '✅ CI PASSED — All subsystems healthy'
                 }
             }
         }
@@ -206,10 +225,11 @@ pipeline {
             echo 'ℹ️ CI run completed'
         }
         success {
-            echo '✅ CI PIPELINE SUCCESS — Device is healthy'
+            echo '✅ CI PIPELINE SUCCESS'
         }
         failure {
-            echo '❌ CI PIPELINE FAILURE — Investigate test outputs'
+            echo '❌ CI PIPELINE FAILURE'
         }
     }
 }
+
