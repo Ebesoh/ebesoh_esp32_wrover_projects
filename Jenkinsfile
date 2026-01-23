@@ -102,7 +102,7 @@ pipeline {
 
         stage('Run System Self-Tests') {
             steps {
-                catchError(stageResult: 'FAILURE') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     bat '''
                     echo === Running System Self-Tests ===
 
@@ -129,7 +129,7 @@ pipeline {
 
         stage('Run WiFi Tests') {
             steps {
-                catchError(stageResult: 'FAILURE') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     bat '''
                     echo === Running WiFi Tests ===
 
@@ -156,7 +156,7 @@ pipeline {
 
         stage('Run Bluetooth Tests') {
             steps {
-                catchError(stageResult: 'FAILURE') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     bat '''
                     echo === Running Bluetooth Tests ===
 
@@ -184,9 +184,9 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "System result   : ${env.SYSTEM_RESULT}"
-                    echo "WiFi result     : ${env.WIFI_RESULT}"
-                    echo "Bluetooth result: ${env.BT_RESULT}"
+                    echo "System result    : ${env.SYSTEM_RESULT}"
+                    echo "WiFi result      : ${env.WIFI_RESULT}"
+                    echo "Bluetooth result : ${env.BT_RESULT}"
 
                     if (env.SYSTEM_RESULT == 'FAIL' ||
                         env.WIFI_RESULT   == 'FAIL' ||
@@ -213,4 +213,3 @@ pipeline {
         }
     }
 }
-
