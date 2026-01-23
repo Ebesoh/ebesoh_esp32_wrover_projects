@@ -102,7 +102,7 @@ jobs:
         type system.txt
 
         findstr /C:"CI_RESULT: PASS" system.txt >nul
-        if %errorlevel%==0 (
+        if %errorlevel% neq 0 (
           echo SYSTEM SELF-TEST FAILED
           exit /b 1
         )
