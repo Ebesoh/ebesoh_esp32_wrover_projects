@@ -97,7 +97,14 @@ pipeline {
                 > system.txt
 
                 type system.txt
-                findstr /C:"CI_RESULT: FAIL" system.txt >nul && exit /b 1
+
+                findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                if %errorlevel%==0 (
+                    echo ❌ SYSTEM SELF-TEST FAILED
+                    exit /b 1
+                )
+
+                echo ✅ SYSTEM SELF-TEST PASSED
                 exit /b 0
                 '''
             }
@@ -117,7 +124,14 @@ pipeline {
                         > temp.txt
 
                         type temp.txt
-                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
+
+                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ DS18B20 TESTS FAILED
+                            exit /b 1
+                        )
+
+                        echo ✅ DS18B20 TESTS PASSED
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -142,7 +156,14 @@ pipeline {
                         > wifi.txt
 
                         type wifi.txt
-                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && exit /b 1
+
+                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ WIFI TESTS FAILED
+                            exit /b 1
+                        )
+
+                        echo ✅ WIFI TESTS PASSED
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -167,7 +188,14 @@ pipeline {
                         > bt.txt
 
                         type bt.txt
-                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul && exit /b 1
+
+                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ BLUETOOTH TESTS FAILED
+                            exit /b 1
+                        )
+
+                        echo ✅ BLUETOOTH TESTS PASSED
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -192,6 +220,7 @@ pipeline {
                     if (env.TEMP_RESULT == 'FAIL' ||
                         env.WIFI_RESULT == 'FAIL' ||
                         env.BT_RESULT   == 'FAIL') {
+
                         error('❌ One or more test suites failed')
                     }
 
@@ -210,4 +239,5 @@ pipeline {
         failure { echo '❌ PIPELINE FAILURE' }
     }
 }
+
 
