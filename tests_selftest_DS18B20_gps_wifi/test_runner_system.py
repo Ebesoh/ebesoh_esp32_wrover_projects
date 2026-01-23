@@ -18,21 +18,21 @@ import time
 # -------------------------------------------------
 
 try:
-    from test_ds18b20 import ds18b20_self_test
+    from self_test_DS18B20_temp_sensor import ds18b20_self_test
 except Exception as e:
     print("ERROR: Cannot import DS18B20 test:", e)
     print("CI_RESULT: FAIL")
     sys.exit(1)
 
 try:
-    from test_gps_gtu7 import gps_self_test
+    from self_test_gps_GT_U7 import gps_self_test
 except Exception as e:
     print("ERROR: Cannot import GPS test:", e)
     print("CI_RESULT: FAIL")
     sys.exit(1)
 
 try:
-    from test_wifi_self import wifi_self_test
+    from self_test_wifi import wifi_self_test
 except Exception as e:
     print("ERROR: Cannot import Wi-Fi test:", e)
     print("CI_RESULT: FAIL")

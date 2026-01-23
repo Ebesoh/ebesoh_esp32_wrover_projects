@@ -1,104 +1,121 @@
-#What this DS18B20 self-test verifies
+# test_runner_system.py
+#
+# Runs:
+#  - DS18B20 temperature sensor self-test
+#  - GPS GT-U7 self-test
+#  - Wi-Fi functional self-test
+#
+# CI rules:
+#   - Any FAIL => CI_RESULT: FAIL
+#   - Partial PASS allowed only if explicitly configured
+#   - All reasons printed clearly
 
-#   This test automatically checks:
-
-#   ✅ 1-Wire bus is alive
-
-#   ✅ At least one DS18B20 is detected
-
-#   ✅ Temperature conversion succeeds
-
-#   ✅ Read value is valid (not −127 / 85 / None)
-
-#   ✅ Temperature is within a sane range
-
-#    Verdict: If any step fails, the verdict is FAIL with a reason.
-
-from machine import Pin
-import onewire
-import ds18x20
+import sys
 import time
 
-DATA_PIN = 4           # GPIO used for DS18B20
-TEMP_MIN = -40.0       # sanity limits
-TEMP_MAX = 125.0
-CONVERT_TIMEOUT = 1.0  # seconds
+# -------------------------------------------------
+# Import individual self-tests
+# -------------------------------------------------
+
+try:
+    from self_test_DS18B20_temp_sensor import ds18b20_self_test
+except Exception as e:
+    print("ERROR: Cannot import DS18B20 test:", e)
+    print("CI_RESULT: FAIL")
+    sys.exit(1)
+
+try:
+    from test_gps_gtu7 import gps_self_test
+except Exception as e:
+    print("ERROR: Cannot import GPS test:", e)
+    print("CI_RESULT: FAIL")
+    sys.exit(1)
+
+try:
+    from test_wifi_self import wifi_self_test
+except Exception as e:
+    print("ERROR: Cannot import Wi-Fi test:", e)
+    print("CI_RESULT: FAIL")
+    sys.exit(1)
 
 
-def ds18b20_self_test():
-    verdict = "PASS"
-    reasons = []
+# -------------------------------------------------
+# Runner
+# -------------------------------------------------
 
-    print("Starting DS18B20 self-test...")
+def run_test(name, test_func):
+    print("\n" + "=" * 60)
+    print("RUNNING:", name)
+    print("=" * 60)
 
     try:
-        ow = onewire.OneWire(Pin(DATA_PIN))
-        ds = ds18x20.DS18X20(ow)
+        result = test_func()
+
+        verdict = result[0]
+        reasons = result[1]
+
+        print("VERDICT:", verdict)
+        for r in reasons:
+            print("-", r)
+
+        return verdict == "PASS"
+
     except Exception as e:
-        return "FAIL", ["1-Wire init failed"]
-
-    # -------- Step 1: Detect sensor --------
-    roms = ds.scan()
-    if not roms:
-        return "FAIL", ["No DS18B20 detected"]
-
-    print("Found {} DS18B20 device(s)".format(len(roms)))
-    sensor = roms[0]
-
-    # -------- Step 2: Temperature conversion --------
-    try:
-        ds.convert_temp()
-    except Exception:
-        return "FAIL", ["Temperature conversion start failed"]
-
-    t0 = time.time()
-    while time.time() - t0 < CONVERT_TIMEOUT:
-        time.sleep(0.1)
-
-    # -------- Step 3: Read temperature --------
-    try:
-        temp = ds.read_temp(sensor)
-    except Exception:
-        return "FAIL", ["Temperature read failed"]
-
-    print("Raw temperature:", temp)
-
-    # -------- Step 4: Validate reading --------
-    if temp is None:
-        verdict = "FAIL"
-        reasons.append("Temperature is None")
-
-    elif temp == -127.0:
-        verdict = "FAIL"
-        reasons.append("Sensor not responding (-127)")
-
-    elif temp == 85.0:
-        verdict = "FAIL"
-        reasons.append("Power-up default value (85°C)")
-
-    elif temp < TEMP_MIN or temp > TEMP_MAX:
-        verdict = "FAIL"
-        reasons.append("Temperature out of range")
-
-    if verdict == "PASS":
-        reasons.append("All checks passed")
-
-    return verdict, reasons, temp
+        print("VERDICT: FAIL")
+        print("FAIL_REASON: Unhandled exception")
+        print("EXCEPTION:", e)
+        return False
 
 
-# -----------------------------
-# RUN SELF TEST
-# -----------------------------
+def main():
+    print("=" * 60)
+    print("ESP32 SYSTEM SELF-TEST SUITE")
+    print("=" * 60)
 
-result = ds18b20_self_test()
+    results = []
 
-print("==============================")
-print("DS18B20 SELF-TEST VERDICT:", result[0])
+    results.append(("DS18B20 Temperature Sensor", run_test(
+        "DS18B20 Temperature Sensor", ds18b20_self_test)))
 
-for r in result[1]:
-    print("-", r)
+    results.append(("GPS GT-U7", run_test(
+        "GPS GT-U7", gps_self_test)))
 
-if result[0] == "PASS":
-    print("Measured temperature: {:.2f} °C".format(result[2]))
+    results.append(("Wi-Fi Connectivity", run_test(
+        "Wi-Fi Connectivity", wifi_self_test)))
 
-print("==============================")
+    # -------------------------------------------------
+    # Summary
+    # -------------------------------------------------
+    print("\n" + "=" * 60)
+    print("TEST SUMMARY")
+    print("=" * 60)
+
+    passed = 0
+    for name, ok in results:
+        status = "PASS" if ok else "FAIL"
+        print("{:<30} {}".format(name, status))
+        if ok:
+            passed += 1
+
+    total = len(results)
+    print("\nTotal:", passed, "/", total)
+
+    # -------------------------------------------------
+    # CI Verdict
+    # -------------------------------------------------
+    if passed == total:
+        print("\n🎉 ALL SYSTEM TESTS PASSED")
+        print("CI_RESULT: PASS")
+        sys.exit(0)
+
+    else:
+        print("\n❌ SYSTEM TEST FAILURE")
+        print("CI_RESULT: FAIL")
+        sys.exit(1)
+
+
+# -------------------------------------------------
+# Entry point
+# -------------------------------------------------
+if __name__ == "__main__":
+    main()
