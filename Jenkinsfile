@@ -199,4 +199,33 @@ pipeline {
             steps {
                 script {
                     echo "Temperature : ${env.TEMP_RESULT}"
+                    echo "Wi-Fi       : ${env.WIFI_RESULT}"
+                    echo "Bluetooth   : ${env.BT_RESULT}"
+
+                    if (env.TEMP_RESULT == 'FAIL' ||
+                        env.WIFI_RESULT == 'FAIL' ||
+                        env.BT_RESULT   == 'FAIL') {
+
+                        error('❌ CI FAILED — One or more test suites failed')
+                    }
+
+                    echo '✅ ALL TEST SUITES PASSED'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            echo 'CI run completed'
+        }
+        success {
+            echo '✅ PIPELINE SUCCESS'
+        }
+        failure {
+            echo '❌ PIPELINE FAILURE'
+        }
+    }
+}
 
