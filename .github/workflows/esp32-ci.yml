@@ -56,7 +56,7 @@ jobs:
     - name: Wait for ESP32
       shell: cmd
       run: |
-        timeout /t 3 /nobreak > nul
+        timeout /t 3 /nobreak 
 
     # =========================================================
     # UPLOAD TEST FILES
