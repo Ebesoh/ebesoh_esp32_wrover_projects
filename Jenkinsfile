@@ -75,27 +75,21 @@ pipeline {
         }
 
         /* =========================================================
-           UPLOAD ALL TEST FILES
+           UPLOAD TEST FILES
            ========================================================= */
 
         stage('Upload Test Files') {
             steps {
                 bat '''
-                for %%f in (tests_temp\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp %%f :
-                )
+                echo === Uploading test files ===
 
-                for %%f in (tests_wifi\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp %%f :
-                )
+                for %%f in (tests_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_bt\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
 
-                for %%f in (tests_bt\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp %%f :
-                )
-
-                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp %%f :
-                )
+                echo === Uploading DS18B20 runner explicitly ===
+                python -m mpremote connect %ESP_PORT% fs cp test_runner_ds18b20.py :
                 '''
             }
         }
@@ -113,7 +107,6 @@ pipeline {
 
                 type system.txt
 
-                rem ---- FAIL ONLY IF CI_RESULT: FAIL EXISTS ----
                 findstr /C:"CI_RESULT: FAIL" system.txt >nul
                 if %errorlevel%==0 (
                     echo ❌ SYSTEM SELF-TEST FAILED
@@ -136,20 +129,20 @@ pipeline {
            ========================================================= */
 
         stage('DS18B20 Temperature Tests') {
-              steps {
-                  bat '''
-                  echo === Uploading DS18B20 runner ===
-                  python -m mpremote connect %ESP_PORT% fs cp test_runner_ds18b20.py :
+            steps {
+                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                    > temp.txt
 
-                  echo === Running DS18B20 Temperature Tests ===
-                  python -m mpremote connect %ESP_PORT% exec ^
-                  "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                  > temp.txt
+                    type temp.txt
 
-                  type temp.txt
-                  findstr /C:"CI_RESULT: FAIL" temp.txt && exit /b 1
-                  '''
-          }
+                    findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                    if %errorlevel%==0 exit /b 1
+                    exit /b 0
+                    '''
+                }
             }
             post {
                 failure {
@@ -219,13 +212,14 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "Temperature: ${env.TEMP_RESULT}"
-                    echo "Wi-Fi      : ${env.WIFI_RESULT}"
-                    echo "Bluetooth  : ${env.BT_RESULT}"
+                    echo "Temperature : ${env.TEMP_RESULT}"
+                    echo "Wi-Fi       : ${env.WIFI_RESULT}"
+                    echo "Bluetooth   : ${env.BT_RESULT}"
 
                     if (env.TEMP_RESULT == 'FAIL' ||
                         env.WIFI_RESULT == 'FAIL' ||
                         env.BT_RESULT   == 'FAIL') {
+
                         error('❌ One or more test suites failed')
                     }
 
