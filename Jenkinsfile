@@ -85,7 +85,20 @@ pipeline {
             steps {
                 bat '''
                 echo === Running WiFi tests on ESP32 ===
-                python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
+
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                > esp32_test_output.txt
+
+                echo === ESP32 OUTPUT ===
+                type esp32_test_output.txt
+
+                findstr /C:"CI_RESULT: FAIL" esp32_test_output.txt && (
+                    echo ESP32 TESTS FAILED
+                    exit /b 1
+                )
+
+                echo ESP32 TESTS PASSED
                 '''
             }
         }
@@ -103,3 +116,4 @@ pipeline {
         }
     }
 }
+

@@ -109,7 +109,7 @@ def run_all_wifi_tests():
 
         except Exception as e:
             print(f"✗ {test_name}: ERROR - {e}")
-            results.append((test_name, False, 0))
+            results.append((test_name, False, 0.0))
 
         time.sleep(2)
 
@@ -188,4 +188,5 @@ def run_quick_connectivity_test(ssid, password):
 # ===== MAIN =====
 if __name__ == "__main__":
     run_all_wifi_tests()
+
 
