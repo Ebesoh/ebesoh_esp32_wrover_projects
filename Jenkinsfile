@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -7,9 +6,9 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        TEMP_RESULT   = 'PASS'
-        WIFI_RESULT   = 'PASS'
-        BT_RESULT     = 'PASS'
+        TEMP_RESULT = 'PASS'
+        WIFI_RESULT = 'PASS'
+        BT_RESULT   = 'PASS'
     }
 
     options {
@@ -82,19 +81,30 @@ pipeline {
         stage('Upload Test Files') {
             steps {
                 bat '''
-                for %%f in (tests_temp\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                for %%f in (tests_wifi\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                for %%f in (tests_bt\\*.py)     do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py)do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_temp\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+
+                for %%f in (tests_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+
+                for %%f in (tests_bt\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
                 '''
             }
         }
 
         /* =========================================================
-           SYSTEM SELF TEST — HARD GATE (RUN FIRST)
+           SYSTEM SELF TEST — HARD GATE
            ========================================================= */
 
-        stage('System Self-Test (Temperature + GPS + Core)') {
+        stage('System Self-Test (HARD GATE)') {
             steps {
                 bat '''
                 python -m mpremote connect %ESP_PORT% exec ^
@@ -102,7 +112,16 @@ pipeline {
                 > system.txt
 
                 type system.txt
-                findstr /C:"CI_RESULT: FAIL" system.txt && exit /b 1
+
+                rem ---- FAIL ONLY IF CI_RESULT: FAIL EXISTS ----
+                findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                if %errorlevel%==0 (
+                    echo ❌ SYSTEM SELF-TEST FAILED
+                    exit /b 1
+                )
+
+                echo ✅ SYSTEM SELF-TEST PASSED
+                exit /b 0
                 '''
             }
             post {
@@ -113,7 +132,7 @@ pipeline {
         }
 
         /* =========================================================
-           DS18B20 TEMPERATURE TESTS (EXTENDED)
+           DS18B20 EXTENDED TEMPERATURE TESTS
            ========================================================= */
 
         stage('DS18B20 Temperature Tests') {
@@ -125,7 +144,10 @@ pipeline {
                     > temp.txt
 
                     type temp.txt
-                    findstr /C:"CI_RESULT: FAIL" temp.txt && exit /b 1
+
+                    findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                    if %errorlevel%==0 exit /b 1
+                    exit /b 0
                     '''
                 }
             }
@@ -149,7 +171,10 @@ pipeline {
                     > wifi.txt
 
                     type wifi.txt
-                    findstr /C:"CI_RESULT: FAIL" wifi.txt && exit /b 1
+
+                    findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+                    if %errorlevel%==0 exit /b 1
+                    exit /b 0
                     '''
                 }
             }
@@ -173,7 +198,10 @@ pipeline {
                     > bt.txt
 
                     type bt.txt
-                    findstr /C:"CI_RESULT: FAIL" bt.txt && exit /b 1
+
+                    findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+                    if %errorlevel%==0 exit /b 1
+                    exit /b 0
                     '''
                 }
             }
@@ -185,20 +213,19 @@ pipeline {
         }
 
         /* =========================================================
-           FINAL VERDICT
+           FINAL CI VERDICT
            ========================================================= */
 
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "Temperature result: ${env.TEMP_RESULT}"
-                    echo "Wi-Fi result:        ${env.WIFI_RESULT}"
-                    echo "Bluetooth result:   ${env.BT_RESULT}"
+                    echo "Temperature: ${env.TEMP_RESULT}"
+                    echo "Wi-Fi      : ${env.WIFI_RESULT}"
+                    echo "Bluetooth  : ${env.BT_RESULT}"
 
                     if (env.TEMP_RESULT == 'FAIL' ||
                         env.WIFI_RESULT == 'FAIL' ||
-                        env.BT_RESULT == 'FAIL') {
-
+                        env.BT_RESULT   == 'FAIL') {
                         error('❌ One or more test suites failed')
                     }
 
