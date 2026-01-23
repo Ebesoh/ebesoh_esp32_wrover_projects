@@ -88,8 +88,8 @@ pipeline {
                 for %%f in (tests_bt\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
 
-                echo === Uploading DS18B20 runner explicitly ===
-                python -m mpremote connect %ESP_PORT% fs cp test_runner_ds18b20.py :
+//                echo === Uploading DS18B20 runner explicitly ===
+//                python -m mpremote connect %ESP_PORT% fs cp test_runner_ds18b20.py :
                 '''
             }
         }
