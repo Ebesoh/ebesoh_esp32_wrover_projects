@@ -54,10 +54,7 @@ pipeline {
             steps {
                 bat '''
                 echo === Waiting for ESP32 reboot ===
-                python - <<EOF
-import time
-time.sleep(10)
-EOF
+                python -c "import time; time.sleep(10)"
                 '''
             }
         }
@@ -71,20 +68,11 @@ EOF
             }
         }
 
-        stage('Run WiFi Test Suite on ESP32') {
+        stage('Run WiFi Tests on ESP32') {
             steps {
                 bat '''
                 echo === Running WiFi tests on ESP32 ===
                 python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
-                '''
-            }
-        }
-
-        stage('Evaluate Result') {
-            steps {
-                bat '''
-                echo === Evaluating CI result ===
-                python -m mpremote connect %ESP_PORT% exec "print('CI_RESULT: PASS')" || exit /b 1
                 '''
             }
         }
