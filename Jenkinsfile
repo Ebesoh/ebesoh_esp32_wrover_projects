@@ -73,7 +73,7 @@ pipeline {
             steps {
                 bat '''
                 echo === Uploading WiFi test files ===
-                for %%f in (tests\\*.py) do (
+                for %%f in (tests_wifi\\*.py) do (
                     echo Uploading %%f
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
