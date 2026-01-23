@@ -67,8 +67,7 @@ jobs:
     - name: Reset ESP32 (MicroPython)
       shell: cmd
       run: |
-        python -m mpremote disconnect || exit /b 0
-        python -m mpremote connect COM5 reset
+        python -m mpremote connect COM5 reset || exit /b 1
         timeout /t 3 >nul
 
     - name: Wait after reset
