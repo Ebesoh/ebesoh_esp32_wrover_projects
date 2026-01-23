@@ -64,11 +64,15 @@ jobs:
     # =========================================================
     # LOGICAL RESET (CI-SAFE)
     # =========================================================
-    - name: Reset ESP32 (MicroPython)
-      shell: cmd
+   
+    - name: Check for ESP32 device
+      run: |
+        python -c "import serial.tools.list_ports; print([port.device for port in serial.tools.list_ports.comports()])"
+        
+    - name: Connect and reset ESP32
       run: |
         python -m mpremote connect COM5 reset || exit /b 1
-        timeout /t 3 >nul
+    
 
     - name: Wait after reset
       shell: powershell
