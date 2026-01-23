@@ -14,24 +14,55 @@ env:
 jobs:
   esp32-hardware-tests:
     name: ESP32 Hardware Validation
-    runs-on: self-hosted   # REQUIRED for COM port access
+    runs-on: self-hosted
 
     steps:
+    # =========================================================
+    # CHECKOUT
+    # =========================================================
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+    # =========================================================
+    # VERIFY PYTHON (PREINSTALLED)
+    # =========================================================
+    - name: Verify Python on runner
+      shell: cmd
+      run: |
+        python --version
+        pip --version
+        where python
 
-    - name: Install ESP32 Tools
+    # =========================================================
+    # INSTALL TOOLS
+    # =========================================================
+    - name: Install ESP32 host tools
       shell: cmd
       run: |
         pip install --upgrade pip
         pip install esptool mpremote pyserial
 
-    - name: Upload Test Files
+    # =========================================================
+    # DEBUG: COM PORTS
+    # =========================================================
+    - name: List COM ports
+      shell: cmd
+      run: |
+        python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+
+    # =========================================================
+    # RESET DEVICE
+    # =========================================================
+    - name: Reset ESP32 (RAW REPL)
+      shell: cmd
+      run: |
+        python -m mpremote connect %ESP_PORT% reset
+        timeout /t 3 /nobreak > nul
+
+    # =========================================================
+    # UPLOAD TEST FILES
+    # =========================================================
+    - name: Upload test files to ESP32
       shell: cmd
       run: |
         for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -39,95 +70,96 @@ jobs:
         for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
         for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-    # ================= SYSTEM SELF TEST (HARD GATE) =================
-
+    # =========================================================
+    # SYSTEM SELF TEST (HARD GATE)
+    # =========================================================
     - name: System Self-Test (HARD GATE)
-      id: system_test
+      id: system
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec ^
-        "import test_runner_system; test_runner_system.main()" ^
-        > system.txt
-
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > system.txt
         type system.txt
 
         findstr /C:"CI_RESULT: FAIL" system.txt >nul
         if %errorlevel%==0 (
-          echo system_test_result=fail>>"%GITHUB_OUTPUT%"
+          echo SYSTEM TEST FAILED
           exit /b 1
         )
 
-        echo system_test_result=pass>>"%GITHUB_OUTPUT%"
+        echo SYSTEM TEST PASSED
 
-    # ================= DS18B20 =================
-
+    # =========================================================
+    # DS18B20 TEMPERATURE TESTS
+    # =========================================================
     - name: DS18B20 Temperature Tests
-      id: temp_test
-      if: steps.system_test.outputs.system_test_result == 'pass'
+      id: temp
       shell: cmd
+      continue-on-error: true
       run: |
-        python -m mpremote connect %ESP_PORT% exec ^
-        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-        > temp.txt
-
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
         type temp.txt
 
         findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-        if %errorlevel%==0 (
-          echo temp_test_result=fail>>"%GITHUB_OUTPUT%"
-          exit /b 1
-        )
+        if %errorlevel%==0 exit /b 1
 
-        echo temp_test_result=pass>>"%GITHUB_OUTPUT%"
-
-    # ================= WIFI =================
-
+    # =========================================================
+    # WIFI TESTS
+    # =========================================================
     - name: Wi-Fi Tests
-      id: wifi_test
-      if: steps.temp_test.outputs.temp_test_result == 'pass'
+      id: wifi
       shell: cmd
+      continue-on-error: true
       run: |
-        python -m mpremote connect %ESP_PORT% exec ^
-        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-        > wifi.txt
-
+        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
         type wifi.txt
 
         findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-        if %errorlevel%==0 (
-          echo wifi_test_result=fail>>"%GITHUB_OUTPUT%"
-          exit /b 1
-        )
+        if %errorlevel%==0 exit /b 1
 
-        echo wifi_test_result=pass>>"%GITHUB_OUTPUT%"
-
-    # ================= BLUETOOTH =================
-
+    # =========================================================
+    # BLUETOOTH TESTS
+    # =========================================================
     - name: Bluetooth Tests
-      id: bt_test
-      if: steps.wifi_test.outputs.wifi_test_result == 'pass'
+      id: bt
       shell: cmd
+      continue-on-error: true
       run: |
-        python -m mpremote connect %ESP_PORT% exec ^
-        "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-        > bt.txt
-
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
         type bt.txt
 
         findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-        if %errorlevel%==0 (
-          echo bt_test_result=fail>>"%GITHUB_OUTPUT%"
-          exit /b 1
-        )
+        if %errorlevel%==0 exit /b 1
 
-        echo bt_test_result=pass>>"%GITHUB_OUTPUT%"
+    # =========================================================
+    # FINAL DECISION
+    # =========================================================
+    - name: Final CI Verdict
+      shell: bash
+      run: |
+        echo "=== FINAL TEST SUMMARY ==="
+        echo "System     : PASSED"
+        echo "Temperature: ${{ steps.temp.outcome }}"
+        echo "Wi-Fi      : ${{ steps.wifi.outcome }}"
+        echo "Bluetooth  : ${{ steps.bt.outcome }}"
 
-    # ================= ARTIFACTS =================
+        if [[ "${{ steps.temp.outcome }}" == "failure" ||
+              "${{ steps.wifi.outcome }}" == "failure" ||
+              "${{ steps.bt.outcome }}" == "failure" ]]; then
+          echo "❌ One or more test suites failed"
+          exit 1
+        fi
 
-    - name: Upload Logs
+        echo "✅ ALL TEST SUITES PASSED"
+
+    # =========================================================
+    # ARTIFACTS
+    # =========================================================
+    - name: Upload logs
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: esp32-test-logs
-        path: "*.txt"
+        path: |
+          *.txt
+
 
