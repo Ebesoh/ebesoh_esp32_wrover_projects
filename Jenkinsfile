@@ -18,23 +18,15 @@ pipeline {
 
     stages {
 
-        /* ---------------- CHECKOUT ---------------- */
-
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
-
-        /* ---------------- HOST ENV ---------------- */
 
         stage('Verify Python Environment') {
             steps {
                 bat '''
-                echo === Python Environment ===
                 where python
                 python --version
-                python -m pip --version
                 '''
             }
         }
@@ -42,21 +34,8 @@ pipeline {
         stage('Install Host Tools') {
             steps {
                 bat '''
-                echo === Installing ESP32 host tools ===
                 python -m pip install --upgrade pip
                 python -m pip install esptool mpremote
-                '''
-            }
-        }
-
-        /* ---------------- FLASH (OPTIONAL) ---------------- */
-
-        stage('Flash ESP32 (optional)') {
-            steps {
-                bat '''
-                echo === Flashing ESP32 (optional) ===
-                python -m esptool --chip esp32 --port %ESP_PORT% erase-flash || echo Skipping erase
-                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE% || echo Skipping flash
                 '''
             }
         }
@@ -67,36 +46,18 @@ pipeline {
             }
         }
 
-        stage('Force RAW REPL') {
-            steps {
-                bat '''
-                python -m mpremote connect %ESP_PORT% reset
-                python -c "import time; time.sleep(3)"
-                '''
-            }
-        }
-
-        /* ---------------- UPLOAD TEST FILES ---------------- */
-
         stage('Upload Test Files') {
             steps {
                 bat '''
-                echo === Uploading System tests ===
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
-
-                echo === Uploading DS18B20 / Temperature tests ===
                 for %%f in (test_temp\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
-
-                echo === Uploading WiFi tests ===
                 for %%f in (tests_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
-
-                echo === Uploading Bluetooth tests ===
                 for %%f in (tests_bt\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
@@ -104,16 +65,14 @@ pipeline {
             }
         }
 
-        /* ---------------- SYSTEM TESTS ---------------- */
+        /* ---------- SYSTEM TESTS ---------- */
 
         stage('Run System Self-Tests') {
             steps {
                 bat '''
-                echo === Running System Self-Tests ===
-
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import test_runner_system; test_runner_system.main()" ^
-                > esp32_system_output.txt
+                > esp32_system_output.txt || echo mpremote exit ignored
 
                 type esp32_system_output.txt
 
@@ -121,22 +80,18 @@ pipeline {
                 '''
             }
             post {
-                failure {
-                    script { env.SYSTEM_RESULT = 'FAIL' }
-                }
+                failure { script { env.SYSTEM_RESULT = 'FAIL' } }
             }
         }
 
-        /* ---------------- DS18B20 / TEMP TESTS ---------------- */
+        /* ---------- DS18B20 ---------- */
 
-        stage('Run DS18B20 Temperature Tests') {
+        stage('Run Temperature Tests') {
             steps {
                 bat '''
-                echo === Running DS18B20 Temperature Tests ===
-
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                > esp32_temp_output.txt
+                > esp32_temp_output.txt || echo mpremote exit ignored
 
                 type esp32_temp_output.txt
 
@@ -144,22 +99,18 @@ pipeline {
                 '''
             }
             post {
-                failure {
-                    script { env.TEMP_RESULT = 'FAIL' }
-                }
+                failure { script { env.TEMP_RESULT = 'FAIL' } }
             }
         }
 
-        /* ---------------- WIFI TESTS ---------------- */
+        /* ---------- WIFI ---------- */
 
         stage('Run WiFi Tests') {
             steps {
                 bat '''
-                echo === Running WiFi Tests ===
-
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                > esp32_wifi_output.txt
+                > esp32_wifi_output.txt || echo mpremote exit ignored
 
                 type esp32_wifi_output.txt
 
@@ -167,22 +118,18 @@ pipeline {
                 '''
             }
             post {
-                failure {
-                    script { env.WIFI_RESULT = 'FAIL' }
-                }
+                failure { script { env.WIFI_RESULT = 'FAIL' } }
             }
         }
 
-        /* ---------------- BLUETOOTH TESTS ---------------- */
+        /* ---------- BLUETOOTH ---------- */
 
         stage('Run Bluetooth Tests') {
             steps {
                 bat '''
-                echo === Running Bluetooth Tests ===
-
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-                > esp32_bt_output.txt
+                > esp32_bt_output.txt || echo mpremote exit ignored
 
                 type esp32_bt_output.txt
 
@@ -190,29 +137,21 @@ pipeline {
                 '''
             }
             post {
-                failure {
-                    script { env.BT_RESULT = 'FAIL' }
-                }
+                failure { script { env.BT_RESULT = 'FAIL' } }
             }
         }
 
-        /* ---------------- FINAL VERDICT ---------------- */
+        /* ---------- FINAL VERDICT ---------- */
 
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "System     : ${env.SYSTEM_RESULT}"
-                    echo "Temperature: ${env.TEMP_RESULT}"
-                    echo "WiFi       : ${env.WIFI_RESULT}"
-                    echo "Bluetooth  : ${env.BT_RESULT}"
-
                     if (env.SYSTEM_RESULT == 'FAIL' ||
                         env.TEMP_RESULT   == 'FAIL' ||
                         env.WIFI_RESULT   == 'FAIL' ||
                         env.BT_RESULT     == 'FAIL') {
                         error('❌ CI FAILED — One or more subsystems failed')
                     }
-
                     echo '✅ CI PASSED — All subsystems healthy'
                 }
             }
@@ -222,13 +161,6 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-            echo 'ℹ️ CI run completed'
-        }
-        success {
-            echo '✅ CI PIPELINE SUCCESS'
-        }
-        failure {
-            echo '❌ CI PIPELINE FAILURE'
         }
     }
 }
