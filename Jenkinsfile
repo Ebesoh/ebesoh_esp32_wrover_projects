@@ -22,9 +22,7 @@ pipeline {
            ========================================================= */
 
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
 
         stage('Verify Python Environment') {
@@ -60,9 +58,7 @@ pipeline {
         }
 
         stage('Wait for ESP32 reboot') {
-            steps {
-                bat 'python -c "import time; time.sleep(10)"'
-            }
+            steps { bat 'python -c "import time; time.sleep(10)"' }
         }
 
         stage('Force RAW REPL') {
@@ -81,14 +77,10 @@ pipeline {
         stage('Upload Test Files') {
             steps {
                 bat '''
-                echo === Uploading test files ===
-
                 for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
                 for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
                 for %%f in (tests_bt\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
-
-                 
                 '''
             }
         }
@@ -105,47 +97,33 @@ pipeline {
                 > system.txt
 
                 type system.txt
-
-                findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                if %errorlevel%==0 (
-                    echo ❌ SYSTEM SELF-TEST FAILED
-                    exit /b 1
-                )
-
-                echo ✅ SYSTEM SELF-TEST PASSED
+                findstr /C:"CI_RESULT: FAIL" system.txt >nul && exit /b 1
                 exit /b 0
                 '''
-            }
-            post {
-                failure {
-                    error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
-                }
             }
         }
 
         /* =========================================================
-           DS18B20 EXTENDED TEMPERATURE TESTS
+           DS18B20 TEMPERATURE TESTS
            ========================================================= */
 
         stage('DS18B20 Temperature Tests') {
             steps {
-                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
-                    bat '''
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                    > temp.txt
+                script {
+                    def rc = bat(
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                        > temp.txt
 
-                    type temp.txt
+                        type temp.txt
+                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
+                        exit /b 0
+                        ''',
+                        returnStatus: true
+                    )
 
-                    findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                    if %errorlevel%==0 exit /b 1
-                    exit /b 0
-                    '''
-                }
-            }
-            post {
-                failure {
-                    script { env.TEMP_RESULT = 'FAIL' }
+                    env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
                 }
             }
         }
@@ -156,23 +134,21 @@ pipeline {
 
         stage('Wi-Fi Tests') {
             steps {
-                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
-                    bat '''
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                    > wifi.txt
+                script {
+                    def rc = bat(
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                        > wifi.txt
 
-                    type wifi.txt
+                        type wifi.txt
+                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && exit /b 1
+                        exit /b 0
+                        ''',
+                        returnStatus: true
+                    )
 
-                    findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-                    if %errorlevel%==0 exit /b 1
-                    exit /b 0
-                    '''
-                }
-            }
-            post {
-                failure {
-                    script { env.WIFI_RESULT = 'FAIL' }
+                    env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
                 }
             }
         }
@@ -183,23 +159,21 @@ pipeline {
 
         stage('Bluetooth Tests') {
             steps {
-                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
-                    bat '''
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-                    > bt.txt
+                script {
+                    def rc = bat(
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                        > bt.txt
 
-                    type bt.txt
+                        type bt.txt
+                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul && exit /b 1
+                        exit /b 0
+                        ''',
+                        returnStatus: true
+                    )
 
-                    findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-                    if %errorlevel%==0 exit /b 1
-                    exit /b 0
-                    '''
-                }
-            }
-            post {
-                failure {
-                    script { env.BT_RESULT = 'FAIL' }
+                    env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
                 }
             }
         }
@@ -218,7 +192,6 @@ pipeline {
                     if (env.TEMP_RESULT == 'FAIL' ||
                         env.WIFI_RESULT == 'FAIL' ||
                         env.BT_RESULT   == 'FAIL') {
-
                         error('❌ One or more test suites failed')
                     }
 
@@ -233,11 +206,8 @@ pipeline {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
             echo 'CI run completed'
         }
-        success {
-            echo '✅ PIPELINE SUCCESS'
-        }
-        failure {
-            echo '❌ PIPELINE FAILURE'
-        }
+        success { echo '✅ PIPELINE SUCCESS' }
+        failure { echo '❌ PIPELINE FAILURE' }
     }
 }
+
