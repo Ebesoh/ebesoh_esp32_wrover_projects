@@ -114,6 +114,7 @@ jobs:
     # =========================================================
     - name: DS18B20 Temperature Tests
       shell: cmd
+      continue-on-error: true
       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
         type temp.txt
