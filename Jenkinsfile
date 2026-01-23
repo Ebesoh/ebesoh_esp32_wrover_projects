@@ -15,8 +15,6 @@ pipeline {
 
     stages {
 
-        /* ================= CHECKOUT + SETUP ================= */
-
         stage('Checkout') {
             steps { checkout scm }
         }
@@ -40,8 +38,6 @@ pipeline {
             }
         }
 
-        /* ================= FLASH + RESET ================= */
-
         stage('Flash ESP32 (optional)') {
             steps {
                 bat '''
@@ -64,8 +60,6 @@ pipeline {
             }
         }
 
-        /* ================= UPLOAD TEST FILES ================= */
-
         stage('Upload Test Files') {
             steps {
                 bat '''
@@ -77,39 +71,31 @@ pipeline {
             }
         }
 
-        /* ================= SYSTEM SELF TEST (HARD GATE) ================= */
+        /* ===== SYSTEM HARD GATE ===== */
 
         stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
+                    def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_system; test_runner_system.main()" ^
                         > system.txt
 
                         type system.txt
-
                         findstr /C:"CI_RESULT: FAIL" system.txt >nul
                         if %errorlevel%==0 (
                             exit /b 1
                         ) else (
                             exit /b 0
                         )
-                        '''
-                    )
+                    ''')
 
                     if (rc != 0) {
                         error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
                     }
-
-                    echo '✅ SYSTEM SELF-TEST PASSED'
                 }
             }
         }
-
-        /* ================= DS18B20 TEMPERATURE ================= */
 
         stage('DS18B20 Temperature Tests') {
             steps {
@@ -120,29 +106,19 @@ pipeline {
                         > temp.txt
 
                         type temp.txt
-
-                        REM: Use PowerShell for cleaner logic
-                        powershell '''
-                            $content = Get-Content temp.txt
-                            if ($content -match "CI_RESULT: FAIL") {
-                                exit 1
-                            } else {
-                                exit 0
-                            }
-                        '''
+                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
                     ''')
 
                     env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    
-                    // ADD THIS - fail the stage immediately if test failed
-                    if (rc != 0) {
-                        error("❌ DS18B20 Tests FAILED - see temp.txt")
-                    }
+                    if (rc != 0) { error('❌ DS18B20 TESTS FAILED') }
                 }
             }
         }
-
-        /* ================= WIFI ================= */
 
         stage('Wi-Fi Tests') {
             steps {
@@ -153,29 +129,19 @@ pipeline {
                         > wifi.txt
 
                         type wifi.txt
-
-                        REM: Use PowerShell for cleaner logic
-                        powershell '''
-                            $content = Get-Content wifi.txt
-                            if ($content -match "CI_RESULT: FAIL") {
-                                exit 1
-                            } else {
-                                exit 0
-                            }
-                        '''
+                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
                     ''')
 
                     env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    
-                    // ADD THIS - fail the stage immediately if test failed
-                    if (rc != 0) {
-                        error("❌ Wi-Fi Tests FAILED - see wifi.txt")
-                    }
+                    if (rc != 0) { error('❌ WIFI TESTS FAILED') }
                 }
             }
         }
-
-        /* ================= BLUETOOTH ================= */
 
         stage('Bluetooth Tests') {
             steps {
@@ -186,46 +152,26 @@ pipeline {
                         > bt.txt
 
                         type bt.txt
-
-                        REM: Use PowerShell for cleaner logic
-                        powershell '''
-                            $content = Get-Content bt.txt
-                            if ($content -match "CI_RESULT: FAIL") {
-                                exit 1
-                            } else {
-                                exit 0
-                            }
-                        '''
+                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
                     ''')
 
                     env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    
-                    // ADD THIS - fail the stage immediately if test failed
-                    if (rc != 0) {
-                        error("❌ Bluetooth Tests FAILED - see bt.txt")
-                    }
+                    if (rc != 0) { error('❌ BLUETOOTH TESTS FAILED') }
                 }
             }
         }
 
-        /* ================= FINAL VERDICT ================= */
-
         stage('Final CI Verdict') {
-            when {
-                // Only run this stage if all previous stages passed
-                expression { 
-                    env.TEMP_RESULT == 'PASS' && 
-                    env.WIFI_RESULT == 'PASS' && 
-                    env.BT_RESULT == 'PASS' 
-                }
-            }
             steps {
-                script {
-                    echo "Temperature : ${env.TEMP_RESULT}"
-                    echo "Wi-Fi       : ${env.WIFI_RESULT}"
-                    echo "Bluetooth   : ${env.BT_RESULT}"
-                    echo '✅ ALL TEST SUITES PASSED'
-                }
+                echo "Temperature : ${env.TEMP_RESULT}"
+                echo "Wi-Fi       : ${env.WIFI_RESULT}"
+                echo "Bluetooth   : ${env.BT_RESULT}"
+                echo '✅ ALL TEST SUITES PASSED'
             }
         }
     }
@@ -233,18 +179,8 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-            script {
-                echo "=== FINAL RESULTS ==="
-                echo "Temperature: ${env.TEMP_RESULT}"
-                echo "Wi-Fi: ${env.WIFI_RESULT}"
-                echo "Bluetooth: ${env.BT_RESULT}"
-            }
         }
-        success { 
-            echo '✅ PIPELINE SUCCESS' 
-        }
-        failure { 
-            echo '❌ PIPELINE FAILURE' 
-        }
+        success { echo '✅ PIPELINE SUCCESS' }
+        failure { echo '❌ PIPELINE FAILURE' }
     }
 }
