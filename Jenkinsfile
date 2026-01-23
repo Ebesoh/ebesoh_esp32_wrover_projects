@@ -140,7 +140,7 @@ pipeline {
                 catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
                     bat '''
                     python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_ds18b20_runner; test_ds18b20_runner.main()" ^
+                    "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
                     > temp.txt
 
                     type temp.txt
