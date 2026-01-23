@@ -91,22 +91,25 @@ pipeline {
 
         stage('System Self-Test (HARD GATE)') {
             steps {
-                bat '''
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import test_runner_system; test_runner_system.main()" ^
-                > system.txt
+                script {
+                    def rc = bat(
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_system; test_runner_system.main()" ^
+                        > system.txt
 
-                type system.txt
+                        type system.txt
+                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                        if %ERRORLEVEL%==0 exit /b 1
+                        exit /b 0
+                        ''',
+                        returnStatus: true
+                    )
 
-                findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                if %errorlevel%==0 (
-                    echo ❌ SYSTEM SELF-TEST FAILED
-                    exit /b 1
-                )
-
-                echo ✅ SYSTEM SELF-TEST PASSED
-                exit /b 0
-                '''
+                    if (rc != 0) {
+                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
+                    }
+                }
             }
         }
 
@@ -124,14 +127,8 @@ pipeline {
                         > temp.txt
 
                         type temp.txt
-
                         findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                        if %errorlevel%==0 (
-                            echo ❌ DS18B20 TESTS FAILED
-                            exit /b 1
-                        )
-
-                        echo ✅ DS18B20 TESTS PASSED
+                        if %ERRORLEVEL%==0 exit /b 1
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -156,14 +153,8 @@ pipeline {
                         > wifi.txt
 
                         type wifi.txt
-
                         findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-                        if %errorlevel%==0 (
-                            echo ❌ WIFI TESTS FAILED
-                            exit /b 1
-                        )
-
-                        echo ✅ WIFI TESTS PASSED
+                        if %ERRORLEVEL%==0 exit /b 1
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -188,14 +179,8 @@ pipeline {
                         > bt.txt
 
                         type bt.txt
-
                         findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-                        if %errorlevel%==0 (
-                            echo ❌ BLUETOOTH TESTS FAILED
-                            exit /b 1
-                        )
-
-                        echo ✅ BLUETOOTH TESTS PASSED
+                        if %ERRORLEVEL%==0 exit /b 1
                         exit /b 0
                         ''',
                         returnStatus: true
@@ -207,37 +192,11 @@ pipeline {
         }
 
         /* =========================================================
-           FINAL CI VERDICT
+           FINAL CI VERDICT (AUTHORITATIVE)
            ========================================================= */
 
         stage('Final CI Verdict') {
             steps {
                 script {
                     echo "Temperature : ${env.TEMP_RESULT}"
-                    echo "Wi-Fi       : ${env.WIFI_RESULT}"
-                    echo "Bluetooth   : ${env.BT_RESULT}"
-
-                    if (env.TEMP_RESULT == 'FAIL' ||
-                        env.WIFI_RESULT == 'FAIL' ||
-                        env.BT_RESULT   == 'FAIL') {
-
-                        error('❌ One or more test suites failed')
-                    }
-
-                    echo '✅ ALL TEST SUITES PASSED'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-            echo 'CI run completed'
-        }
-        success { echo '✅ PIPELINE SUCCESS' }
-        failure { echo '❌ PIPELINE FAILURE' }
-    }
-}
-
 
