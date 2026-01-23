@@ -70,6 +70,7 @@ jobs:
         python -c "import serial.tools.list_ports; print([port.device for port in serial.tools.list_ports.comports()])"
         
     - name: Connect and reset ESP32
+      shell: cmd
       run: |
         python -m mpremote connect COM5 reset || exit /b 1
     
