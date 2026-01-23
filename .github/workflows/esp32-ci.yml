@@ -1,5 +1,3 @@
-
-
 name: ESP32 Hardware Testing
 
 on:
@@ -53,12 +51,12 @@ jobs:
         python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
 
     # =========================================================
-    # RESET DEVICE (FIXED)
+    # RESET DEVICE (CI-SAFE FIX)
     # =========================================================
-    - name: Reset ESP32 (RAW REPL)
+    - name: Reset ESP32 (CI-safe)
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% reset --no-stdin
+        python -m mpremote connect %ESP_PORT% exec "import machine; machine.reset()"
         timeout /t 3 /nobreak > nul
 
     # =========================================================
@@ -163,3 +161,4 @@ jobs:
         name: esp32-test-logs
         path: |
           *.txt
+
