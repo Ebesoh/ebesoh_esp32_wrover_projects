@@ -1,0 +1,142 @@
+name: ESP32 Hardware CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  esp32-tests:
+    # IMPORTANT: must be self-hosted Windows with ESP32 attached
+    runs-on: self-hosted
+
+    env:
+      ESP_PORT: COM5
+      FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      # =========================================================
+      # CHECKOUT
+      # =========================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # =========================================================
+      # PYTHON + TOOLS
+      # =========================================================
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install host tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install esptool mpremote
+
+      # =========================================================
+      # SYSTEM SELF-TEST (HARD GATE)
+      # =========================================================
+      - name: System Self-Test (HARD GATE)
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_system; test_runner_system.main()" ^
+          > system.txt
+
+          type system.txt
+
+          findstr /C:"CI_RESULT: FAIL" system.txt >nul
+          if not errorlevel 1 (
+            echo SYSTEM SELF-TEST FAILED
+            exit /b 1
+          )
+
+          echo SYSTEM SELF-TEST PASSED
+
+      # =========================================================
+      # DS18B20 TEMPERATURE TESTS
+      # =========================================================
+      - name: DS18B20 Temperature Tests
+        shell: cmd
+        continue-on-error: true
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+          > temp.txt
+
+          type temp.txt
+
+          findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+          if not errorlevel 1 exit /b 1
+
+      # =========================================================
+      # WI-FI TESTS
+      # =========================================================
+      - name: Wi-Fi Tests
+        shell: cmd
+        continue-on-error: true
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+          > wifi.txt
+
+          type wifi.txt
+
+          findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+          if not errorlevel 1 exit /b 1
+
+      # =========================================================
+      # BLUETOOTH TESTS
+      # =========================================================
+      - name: Bluetooth Tests
+        shell: cmd
+        continue-on-error: true
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+          > bt.txt
+
+          type bt.txt
+
+          findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+          if not errorlevel 1 exit /b 1
+
+      # =========================================================
+      # FINAL DECISION (AUTHORITATIVE)
+      # =========================================================
+      - name: Final CI Verdict
+        shell: cmd
+        run: |
+          set FAILED=0
+
+          if exist temp.txt (
+            findstr /C:"CI_RESULT: FAIL" temp.txt >nul && set FAILED=1
+          )
+
+          if exist wifi.txt (
+            findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && set FAILED=1
+          )
+
+          if exist bt.txt (
+            findstr /C:"CI_RESULT: FAIL" bt.txt >nul && set FAILED=1
+          )
+
+          if %FAILED%==1 (
+            echo ONE OR MORE TEST SUITES FAILED
+            exit /b 1
+          )
+
+          echo ALL TEST SUITES PASSED
+
+      # =========================================================
+      # ARTIFACTS
+      # =========================================================
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp32-test-logs
+          path: |
+            *.txt
+
