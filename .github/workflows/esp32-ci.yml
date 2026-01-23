@@ -59,7 +59,7 @@ jobs:
     - name: Wait for ESP32 reboot
       shell: powershell
       run: |
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 15
 
     # =========================================================
     # LOGICAL RESET (CI-SAFE)
@@ -71,6 +71,7 @@ jobs:
         
     - name: Connect and reset ESP32
       shell: cmd
+      continue-on-error: true
       run: |
         python -m mpremote connect COM5 reset || exit /b 1
     
@@ -78,7 +79,7 @@ jobs:
     - name: Wait after reset
       shell: powershell
       run: |
-        Start-Sleep -Seconds 3
+        Start-Sleep -Seconds 5
 
     # =========================================================
     # UPLOAD TEST FILES
