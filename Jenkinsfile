@@ -136,20 +136,20 @@ pipeline {
            ========================================================= */
 
         stage('DS18B20 Temperature Tests') {
-            steps {
-                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
-                    bat '''
-                    python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                    > temp.txt
+              steps {
+                  bat '''
+                  echo === Uploading DS18B20 runner ===
+                  python -m mpremote connect %ESP_PORT% fs cp test_runner_ds18b20.py :
 
-                    type temp.txt
+                  echo === Running DS18B20 Temperature Tests ===
+                  python -m mpremote connect %ESP_PORT% exec ^
+                  "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                  > temp.txt
 
-                    findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                    if %errorlevel%==0 exit /b 1
-                    exit /b 0
-                    '''
-                }
+                  type temp.txt
+                  findstr /C:"CI_RESULT: FAIL" temp.txt && exit /b 1
+                  '''
+          }
             }
             post {
                 failure {
