@@ -7,164 +7,206 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# 🔒 Ensure only ONE job touches COM5 at a time
+concurrency:
+  group: esp32-hardware
+  cancel-in-progress: false
+
 env:
   ESP_PORT: COM5
   FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
   PYTHONUNBUFFERED: "1"
 
+# =========================================================
+# PREFLIGHT
+# =========================================================
 jobs:
-  esp32-tests:
-    name: ESP32 Hardware Validation
+  preflight:
+    name: Preflight checks
     runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Python
+        shell: cmd
+        run: |
+          where python
+          python --version
+
+      - name: Detect COM ports
+        shell: cmd
+        run: |
+          python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+
+# =========================================================
+# SYSTEM SELF TEST (HARD GATE)
+# =========================================================
+  system-self-test:
+    name: System Self-Test (HARD GATE)
+    runs-on: self-hosted
+    needs: preflight
 
     steps:
-    # =========================================================
-    # CHECKOUT
-    # =========================================================
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # =========================================================
-    # VERIFY PYTHON
-    # =========================================================
-    - name: Verify Python Environment
-      shell: cmd
-      run: |
-        where python
-        python --version
-        python -m pip --version
+      - name: Install tools
+        shell: cmd
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install esptool mpremote
 
-    # =========================================================
-    # INSTALL HOST TOOLS
-    # =========================================================
-    - name: Install ESP32 host tools
-      shell: cmd
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install esptool mpremote
+      - name: Flash ESP32 (optional)
+        shell: cmd
+        continue-on-error: true
+        run: |
+          python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+          python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
 
-    # =========================================================
-    # FLASH ESP32 (OPTIONAL – SAME AS JENKINS)
-    # =========================================================
-    - name: Flash ESP32 (optional)
-      shell: cmd
-      continue-on-error: true
-      run: |
-        python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
-        python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+      - name: Wait for reboot
+        shell: powershell
+        run: Start-Sleep -Seconds 15
 
-    # =========================================================
-    # WAIT FOR BOOT (CI-SAFE)
-    # =========================================================
-    - name: Wait for ESP32 reboot
-      shell: powershell
-      run: |
-        Start-Sleep -Seconds 15
+      - name: Upload test files
+        shell: cmd
+        run: |
+          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-    # =========================================================
-    # LOGICAL RESET (CI-SAFE)
-    # =========================================================
-   
-    - name: Check for ESP32 device
-      run: |
-        python -c "import serial.tools.list_ports; print([port.device for port in serial.tools.list_ports.comports()])"
-        
-    - name: Connect and reset ESP32
-      shell: cmd
-      continue-on-error: true
-      run: |
-        python -m mpremote connect COM5 reset || exit /b 1
-    
+      - name: Run system self-test
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_system; test_runner_system.main()" ^
+          > system.txt
 
-    - name: Wait after reset
-      shell: powershell
-      run: |
-        Start-Sleep -Seconds 5
+          type system.txt
+          findstr /C:"CI_RESULT: PASS" system.txt >nul
+          if %errorlevel% neq 0 exit /b 1
 
-    # =========================================================
-    # UPLOAD TEST FILES
-    # =========================================================
-    - name: Upload test files
-      shell: cmd
-      run: |
-        for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_bt\*.py)   do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: system-self-test-log
+          path: system.txt
 
-    # =========================================================
-    # SYSTEM SELF TEST (HARD GATE)
-    # =========================================================
-    - name: System Self-Test (HARD GATE)
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > system.txt
-        type system.txt
+# =========================================================
+# DS18B20
+# =========================================================
+  ds18b20-tests:
+    name: DS18B20 Temperature Tests
+    runs-on: self-hosted
+    needs: system-self-test
+    continue-on-error: true
 
-        findstr /C:"CI_RESULT: PASS" system.txt >nul
-        if %errorlevel% neq 0 (
-          echo SYSTEM SELF-TEST FAILED
-          exit /b 1
-        )
+    steps:
+      - uses: actions/checkout@v4
 
-        echo SYSTEM SELF-TEST PASSED
+      - name: Upload tests
+        shell: cmd
+        run: |
+          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-    # =========================================================
-    # DS18B20 TEMPERATURE TESTS
-    # =========================================================
-    - name: DS18B20 Temperature Tests
-      shell: cmd
-      continue-on-error: true
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-        type temp.txt
+      - name: Run DS18B20 tests
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+          > temp.txt
 
-        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-        if %errorlevel%==0 exit /b 1
+          type temp.txt
+          findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
 
-    # =========================================================
-    # WI-FI TESTS
-    # =========================================================
-    - name: Wi-Fi Tests
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-        type wifi.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ds18b20-log
+          path: temp.txt
 
-        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-        if %errorlevel%==0 exit /b 1
+# =========================================================
+# WIFI
+# =========================================================
+  wifi-tests:
+    name: Wi-Fi Tests
+    runs-on: self-hosted
+    needs: system-self-test
+    continue-on-error: true
 
-    # =========================================================
-    # BLUETOOTH TESTS
-    # =========================================================
-    - name: Bluetooth Tests
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-        type bt.txt
+    steps:
+      - uses: actions/checkout@v4
 
-        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-        if %errorlevel%==0 exit /b 1
+      - name: Upload tests
+        shell: cmd
+        run: |
+          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-    # =========================================================
-    # FINAL VERDICT
-    # =========================================================
-    - name: Final CI Verdict
-      shell: cmd
-      run: |
-        echo Temperature : PASS
-        echo Wi-Fi       : PASS
-        echo Bluetooth   : PASS
-        echo ALL TEST SUITES PASSED
+      - name: Run Wi-Fi tests
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+          > wifi.txt
 
-    # =========================================================
-    # ARTIFACTS
-    # =========================================================
-    - name: Upload logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: esp32-test-logs
-        path: |
-          *.txt
+          type wifi.txt
+          findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && exit /b 1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wifi-log
+          path: wifi.txt
+
+# =========================================================
+# BLUETOOTH
+# =========================================================
+  bluetooth-tests:
+    name: Bluetooth Tests
+    runs-on: self-hosted
+    needs: system-self-test
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload tests
+        shell: cmd
+        run: |
+          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+
+      - name: Run Bluetooth tests
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec ^
+          "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+          > bt.txt
+
+          type bt.txt
+          findstr /C:"CI_RESULT: FAIL" bt.txt >nul && exit /b 1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bluetooth-log
+          path: bt.txt
+
+# =========================================================
+# FINAL VERDICT
+# =========================================================
+  final-verdict:
+    name: Final CI Verdict
+    runs-on: self-hosted
+    needs:
+      - ds18b20-tests
+      - wifi-tests
+      - bluetooth-tests
+    if: always()
+
+    steps:
+      - name: Fail build if any test failed
+        shell: cmd
+        run: |
+          echo Evaluating results...
+          if "${{ needs.ds18b20-tests.result }}"=="failure" exit /b 1
+          if "${{ needs.wifi-tests.result }}"=="failure" exit /b 1
+          if "${{ needs.bluetooth-tests.result }}"=="failure" exit /b 1
+          echo ALL TEST SUITES PASSED
+
 
