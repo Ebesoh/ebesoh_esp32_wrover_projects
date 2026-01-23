@@ -51,12 +51,11 @@ jobs:
         python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
 
     # =========================================================
-    # RESET DEVICE (CI-SAFE FIX)
+    # WAIT FOR DEVICE (CI-SAFE)
     # =========================================================
-    - name: Reset ESP32 (CI-safe)
+    - name: Wait for ESP32
       shell: cmd
       run: |
-        python -m esptool --chip esp32 --port %ESP_PORT% run
         timeout /t 3 /nobreak > nul
 
     # =========================================================
@@ -161,5 +160,6 @@ jobs:
         name: esp32-test-logs
         path: |
           *.txt
+
 
 
