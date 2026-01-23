@@ -67,7 +67,9 @@ jobs:
     - name: Reset ESP32 (MicroPython)
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import machine; machine.reset()"
+        python -m mpremote disconnect || exit /b 0
+        python -m mpremote connect COM5 reset
+        timeout /t 3 >nul
 
     - name: Wait after reset
       shell: powershell
