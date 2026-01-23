@@ -121,15 +121,23 @@ pipeline {
 
                         type temp.txt
 
-                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
+                        REM: Use PowerShell for cleaner logic
+                        powershell '''
+                            $content = Get-Content temp.txt
+                            if ($content -match "CI_RESULT: FAIL") {
+                                exit 1
+                            } else {
+                                exit 0
+                            }
+                        '''
                     ''')
 
                     env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    // ADD THIS - fail the stage immediately if test failed
+                    if (rc != 0) {
+                        error("❌ DS18B20 Tests FAILED - see temp.txt")
+                    }
                 }
             }
         }
@@ -146,15 +154,23 @@ pipeline {
 
                         type wifi.txt
 
-                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
+                        REM: Use PowerShell for cleaner logic
+                        powershell '''
+                            $content = Get-Content wifi.txt
+                            if ($content -match "CI_RESULT: FAIL") {
+                                exit 1
+                            } else {
+                                exit 0
+                            }
+                        '''
                     ''')
 
                     env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    // ADD THIS - fail the stage immediately if test failed
+                    if (rc != 0) {
+                        error("❌ Wi-Fi Tests FAILED - see wifi.txt")
+                    }
                 }
             }
         }
@@ -171,15 +187,23 @@ pipeline {
 
                         type bt.txt
 
-                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
+                        REM: Use PowerShell for cleaner logic
+                        powershell '''
+                            $content = Get-Content bt.txt
+                            if ($content -match "CI_RESULT: FAIL") {
+                                exit 1
+                            } else {
+                                exit 0
+                            }
+                        '''
                     ''')
 
                     env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    // ADD THIS - fail the stage immediately if test failed
+                    if (rc != 0) {
+                        error("❌ Bluetooth Tests FAILED - see bt.txt")
+                    }
                 }
             }
         }
@@ -187,18 +211,19 @@ pipeline {
         /* ================= FINAL VERDICT ================= */
 
         stage('Final CI Verdict') {
+            when {
+                // Only run this stage if all previous stages passed
+                expression { 
+                    env.TEMP_RESULT == 'PASS' && 
+                    env.WIFI_RESULT == 'PASS' && 
+                    env.BT_RESULT == 'PASS' 
+                }
+            }
             steps {
                 script {
                     echo "Temperature : ${env.TEMP_RESULT}"
                     echo "Wi-Fi       : ${env.WIFI_RESULT}"
                     echo "Bluetooth   : ${env.BT_RESULT}"
-
-                    if (env.TEMP_RESULT == 'FAIL' ||
-                        env.WIFI_RESULT == 'FAIL' ||
-                        env.BT_RESULT   == 'FAIL') {
-                        error('❌ One or more test suites failed')
-                    }
-
                     echo '✅ ALL TEST SUITES PASSED'
                 }
             }
@@ -208,10 +233,18 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-            echo 'CI run completed'
+            script {
+                echo "=== FINAL RESULTS ==="
+                echo "Temperature: ${env.TEMP_RESULT}"
+                echo "Wi-Fi: ${env.WIFI_RESULT}"
+                echo "Bluetooth: ${env.BT_RESULT}"
+            }
         }
-        success { echo '✅ PIPELINE SUCCESS' }
-        failure { echo '❌ PIPELINE FAILURE' }
+        success { 
+            echo '✅ PIPELINE SUCCESS' 
+        }
+        failure { 
+            echo '❌ PIPELINE FAILURE' 
+        }
     }
 }
-
