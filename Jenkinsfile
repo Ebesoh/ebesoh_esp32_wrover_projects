@@ -5,6 +5,8 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
+        WIFI_RESULT = 'PASS'
+        BT_RESULT   = 'PASS'
     }
 
     options {
@@ -52,17 +54,13 @@ pipeline {
 
         stage('Wait for ESP32 reboot') {
             steps {
-                bat '''
-                echo === Waiting for ESP32 reboot ===
-                python -c "import time; time.sleep(10)"
-                '''
+                bat 'python -c "import time; time.sleep(10)"'
             }
         }
 
         stage('Force RAW REPL') {
             steps {
                 bat '''
-                echo === Forcing RAW REPL ===
                 python -m mpremote connect %ESP_PORT% reset
                 python -c "import time; time.sleep(3)"
                 '''
@@ -72,76 +70,107 @@ pipeline {
         stage('Upload WiFi + Bluetooth Test Files') {
             steps {
                 bat '''
-                echo === Uploading WiFi test files ===
+                echo === Uploading WiFi tests ===
                 for %%f in (tests_wifi\\*.py) do (
-                    echo Uploading %%f
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
 
-                echo === Uploading Bluetooth test files ===
+                echo === Uploading Bluetooth tests ===
                 for %%f in (tests_bt\\*.py) do (
-                    echo Uploading %%f
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
                 '''
             }
         }
 
-        stage('Run WiFi Tests on ESP32') {
+        /* ---------------- WIFI TESTS ---------------- */
+
+        stage('Run WiFi Tests') {
             steps {
-                bat '''
-                echo === Running WiFi tests ===
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat '''
+                    echo === Running WiFi tests ===
 
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                > esp32_wifi_output.txt
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                    > esp32_wifi_output.txt
 
-                echo === WIFI TEST OUTPUT ===
-                type esp32_wifi_output.txt
+                    type esp32_wifi_output.txt
 
-                findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && (
-                    echo WIFI TESTS FAILED
-                    exit /b 1
-                )
-
-                echo WIFI TESTS PASSED
-                '''
+                    findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && (
+                        echo WIFI FAILED
+                        exit /b 1
+                    )
+                    '''
+                }
+            }
+            post {
+                failure {
+                    script {
+                        env.WIFI_RESULT = 'FAIL'
+                    }
+                }
             }
         }
 
-        stage('Run Bluetooth Tests on ESP32') {
+        /* ---------------- BLUETOOTH TESTS ---------------- */
+
+        stage('Run Bluetooth Tests') {
             steps {
-                bat '''
-                echo === Running Bluetooth tests ===
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat '''
+                    echo === Running Bluetooth tests ===
 
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-                > esp32_bt_output.txt
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                    > esp32_bt_output.txt
 
-                echo === BLUETOOTH TEST OUTPUT ===
-                type esp32_bt_output.txt
+                    type esp32_bt_output.txt
 
-                findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && (
-                    echo BLUETOOTH TESTS FAILED
-                    exit /b 1
-                )
+                    findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && (
+                        echo BLUETOOTH FAILED
+                        exit /b 1
+                    )
+                    '''
+                }
+            }
+            post {
+                failure {
+                    script {
+                        env.BT_RESULT = 'FAIL'
+                    }
+                }
+            }
+        }
 
-                echo BLUETOOTH TESTS PASSED
-                '''
+        /* ---------------- FINAL VERDICT ---------------- */
+
+        stage('Final CI Verdict') {
+            steps {
+                script {
+                    echo "WiFi result: ${env.WIFI_RESULT}"
+                    echo "Bluetooth result: ${env.BT_RESULT}"
+
+                    if (env.WIFI_RESULT == 'FAIL' || env.BT_RESULT == 'FAIL') {
+                        error('❌ One or more test suites failed')
+                    }
+
+                    echo '✅ All test suites passed'
+                }
             }
         }
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            echo 'ℹ️ CI run completed'
+        }
         success {
-            echo '✅ CI PIPELINE SUCCESS — WiFi and Bluetooth tests passed'
+            echo '✅ CI PIPELINE SUCCESS — WiFi and Bluetooth OK'
         }
         failure {
-            echo '❌ CI PIPELINE FAILURE — WiFi and/or Bluetooth tests failed'
-        }
-        always {
-            echo 'ℹ️ CI run completed'
-            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            echo '❌ CI PIPELINE FAILURE — Check test results'
         }
     }
 }
