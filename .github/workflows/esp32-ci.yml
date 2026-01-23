@@ -9,10 +9,11 @@ on:
 
 env:
   ESP_PORT: COM5
-  FIRMWARE_PATH: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+  FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+  PYTHONUNBUFFERED: "1"
 
 jobs:
-  esp32-hardware-tests:
+  esp32-tests:
     name: ESP32 Hardware Validation
     runs-on: self-hosted
 
@@ -24,56 +25,70 @@ jobs:
       uses: actions/checkout@v4
 
     # =========================================================
-    # VERIFY PYTHON (PREINSTALLED)
+    # VERIFY PYTHON
     # =========================================================
-    - name: Verify Python on runner
+    - name: Verify Python Environment
       shell: cmd
       run: |
-        python --version
-        pip --version
         where python
+        python --version
+        python -m pip --version
 
     # =========================================================
-    # INSTALL TOOLS
+    # INSTALL HOST TOOLS
     # =========================================================
     - name: Install ESP32 host tools
       shell: cmd
       run: |
-        pip install --upgrade pip
-        pip install esptool mpremote pyserial
+        python -m pip install --upgrade pip
+        python -m pip install esptool mpremote
 
     # =========================================================
-    # DEBUG: COM PORTS
+    # FLASH ESP32 (OPTIONAL – SAME AS JENKINS)
     # =========================================================
-    - name: List COM ports
+    - name: Flash ESP32 (optional)
       shell: cmd
+      continue-on-error: true
       run: |
-        python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+        python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+        python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
 
     # =========================================================
-    # WAIT FOR DEVICE (CI-SAFE)
+    # WAIT FOR BOOT (CI-SAFE)
     # =========================================================
-    - name: Wait for ESP32
+    - name: Wait for ESP32 reboot
+      shell: powershell
+      run: |
+        Start-Sleep -Seconds 10
+
+    # =========================================================
+    # LOGICAL RESET (CI-SAFE)
+    # =========================================================
+    - name: Reset ESP32 (MicroPython)
       shell: cmd
       run: |
-        timeout /t 3 /nobreak 
+        python -m mpremote connect %ESP_PORT% exec "import machine; machine.reset()"
+
+    - name: Wait after reset
+      shell: powershell
+      run: |
+        Start-Sleep -Seconds 3
 
     # =========================================================
     # UPLOAD TEST FILES
     # =========================================================
-    - name: Upload test files to ESP32
+    - name: Upload test files
       shell: cmd
       run: |
         for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
         for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+        for %%f in (tests_bt\*.py)   do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
         for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
     # =========================================================
     # SYSTEM SELF TEST (HARD GATE)
     # =========================================================
     - name: System Self-Test (HARD GATE)
-      id: system
       shell: cmd
       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > system.txt
@@ -81,19 +96,17 @@ jobs:
 
         findstr /C:"CI_RESULT: FAIL" system.txt >nul
         if %errorlevel%==0 (
-          echo SYSTEM TEST FAILED
+          echo SYSTEM SELF-TEST FAILED
           exit /b 1
         )
 
-        echo SYSTEM TEST PASSED
+        echo SYSTEM SELF-TEST PASSED
 
     # =========================================================
     # DS18B20 TEMPERATURE TESTS
     # =========================================================
     - name: DS18B20 Temperature Tests
-      id: temp
       shell: cmd
-      continue-on-error: true
       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
         type temp.txt
@@ -102,12 +115,10 @@ jobs:
         if %errorlevel%==0 exit /b 1
 
     # =========================================================
-    # WIFI TESTS
+    # WI-FI TESTS
     # =========================================================
     - name: Wi-Fi Tests
-      id: wifi
       shell: cmd
-      continue-on-error: true
       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
         type wifi.txt
@@ -119,9 +130,7 @@ jobs:
     # BLUETOOTH TESTS
     # =========================================================
     - name: Bluetooth Tests
-      id: bt
       shell: cmd
-      continue-on-error: true
       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
         type bt.txt
@@ -130,25 +139,15 @@ jobs:
         if %errorlevel%==0 exit /b 1
 
     # =========================================================
-    # FINAL DECISION
+    # FINAL VERDICT
     # =========================================================
     - name: Final CI Verdict
-      shell: bash
+      shell: cmd
       run: |
-        echo "=== FINAL TEST SUMMARY ==="
-        echo "System     : PASSED"
-        echo "Temperature: ${{ steps.temp.outcome }}"
-        echo "Wi-Fi      : ${{ steps.wifi.outcome }}"
-        echo "Bluetooth  : ${{ steps.bt.outcome }}"
-
-        if [[ "${{ steps.temp.outcome }}" == "failure" ||
-              "${{ steps.wifi.outcome }}" == "failure" ||
-              "${{ steps.bt.outcome }}" == "failure" ]]; then
-          echo "❌ One or more test suites failed"
-          exit 1
-        fi
-
-        echo "✅ ALL TEST SUITES PASSED"
+        echo Temperature : PASS
+        echo Wi-Fi       : PASS
+        echo Bluetooth   : PASS
+        echo ALL TEST SUITES PASSED
 
     # =========================================================
     # ARTIFACTS
@@ -160,6 +159,4 @@ jobs:
         name: esp32-test-logs
         path: |
           *.txt
-
-
 
