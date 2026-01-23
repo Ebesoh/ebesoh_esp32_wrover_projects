@@ -48,29 +48,39 @@ pipeline {
 
         /* ================= DS18B20 TEMPERATURE ================= */
 
-        stage('DS18B20 Temperature Tests') {
-            steps {
-                script {
-                    try {
-                        bat '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                        > temp.txt
+       stage('System Self-Test (HARD GATE)') {
+          steps {
+            script {
+               def rc = bat(
+                    returnStatus: true,
+                     script: '''
+                     python -m mpremote connect %ESP_PORT% exec ^
+                     "import test_runner_system; test_runner_system.main()" ^
+                     > system.txt
 
-                        type temp.txt
+                    type system.txt
 
-                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                        if not errorlevel 1 exit /b 1
-                        '''
-                        env.TEMP_RESULT = 'PASS'
-                    } catch (Exception e) {
-                        env.TEMP_RESULT = 'FAIL'
-                        unstable("DS18B20 tests failed")
-                    }
-                }
+                    REM: Look for FAIL - if found, exit with 1
+                    findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                    if %errorlevel% EQU 0 (
+                    echo ❌ FAIL found in system test
+                    exit /b 1
+                )
+                
+                REM: If we get here, no FAIL was found
+                echo ✅ No FAIL found in system test
+                exit /b 0
+                '''
+            )
+
+            if (rc != 0) {
+                error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
             }
-        }
 
+            echo '✅ SYSTEM SELF-TEST PASSED'
+        }
+    }
+}
         /* ================= WIFI ================= */
 
         stage('Wi-Fi Tests') {
