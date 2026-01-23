@@ -6,7 +6,6 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        TEMP_RESULT = 'PASS'
         WIFI_RESULT = 'PASS'
         BT_RESULT   = 'PASS'
     }
@@ -34,53 +33,28 @@ pipeline {
 
         stage('System Self-Test (HARD GATE)') {
             steps {
-                bat '''
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import test_runner_system; test_runner_system.main()" ^
-                > system.txt
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_system; test_runner_system.main()" ^
+                        > system.txt
 
-                type system.txt
-                findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                if not errorlevel 1 exit /b 1
-                '''
+                        type system.txt
+                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                        '''
+                    )
+
+                    if (rc != 0) {
+                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
+                    }
+
+                    echo '✅ SYSTEM SELF-TEST PASSED'
+                }
             }
         }
 
-        /* ================= DS18B20 TEMPERATURE ================= */
-
-       stage('System Self-Test (HARD GATE)') {
-          steps {
-            script {
-               def rc = bat(
-                    returnStatus: true,
-                     script: '''
-                     python -m mpremote connect %ESP_PORT% exec ^
-                     "import test_runner_system; test_runner_system.main()" ^
-                     > system.txt
-
-                    type system.txt
-
-                    REM: Look for FAIL - if found, exit with 1
-                    findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                    if %errorlevel% EQU 0 (
-                    echo ❌ FAIL found in system test
-                    exit /b 1
-                )
-                
-                REM: If we get here, no FAIL was found
-                echo ✅ No FAIL found in system test
-                exit /b 0
-                '''
-            )
-
-            if (rc != 0) {
-                error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
-            }
-
-            echo '✅ SYSTEM SELF-TEST PASSED'
-        }
-    }
-}
         /* ================= WIFI ================= */
 
         stage('Wi-Fi Tests') {
@@ -93,14 +67,13 @@ pipeline {
                         > wifi.txt
 
                         type wifi.txt
-
                         findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
                         if not errorlevel 1 exit /b 1
                         '''
                         env.WIFI_RESULT = 'PASS'
                     } catch (Exception e) {
                         env.WIFI_RESULT = 'FAIL'
-                        unstable("Wi-Fi tests failed")
+                        unstable('Wi-Fi tests failed')
                     }
                 }
             }
@@ -118,14 +91,13 @@ pipeline {
                         > bt.txt
 
                         type bt.txt
-
                         findstr /C:"CI_RESULT: FAIL" bt.txt >nul
                         if not errorlevel 1 exit /b 1
                         '''
                         env.BT_RESULT = 'PASS'
                     } catch (Exception e) {
                         env.BT_RESULT = 'FAIL'
-                        unstable("Bluetooth tests failed")
+                        unstable('Bluetooth tests failed')
                     }
                 }
             }
@@ -134,15 +106,18 @@ pipeline {
         /* ================= FINAL DECISION ================= */
 
         stage('Final Decision') {
-            when {
-                expression {
-                    env.TEMP_RESULT == 'FAIL' ||
-                    env.WIFI_RESULT == 'FAIL' ||
-                    env.BT_RESULT   == 'FAIL'
-                }
-            }
             steps {
-                error("❌ One or more test suites failed")
+                script {
+                    echo "Wi-Fi     : ${env.WIFI_RESULT}"
+                    echo "Bluetooth : ${env.BT_RESULT}"
+
+                    if (env.WIFI_RESULT == 'FAIL' ||
+                        env.BT_RESULT   == 'FAIL') {
+                        error('❌ One or more test suites failed')
+                    }
+
+                    echo '✅ ALL TEST SUITES PASSED'
+                }
             }
         }
     }
@@ -150,21 +125,10 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-
-            script {
-                if (env.TEMP_RESULT == 'FAIL' ||
-                    env.WIFI_RESULT == 'FAIL' ||
-                    env.BT_RESULT   == 'FAIL') {
-
-                    currentBuild.result = 'FAILURE'
-                }
-            }
         }
-
         success {
             echo '✅ PIPELINE SUCCESS'
         }
-
         failure {
             echo '❌ PIPELINE FAILURE'
         }
