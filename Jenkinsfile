@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         ESP_PORT = 'COM5'
+        FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
     }
 
@@ -21,34 +22,33 @@ pipeline {
         stage('Verify Python Environment') {
             steps {
                 bat '''
-                echo === Python Detection ===
+                echo === Python detection ===
                 where python
                 python --version
-                python -m pip --version
                 '''
             }
         }
 
-        stage('Install Host Tools') {
+        stage('Install Tooling') {
             steps {
                 bat '''
-                echo === Installing host-side tools ===
+                echo === Installing tools ===
                 python -m pip install --upgrade pip
-                python -m pip install esptool mpremote
+                python -m pip install esptool mpremote pytest
                 '''
             }
         }
 
-        stage('Flash MicroPython Firmware') {
+        stage('Flash ESP32-WROVER') {
             steps {
                 bat '''
                 echo === Flashing ESP32-WROVER ===
 
-                echo Erasing flash...
                 python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
 
-                echo Writing MicroPython firmware...
-                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+                timeout /t 5 /nobreak
+
+                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
                 '''
             }
         }
@@ -57,19 +57,17 @@ pipeline {
             steps {
                 bat '''
                 echo === Waiting for ESP32 reboot ===
-                timeout /t 6 /nobreak > nul
+                timeout /t 10 /nobreak
                 '''
             }
         }
 
-        stage('Reset MicroPython & Prepare REPL') {
+        stage('Reset ESP32 (mpremote)') {
             steps {
                 bat '''
-                echo === Resetting MicroPython ===
+                echo === Resetting ESP32 via mpremote ===
                 python -m mpremote connect %ESP_PORT% reset
-
-                echo === Waiting for MicroPython boot ===
-                timeout /t 5 /nobreak > nul
+                timeout /t 5 /nobreak
                 '''
             }
         }
@@ -78,7 +76,10 @@ pipeline {
             steps {
                 bat '''
                 echo === Uploading WiFi test files ===
+
                 python -m mpremote connect %ESP_PORT% fs cp tests\\*.py :
+
+                timeout /t 3 /nobreak
                 '''
             }
         }
@@ -86,8 +87,12 @@ pipeline {
         stage('Run WiFi Test Suite on ESP32') {
             steps {
                 bat '''
-                echo === Running WiFi test suite on device ===
-                python -m mpremote connect %ESP_PORT% run test_wifi_runner.py
+                echo === Running WiFi tests on ESP32 ===
+
+                python -m mpremote connect %ESP_PORT% exec "
+import test_wifi_runner
+test_wifi_runner.run_all_wifi_tests()
+"
                 '''
             }
         }
@@ -95,13 +100,14 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI SUCCESS: ESP32 WiFi tests passed'
+            echo 'CI PIPELINE SUCCESS: ESP32 WiFi tests passed'
         }
         failure {
-            echo '❌ CI FAILURE: ESP32 WiFi tests failed'
+            echo 'CI PIPELINE FAILURE: ESP32 WiFi tests failed'
         }
         always {
             echo 'CI run completed'
         }
     }
 }
+
