@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -6,9 +7,9 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
+        TEMP_RESULT   = 'PASS'
         WIFI_RESULT   = 'PASS'
         BT_RESULT     = 'PASS'
-        SYSTEM_RESULT = 'PASS'
     }
 
     options {
@@ -17,15 +18,15 @@ pipeline {
 
     stages {
 
-        /* ================= CHECKOUT ================= */
+        /* =========================================================
+           CHECKOUT + HOST SETUP
+           ========================================================= */
 
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-
-        /* ================= HOST SETUP ================= */
 
         stage('Verify Python Environment') {
             steps {
@@ -46,7 +47,9 @@ pipeline {
             }
         }
 
-        /* ================= FLASH ================= */
+        /* =========================================================
+           FLASH + RESET
+           ========================================================= */
 
         stage('Flash ESP32 (optional)') {
             steps {
@@ -72,19 +75,70 @@ pipeline {
             }
         }
 
-        /* ================= UPLOAD TESTS ================= */
+        /* =========================================================
+           UPLOAD ALL TEST FILES
+           ========================================================= */
 
         stage('Upload Test Files') {
             steps {
                 bat '''
-                for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                for %%f in (tests_bt\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                for %%f in (tests_system\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_temp\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_wifi\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_bt\\*.py)     do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_system\\*.py)do python -m mpremote connect %ESP_PORT% fs cp %%f :
                 '''
             }
         }
 
-        /* ================= WIFI ================= */
+        /* =========================================================
+           SYSTEM SELF TEST — HARD GATE (RUN FIRST)
+           ========================================================= */
+
+        stage('System Self-Test (Temperature + GPS + Core)') {
+            steps {
+                bat '''
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_runner_system; test_runner_system.main()" ^
+                > system.txt
+
+                type system.txt
+                findstr /C:"CI_RESULT: FAIL" system.txt && exit /b 1
+                '''
+            }
+            post {
+                failure {
+                    error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
+                }
+            }
+        }
+
+        /* =========================================================
+           DS18B20 TEMPERATURE TESTS (EXTENDED)
+           ========================================================= */
+
+        stage('DS18B20 Temperature Tests') {
+            steps {
+                catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS') {
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_ds18b20_runner; test_ds18b20_runner.main()" ^
+                    > temp.txt
+
+                    type temp.txt
+                    findstr /C:"CI_RESULT: FAIL" temp.txt && exit /b 1
+                    '''
+                }
+            }
+            post {
+                failure {
+                    script { env.TEMP_RESULT = 'FAIL' }
+                }
+            }
+        }
+
+        /* =========================================================
+           WIFI TESTS
+           ========================================================= */
 
         stage('Wi-Fi Tests') {
             steps {
@@ -106,7 +160,9 @@ pipeline {
             }
         }
 
-        /* ================= BLUETOOTH ================= */
+        /* =========================================================
+           BLUETOOTH TESTS
+           ========================================================= */
 
         stage('Bluetooth Tests') {
             steps {
@@ -128,47 +184,25 @@ pipeline {
             }
         }
 
-        /* ================= SYSTEM (HARD GATE) ================= */
-
-        stage('System Self-Test (Gate)') {
-            steps {
-                bat '''
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import test_runner_system; test_runner_system.main()" ^
-                > system.txt
-
-                type system.txt
-                findstr /C:"CI_RESULT: FAIL" system.txt && exit /b 1
-                '''
-            }
-            post {
-                failure {
-                    script {
-                        env.SYSTEM_RESULT = 'FAIL'
-                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE HALTED')
-                    }
-                }
-            }
-        }
-
-        /* ================= FINAL VERDICT ================= */
+        /* =========================================================
+           FINAL VERDICT
+           ========================================================= */
 
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "Wi-Fi Result: ${env.WIFI_RESULT}"
-                    echo "Bluetooth Result: ${env.BT_RESULT}"
-                    echo "System Result: ${env.SYSTEM_RESULT}"
+                    echo "Temperature result: ${env.TEMP_RESULT}"
+                    echo "Wi-Fi result:        ${env.WIFI_RESULT}"
+                    echo "Bluetooth result:   ${env.BT_RESULT}"
 
-                    if (env.SYSTEM_RESULT == 'FAIL') {
-                        error('Pipeline failed due to system self-test')
+                    if (env.TEMP_RESULT == 'FAIL' ||
+                        env.WIFI_RESULT == 'FAIL' ||
+                        env.BT_RESULT == 'FAIL') {
+
+                        error('❌ One or more test suites failed')
                     }
 
-                    if (env.WIFI_RESULT == 'FAIL' || env.BT_RESULT == 'FAIL') {
-                        error('One or more functional test suites failed')
-                    }
-
-                    echo '✅ ALL TESTS PASSED'
+                    echo '✅ ALL TEST SUITES PASSED'
                 }
             }
         }
@@ -187,5 +221,3 @@ pipeline {
         }
     }
 }
-
-
