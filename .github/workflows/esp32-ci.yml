@@ -101,7 +101,7 @@ jobs:
         python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > system.txt
         type system.txt
 
-        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+        findstr /C:"CI_RESULT: PASS" system.txt >nul
         if %errorlevel%==0 (
           echo SYSTEM SELF-TEST FAILED
           exit /b 1
