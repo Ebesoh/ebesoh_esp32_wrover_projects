@@ -11,9 +11,13 @@ pipeline {
         BT_RESULT   = 'PASS'
     }
 
-    options { timestamps() }
+    options {
+        timestamps()
+    }
 
     stages {
+
+        /* ================= CHECKOUT + SETUP ================= */
 
         stage('Checkout') {
             steps { checkout scm }
@@ -38,6 +42,8 @@ pipeline {
             }
         }
 
+        /* ================= FLASH + RESET ================= */
+
         stage('Flash ESP32 (optional)') {
             steps {
                 bat '''
@@ -60,6 +66,8 @@ pipeline {
             }
         }
 
+        /* ================= UPLOAD TEST FILES ================= */
+
         stage('Upload Test Files') {
             steps {
                 bat '''
@@ -71,107 +79,120 @@ pipeline {
             }
         }
 
-        /* ===== SYSTEM HARD GATE ===== */
+        /* ================= SYSTEM SELF TEST (HARD GATE) ================= */
 
         stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    def rc = bat(returnStatus: true, script: '''
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_system; test_runner_system.main()" ^
                         > system.txt
 
                         type system.txt
                         findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
-                    ''')
+                        if %errorlevel%==0 exit /b 1
+                        exit /b 0
+                        '''
+                    )
 
                     if (rc != 0) {
                         error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
                     }
+
+                    echo '✅ SYSTEM SELF-TEST PASSED'
                 }
             }
         }
 
+        /* ================= DS18B20 TEMPERATURE ================= */
+
         stage('DS18B20 Temperature Tests') {
             steps {
-                script {
-                    def rc = bat(returnStatus: true, script: '''
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
                         > temp.txt
 
                         type temp.txt
                         findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
-                    ''')
+                        if %errorlevel%==0 exit /b 1
+                        exit /b 0
+                        ''')
 
-                    env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    if (rc != 0) { error('❌ DS18B20 TESTS FAILED') }
+                        env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    }
                 }
             }
         }
 
+        /* ================= WIFI ================= */
+
         stage('Wi-Fi Tests') {
             steps {
-                script {
-                    def rc = bat(returnStatus: true, script: '''
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
                         > wifi.txt
 
                         type wifi.txt
                         findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
-                    ''')
+                        if %errorlevel%==0 exit /b 1
+                        exit /b 0
+                        ''')
 
-                    env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    if (rc != 0) { error('❌ WIFI TESTS FAILED') }
+                        env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    }
                 }
             }
         }
 
+        /* ================= BLUETOOTH ================= */
+
         stage('Bluetooth Tests') {
             steps {
-                script {
-                    def rc = bat(returnStatus: true, script: '''
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" ^
                         > bt.txt
 
                         type bt.txt
                         findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
-                    ''')
+                        if %errorlevel%==0 exit /b 1
+                        exit /b 0
+                        ''')
 
-                    env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    if (rc != 0) { error('❌ BLUETOOTH TESTS FAILED') }
+                        env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    }
                 }
             }
         }
 
+        /* ================= FINAL VERDICT ================= */
+
         stage('Final CI Verdict') {
             steps {
-                echo "Temperature : ${env.TEMP_RESULT}"
-                echo "Wi-Fi       : ${env.WIFI_RESULT}"
-                echo "Bluetooth   : ${env.BT_RESULT}"
-                echo '✅ ALL TEST SUITES PASSED'
+                script {
+                    echo "Temperature : ${env.TEMP_RESULT}"
+                    echo "Wi-Fi       : ${env.WIFI_RESULT}"
+                    echo "Bluetooth   : ${env.BT_RESULT}"
+
+                    if (env.TEMP_RESULT == 'FAIL' ||
+                        env.WIFI_RESULT == 'FAIL' ||
+                        env.BT_RESULT   == 'FAIL') {
+                        error('❌ One or more non-critical test suites failed')
+                    }
+
+                    echo '✅ ALL TEST SUITES PASSED'
+                }
             }
         }
     }
@@ -179,8 +200,13 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            echo 'CI run completed'
         }
-        success { echo '✅ PIPELINE SUCCESS' }
-        failure { echo '❌ PIPELINE FAILURE' }
+        success {
+            echo '✅ PIPELINE SUCCESS'
+        }
+        failure {
+            echo '❌ PIPELINE FAILURE'
+        }
     }
 }
