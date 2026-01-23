@@ -33,7 +33,7 @@ pipeline {
         stage('Install Host Tools') {
             steps {
                 bat '''
-                echo === Installing ESP32 tools ===
+                echo === Installing ESP32 host tools ===
                 python -m pip install --upgrade pip
                 python -m pip install esptool mpremote
                 '''
@@ -43,9 +43,9 @@ pipeline {
         stage('Flash ESP32 (optional)') {
             steps {
                 bat '''
-                echo === Flashing ESP32-WROVER ===
-                python -m esptool --chip esp32 --port %ESP_PORT% erase-flash || exit /b 0
-                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE% || exit /b 0
+                echo === Flashing ESP32-WROVER (optional) ===
+                python -m esptool --chip esp32 --port %ESP_PORT% erase-flash || echo Skipping erase
+                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE% || echo Skipping flash
                 '''
             }
         }
@@ -59,11 +59,24 @@ pipeline {
             }
         }
 
+        stage('Force RAW REPL') {
+            steps {
+                bat '''
+                echo === Forcing RAW REPL ===
+                python -m mpremote connect %ESP_PORT% reset
+                python -c "import time; time.sleep(3)"
+                '''
+            }
+        }
+
         stage('Upload WiFi Test Files') {
             steps {
                 bat '''
                 echo === Uploading WiFi test files ===
-                python -m mpremote connect %ESP_PORT% fs cp tests :
+                for %%f in (tests\\*.py) do (
+                    echo Uploading %%f
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
                 '''
             }
         }
