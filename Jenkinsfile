@@ -5,8 +5,10 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-        WIFI_RESULT = 'PASS'
-        BT_RESULT   = 'PASS'
+
+        SYSTEM_RESULT = 'PASS'
+        WIFI_RESULT   = 'PASS'
+        BT_RESULT     = 'PASS'
     }
 
     options {
@@ -67,9 +69,14 @@ pipeline {
             }
         }
 
-        stage('Upload WiFi + Bluetooth Test Files') {
+        stage('Upload All Test Files') {
             steps {
                 bat '''
+                echo === Uploading system tests ===
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+
                 echo === Uploading WiFi tests ===
                 for %%f in (tests_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
@@ -80,6 +87,36 @@ pipeline {
                     python -m mpremote connect %ESP_PORT% fs cp %%f :
                 )
                 '''
+            }
+        }
+
+        /* ---------------- SYSTEM TESTS ---------------- */
+
+        stage('Run System Self-Tests') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat '''
+                    echo === Running system self-tests ===
+
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_system; test_runner_system.main()" ^
+                    > esp32_system_output.txt
+
+                    type esp32_system_output.txt
+
+                    findstr /C:"CI_RESULT: FAIL" esp32_system_output.txt && (
+                        echo SYSTEM TESTS FAILED
+                        exit /b 1
+                    )
+                    '''
+                }
+            }
+            post {
+                failure {
+                    script {
+                        env.SYSTEM_RESULT = 'FAIL'
+                    }
+                }
             }
         }
 
@@ -98,7 +135,7 @@ pipeline {
                     type esp32_wifi_output.txt
 
                     findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && (
-                        echo WIFI FAILED
+                        echo WIFI TESTS FAILED
                         exit /b 1
                     )
                     '''
@@ -128,7 +165,7 @@ pipeline {
                     type esp32_bt_output.txt
 
                     findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && (
-                        echo BLUETOOTH FAILED
+                        echo BLUETOOTH TESTS FAILED
                         exit /b 1
                     )
                     '''
@@ -148,10 +185,13 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "WiFi result: ${env.WIFI_RESULT}"
+                    echo "System result: ${env.SYSTEM_RESULT}"
+                    echo "WiFi result  : ${env.WIFI_RESULT}"
                     echo "Bluetooth result: ${env.BT_RESULT}"
 
-                    if (env.WIFI_RESULT == 'FAIL' || env.BT_RESULT == 'FAIL') {
+                    if (env.SYSTEM_RESULT == 'FAIL' ||
+                        env.WIFI_RESULT   == 'FAIL' ||
+                        env.BT_RESULT     == 'FAIL') {
                         error('❌ One or more test suites failed')
                     }
 
@@ -167,7 +207,7 @@ pipeline {
             echo 'ℹ️ CI run completed'
         }
         success {
-            echo '✅ CI PIPELINE SUCCESS — WiFi and Bluetooth OK'
+            echo '✅ CI PIPELINE SUCCESS — All subsystems OK'
         }
         failure {
             echo '❌ CI PIPELINE FAILURE — Check test results'
