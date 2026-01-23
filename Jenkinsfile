@@ -69,6 +69,8 @@ pipeline {
             }
         }
 
+        /* ===================== WIFI TESTS ===================== */
+
         stage('Upload WiFi Test Files') {
             steps {
                 bat '''
@@ -88,17 +90,63 @@ pipeline {
 
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                > esp32_test_output.txt
+                > esp32_wifi_output.txt
 
-                echo === ESP32 OUTPUT ===
-                type esp32_test_output.txt
+                echo === ESP32 WIFI OUTPUT ===
+                type esp32_wifi_output.txt
 
-                findstr /C:"CI_RESULT: FAIL" esp32_test_output.txt && (
-                    echo ESP32 TESTS FAILED
+                findstr /C:"CI_RESULT: FAIL" esp32_wifi_output.txt && (
+                    echo WIFI TESTS FAILED
                     exit /b 1
                 )
 
-                echo ESP32 TESTS PASSED
+                findstr /C:"CI_RESULT: UNSTABLE" esp32_wifi_output.txt && (
+                    echo WIFI TESTS UNSTABLE
+                    exit /b 1
+                )
+
+                echo WIFI TESTS PASSED
+                '''
+            }
+        }
+
+        /* ===================== BLUETOOTH TESTS ===================== */
+
+        stage('Upload Bluetooth Test Files') {
+            steps {
+                bat '''
+                echo === Uploading Bluetooth test files ===
+                for %%f in (tests_bt\\*.py) do (
+                    echo Uploading %%f
+                    python -m mpremote connect %ESP_PORT% fs cp %%f :
+                )
+                '''
+            }
+        }
+
+        stage('Run Bluetooth Tests on ESP32') {
+            steps {
+                bat '''
+                echo === Running Bluetooth tests on ESP32 ===
+
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                > esp32_bt_output.txt
+
+                echo === ESP32 BLUETOOTH OUTPUT ===
+                type esp32_bt_output.txt
+
+                findstr /C:"CI_RESULT: FAIL" esp32_bt_output.txt && (
+                    echo BLUETOOTH TESTS FAILED
+                    exit /b 1
+                )
+
+                findstr /C:"CI_RESULT: UNSTABLE" esp32_bt_output.txt && (
+                    echo BLUETOOTH TESTS UNSTABLE
+                    exit /b 1
+                )
+
+                echo BLUETOOTH TESTS PASSED
                 '''
             }
         }
@@ -106,10 +154,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI PIPELINE SUCCESS — ESP32 WiFi tests passed'
+            echo '✅ CI PIPELINE SUCCESS — ESP32 WiFi + Bluetooth tests passed'
         }
         failure {
-            echo '❌ CI PIPELINE FAILURE — ESP32 WiFi tests failed'
+            echo '❌ CI PIPELINE FAILURE — ESP32 WiFi or Bluetooth tests failed'
         }
         always {
             echo 'ℹ️ CI run completed'
