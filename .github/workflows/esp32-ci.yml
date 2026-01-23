@@ -56,7 +56,7 @@ jobs:
     - name: Reset ESP32 (CI-safe)
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import machine; machine.reset()"
+        python -m esptool --chip esp32 --port %ESP_PORT% run
         timeout /t 3 /nobreak > nul
 
     # =========================================================
@@ -161,4 +161,5 @@ jobs:
         name: esp32-test-logs
         path: |
           *.txt
+
 
