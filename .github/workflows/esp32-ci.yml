@@ -8,7 +8,7 @@ on:
 jobs:
   esp32-tests:
     # IMPORTANT: must be self-hosted Windows with ESP32 attached
-    runs-on: self-hosted
+    runs-on: windows-latest
 
     env:
       ESP_PORT: COM5
