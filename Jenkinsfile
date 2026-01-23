@@ -46,7 +46,7 @@ pipeline {
 
                 python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
 
-                timeout /t 5 /nobreak
+                ping 127.0.0.1 -n 6 > nul
 
                 python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
                 '''
@@ -57,7 +57,7 @@ pipeline {
             steps {
                 bat '''
                 echo === Waiting for ESP32 reboot ===
-                timeout /t 10 /nobreak
+                ping 127.0.0.1 -n 11 > nul
                 '''
             }
         }
@@ -67,7 +67,7 @@ pipeline {
                 bat '''
                 echo === Resetting ESP32 via mpremote ===
                 python -m mpremote connect %ESP_PORT% reset
-                timeout /t 5 /nobreak
+                ping 127.0.0.1 -n 6 > nul
                 '''
             }
         }
@@ -76,10 +76,8 @@ pipeline {
             steps {
                 bat '''
                 echo === Uploading WiFi test files ===
-
                 python -m mpremote connect %ESP_PORT% fs cp tests\\*.py :
-
-                timeout /t 3 /nobreak
+                ping 127.0.0.1 -n 4 > nul
                 '''
             }
         }
