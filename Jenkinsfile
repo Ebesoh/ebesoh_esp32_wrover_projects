@@ -4,8 +4,8 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        FAILED_TESTS = ''
-        HARDWARE_TEST_PASSED = 'false'  // This creates env.HARDWARE_TEST_PASSED
+        HARDWARE_TEST_PASSED = 'false'
+        FAILED_TESTS = 'false'
     }
 
     options {
@@ -14,6 +14,9 @@ pipeline {
     }
 
     stages {
+        /* =========================================================
+           SIMPLIFIED PREFLIGHT
+        ========================================================= */
         stage('Preflight') {
             steps {
                 checkout scm
@@ -22,87 +25,134 @@ pipeline {
             }
         }
 
+        /* =========================================================
+           TEMPERATURE TEST
+        ========================================================= */
         stage('Temperature Test (DS18B20)') {
-            options { timeout(time: 2, unit: 'MINUTES') }
+            options {
+                timeout(time: 2, unit: 'MINUTES')
+            }
             steps {
                 script {
-                    echo "=== Starting DS18B20 Test ==="
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                        ''')
-                        
-                        if (rc != 0) {
-                            echo "❌ DS18B20 Test FAILED"
-                            env.FAILED_TESTS += (env.FAILED_TESTS ? ', DS18B20' : 'DS18B20')
-                            env.HARDWARE_TEST_PASSED = 'false'  // ✅ Use env. prefix
-                            error('DS18B20 test failed')
+                    echo "=== STARTING DS18B20 TEMPERATURE TEST ==="
+                    
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+                        '''
+                    )
+                    
+                    if (rc != 0) {
+                        echo "❌ TEMPERATURE TEST FAILED (rc=${rc})"
+                        if (!env.FAILED_TESTS) {
+                            env.FAILED_TESTS = 'DS18B20'
                         } else {
-                            echo "✅ DS18B20 Test PASSED"
+                            env.FAILED_TESTS = env.FAILED_TESTS + ', DS18B20'
                         }
+                        env.HARDWARE_TEST_PASSED = 'false'
+                        currentBuild.result = 'FAILURE'
+                    } else {
+                        echo "✅ TEMPERATURE TEST PASSED"
                     }
+                    
+                    // Show first few lines of log for debugging
+                    bat '''
+                        echo "=== TEMPERATURE TEST LOG (first 20 lines) ==="
+                        if exist temp.txt (
+                            head -n 20 temp.txt || type temp.txt 2>nul | findstr /n "." | select -first 20
+                        ) else (
+                            echo "temp.txt not found"
+                        )
+                    '''
                 }
             }
         }
 
+        /* =========================================================
+           WI-FI TEST
+        ========================================================= */
         stage('Wi-Fi Test') {
-            options { timeout(time: 5, unit: 'MINUTES') }
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
             steps {
                 script {
-                    echo "=== Starting Wi-Fi Test ==="
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                        ''')
-                        
-                        if (rc != 0) {
-                            echo "❌ Wi-Fi Test FAILED"
-                            env.FAILED_TESTS += (env.FAILED_TESTS ? ', Wi-Fi' : 'Wi-Fi')
-                            env.HARDWARE_TEST_PASSED = 'false'  // ✅ Use env. prefix
-                            error('Wi-Fi test failed')
+                    echo "=== STARTING WI-FI TEST ==="
+                    
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
+                        '''
+                    )
+                    
+                    if (rc != 0) {
+                        echo "❌ WI-FI TEST FAILED (rc=${rc})"
+                        if (!env.FAILED_TESTS) {
+                            env.FAILED_TESTS = 'Wi-Fi'
                         } else {
-                            echo "✅ Wi-Fi Test PASSED"
+                            env.FAILED_TESTS = env.FAILED_TESTS + ', Wi-Fi'
                         }
+                        env.HARDWARE_TEST_PASSED = 'false'
+                        currentBuild.result = 'FAILURE'
+                    } else {
+                        echo "✅ WI-FI TEST PASSED"
                     }
+                    
+                    // Show first few lines of log for debugging
+                    bat '''
+                        echo "=== WI-FI TEST LOG (first 20 lines) ==="
+                        if exist wifi.txt (
+                            head -n 20 wifi.txt || type wifi.txt 2>nul | findstr /n "." | select -first 20
+                        ) else (
+                            echo "wifi.txt not found"
+                        )
+                    '''
                 }
             }
         }
 
-        stage('Bluetooth Test') {
-            options { timeout(time: 3, unit: 'MINUTES') }
+        /* =========================================================
+           DEBUG OUTPUT
+        ========================================================= */
+        stage('Debug Output') {
             steps {
                 script {
-                    echo "=== Starting Bluetooth Test ==="
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                        ''')
-                        
-                        if (rc != 0) {
-                            echo "❌ Bluetooth Test FAILED"
-                            env.FAILED_TESTS += (env.FAILED_TESTS ? ', Bluetooth' : 'Bluetooth')
-                            env.HARDWARE_TEST_PASSED = 'false'  // ✅ Use env. prefix
-                            error('Bluetooth test failed')
-                        } else {
-                            echo "✅ Bluetooth Test PASSED"
-                        }
-                    }
+                    echo "=== DEBUG INFORMATION ==="
+                    echo "COM Port: ${env.ESP_PORT}"
+                    echo "Failed Tests: ${env.FAILED_TESTS ?: 'None'}"
+                    echo "Hardware Test Passed: ${env.HARDWARE_TEST_PASSED}"
+                    
+                    // Check if log files exist and their size
+                    bat '''
+                        echo "=== LOG FILE STATUS ==="
+                        for %%f in (temp.txt wifi.txt) do (
+                            if exist %%f (
+                                echo "%%f exists, size:"
+                                for /f "tokens=3" %%s in ('dir "%%f" ^| find "%%f"') do echo %%s
+                            ) else (
+                                echo "%%f does NOT exist"
+                            )
+                        )
+                    '''
                 }
             }
         }
 
+        /* =========================================================
+           FINAL VERDICT
+        ========================================================= */
         stage('Final Verdict') {
             steps {
                 script {
-                    echo "=== FINAL RESULTS ==="
-                    echo "Failed Tests: ${env.FAILED_TESTS ?: 'None'}"
-                    echo "Hardware Test Passed: ${env.HARDWARE_TEST_PASSED}"  // ✅ Use env. prefix
+                    echo "=== FINAL VERDICT ==="
                     
-                    if (env.HARDWARE_TEST_PASSED == 'false') {  // ✅ Use env. prefix
-                        error("❌ FINAL VERDICT: Tests failed: ${env.FAILED_TESTS}")
+                    if (env.HARDWARE_TEST_PASSED != 'true') {
+                        echo "FAILED TESTS: ${env.FAILED_TESTS}"
+                        error("❌ FINAL VERDICT: Hardware tests failed")
                     } else {
                         echo "🎉 FINAL VERDICT: ALL TESTS PASSED"
                     }
@@ -113,13 +163,16 @@ pipeline {
 
     post {
         always {
+            echo "=== ARCHIVING LOGS ==="
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-        }
-        success {
-            echo '✅ Pipeline SUCCESS'
+            echo "Archived logs: temp.txt, wifi.txt"
         }
         failure {
-            echo '❌ Pipeline FAILED'
+            echo '❌ PIPELINE FAILED'
+            echo 'Check individual test stages above'
+        }
+        success {
+            echo '✅ PIPELINE SUCCESS'
         }
     }
 }
