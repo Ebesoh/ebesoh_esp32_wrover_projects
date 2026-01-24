@@ -5,10 +5,6 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-
-        SYSTEM_TEST_PASSED   = 'false'
-        HARDWARE_TEST_PASSED = 'true'   // assume pass, mark false on failure
-        FAILED_TESTS = ''
     }
 
     options {
@@ -17,6 +13,19 @@ pipeline {
     }
 
     stages {
+        /* =========================================================
+           INITIALIZE VARIABLES
+        ========================================================= */
+        stage('Initialize') {
+            steps {
+                script {
+                    // Set global variables here
+                    env.SYSTEM_TEST_PASSED = 'false'
+                    env.HARDWARE_TEST_PASSED = 'true'
+                    env.FAILED_TESTS = ''
+                }
+            }
+        }
 
         /* =========================================================
            PREFLIGHT
