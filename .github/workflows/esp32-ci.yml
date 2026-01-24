@@ -1,10 +1,6 @@
 name: ESP32 Hardware Testing
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 # 🔒 One hardware user at a time
