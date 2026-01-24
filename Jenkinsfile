@@ -5,26 +5,20 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-        // Remove these from here - they're read-only!
-        // SYSTEM_TEST_PASSED   = 'false'
-        // HARDWARE_TEST_PASSED = 'true'
-        // FAILED_TESTS = ''
     }
 
     options {
         timestamps()
-        disableConcurrentBuilds()
+        disableConcurrentBuilds(abortPrevious: true)
     }
 
     stages {
-
         /* =========================================================
            INITIALIZE VARIABLES
         ========================================================= */
         stage('Initialize Variables') {
             steps {
                 script {
-                    // Initialize variables here - they'll be mutable
                     env.SYSTEM_TEST_PASSED = 'false'
                     env.HARDWARE_TEST_PASSED = 'true'
                     env.FAILED_TESTS = ''
@@ -34,7 +28,7 @@ pipeline {
 
         /* =========================================================
            Setup
-        =========================================================------*/
+        ========================================================= */
         stage('Preflight') {
             steps {
                 checkout scm
@@ -100,7 +94,6 @@ pipeline {
                         env.SYSTEM_TEST_PASSED = 'false'
                         error('System Self-Test failed')
                     } else {
-                        // Explicitly set to true when test passes
                         env.SYSTEM_TEST_PASSED = 'true'
                     }
                 }
@@ -108,41 +101,92 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS
+           HARDWARE TESTS - TEMPERATURE
         ========================================================= */
-        stage('Hardware Tests') {
+        stage('Temperature Test (DS18B20)') {
             steps {
                 script {
-                    def failures = []
-
-                    if (bat(returnStatus: true, script: '''
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                    ''')) {
-                        failures << 'DS18B20'
+                        '''
+                    )
+                    
+                    if (rc != 0) {
+                        if (!env.FAILED_TESTS) {
+                            env.FAILED_TESTS = 'DS18B20'
+                        } else {
+                            env.FAILED_TESTS = env.FAILED_TESTS + ', DS18B20'
+                        }
+                        env.HARDWARE_TEST_PASSED = 'false'
                     }
+                }
+            }
+        }
 
-                    if (bat(returnStatus: true, script: '''
+        /* =========================================================
+           HARDWARE TESTS - WI-FI
+        ========================================================= */
+        stage('Wi-Fi Test') {
+            steps {
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                    ''')) {
-                        failures << 'Wi-Fi'
+                        '''
+                    )
+                    
+                    if (rc != 0) {
+                        if (!env.FAILED_TESTS) {
+                            env.FAILED_TESTS = 'Wi-Fi'
+                        } else {
+                            env.FAILED_TESTS = env.FAILED_TESTS + ', Wi-Fi'
+                        }
+                        env.HARDWARE_TEST_PASSED = 'false'
                     }
+                }
+            }
+        }
 
-                    if (bat(returnStatus: true, script: '''
+        /* =========================================================
+           HARDWARE TESTS - BLUETOOTH
+        ========================================================= */
+        stage('Bluetooth Test') {
+            steps {
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                    ''')) {
-                        failures << 'Bluetooth'
-                    }
-
-                    // THIS LINE MAKES STAGE RED
-                    if (failures) {
+                        '''
+                    )
+                    
+                    if (rc != 0) {
+                        if (!env.FAILED_TESTS) {
+                            env.FAILED_TESTS = 'Bluetooth'
+                        } else {
+                            env.FAILED_TESTS = env.FAILED_TESTS + ', Bluetooth'
+                        }
                         env.HARDWARE_TEST_PASSED = 'false'
-                        env.FAILED_TESTS = failures.join(', ')
-                        error("Hardware tests failed: ${failures.join(', ')}")
+                    }
+                }
+            }
+        }
+
+        /* =========================================================
+           HARDWARE TESTS VERDICT
+        ========================================================= */
+        stage('Hardware Tests Verdict') {
+            steps {
+                script {
+                    if (env.HARDWARE_TEST_PASSED == 'false') {
+                        error("Hardware tests failed: ${env.FAILED_TESTS}")
                     } else {
-                        // Explicitly set to true when all tests pass
                         env.HARDWARE_TEST_PASSED = 'true'
                     }
                 }
@@ -150,7 +194,7 @@ pipeline {
         }
 
         /* =========================================================
-           FINAL VERDICT (EXPLICIT AUTHORITY)
+           FINAL CI VERDICT (EXPLICIT AUTHORITY)
         ========================================================= */
         stage('Final CI Verdict') {
             steps {
