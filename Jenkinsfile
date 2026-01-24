@@ -21,7 +21,7 @@ pipeline {
                 script {
                     env.SYSTEM_TEST_PASSED = 'false'
                     env.HARDWARE_TEST_PASSED = 'true'
-                    env.CI_RESULT_WiFi = 'true'
+                    env.CI_RESULT_WiFi = 'false'
                     env.FAILED_TESTS = ''
                     
                 }
