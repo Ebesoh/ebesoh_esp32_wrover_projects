@@ -110,35 +110,21 @@ jobs:
           path: system.txt
 
 # =========================================================
-# DS18B20
+# ALL HARDWARE TESTS (DS18B20, Wi-Fi, Bluetooth)
 # =========================================================
-  ds18b20-tests:
-    name: DS18B20 Temperature Tests
+  hardware-tests:
+    name: Hardware Tests (Temperature, Wi-Fi, Bluetooth)
     runs-on: self-hosted
     needs: system-self-test
 
     steps:
-      - name: Run DS18B20 tests
+      - name: Run DS18B20 Temperature tests
         shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
           type temp.txt
           findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ds18b20-log
-          path: temp.txt
-
-# =========================================================
-# WIFI
-# =========================================================
-  wifi-tests:
-    name: Wi-Fi Tests
-    runs-on: self-hosted
-
-    steps:
       - name: Run Wi-Fi tests
         shell: cmd
         run: |
@@ -146,20 +132,6 @@ jobs:
           type wifi.txt
           findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && exit /b 1
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: wifi-log
-          path: wifi.txt
-
-# =========================================================
-# BLUETOOTH
-# =========================================================
-  bluetooth-tests:
-    name: Bluetooth Tests
-    runs-on: self-hosted
-
-    steps:
       - name: Run Bluetooth tests
         shell: cmd
         run: |
@@ -170,8 +142,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: bluetooth-log
-          path: bt.txt
+          name: hardware-test-logs
+          path: |
+            temp.txt
+            wifi.txt
+            bt.txt
 
 # =========================================================
 # FINAL VERDICT
@@ -180,16 +155,20 @@ jobs:
     name: Final CI Verdict
     runs-on: self-hosted
     needs:
-      - ds18b20-tests
-      - wifi-tests
-      - bluetooth-tests
+      - preflight
+      - flash-firmware
+      - upload-test-files
+      - system-self-test
+      - hardware-tests
     if: always()
 
     steps:
       - name: Evaluate results
         shell: cmd
         run: |
-          if "${{ needs.ds18b20-tests.result }}"=="failure" exit /b 1
-          if "${{ needs.wifi-tests.result }}"=="failure" exit /b 1
-          if "${{ needs.bluetooth-tests.result }}"=="failure" exit /b 1
+          if "${{ needs.preflight.result }}"=="failure" exit /b 1
+          if "${{ needs.flash-firmware.result }}"=="failure" exit /b 1
+          if "${{ needs.upload-test-files.result }}"=="failure" exit /b 1
+          if "${{ needs.system-self-test.result }}"=="failure" exit /b 1
+          if "${{ needs.hardware-tests.result }}"=="failure" exit /b 1
           echo ALL TEST SUITES PASSED
