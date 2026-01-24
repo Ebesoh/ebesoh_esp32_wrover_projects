@@ -4,13 +4,79 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        FAILED_TESTS = ''
     }
 
     options { timestamps() }
 
     stages {
-        // ... earlier stages remain the same ...
+
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Verify Python Environment') {
+            steps {
+                bat '''
+                where python
+                python --version
+                python -m pip --version
+                '''
+            }
+        }
+
+        stage('Install Host Tools') {
+            steps {
+                bat '''
+                python -m pip install --upgrade pip
+                python -m pip install esptool mpremote
+                '''
+            }
+        }
+
+        /* ===== UPLOAD TEST FILES ===== */
+        
+        stage('Upload Test Files') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat '''
+                    echo Uploading test files...
+                    
+                    REM Upload temperature test files only
+                    for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                    
+                    echo ✅ Test files uploaded successfully
+                    '''
+                }
+            }
+        }
+
+        /* ===== SYSTEM HARD GATE ===== */
+
+        stage('System Self-Test (HARD GATE)') {
+            steps {
+                script {
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_system; test_runner_system.main()" ^
+                        > system.txt
+
+                        type system.txt
+                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
+                    ''')
+
+                    if (rc != 0) {
+                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
+                    }
+                }
+            }
+        }
+
+        /* ===== TEMPERATURE TEST ===== */
 
         stage('DS18B20 Temperature Tests') {
             steps {
@@ -31,32 +97,43 @@ pipeline {
                         )
                     ''')
 
+                    // REMOVED: env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    // REMOVED: if (rc != 0) { env.ANY_TEST_FAILED = 'true' }
+                    
+                    // ADDED: Fail the stage immediately if test fails
                     if (rc != 0) {
-                        echo "DS18B20 test failed (will fail pipeline at end)"
-                        env.FAILED_TESTS += 'DS18B20, '
+                        error('❌ DS18B20 TEMPERATURE TEST FAILED')
                     }
                 }
             }
         }
 
-        /* ===== FINAL VERDICT ===== --------------*/
+        /* ===== FINAL VERDICT ===== */
+        // This stage only runs if all previous stages passed
 
         stage('Final CI Verdict') {
             steps {
                 script {
                     echo "=== FINAL RESULT ==="
-                    
-                    if (env.FAILED_TESTS) {
-                        // Remove trailing comma and space
-                        def failedList = env.FAILED_TESTS.substring(0, env.FAILED_TESTS.length() - 2)
-                        error("❌ TESTS FAILED: ${failedList}")
-                    } else {
-                        echo '✅ ALL TESTS PASSED'
-                    }
+                    echo '✅ ALL TESTS PASSED'
                 }
             }
         }
     }
 
-    // ... post section remains the same ...
+    post {
+        always {
+            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            script {
+                echo "=== PIPELINE COMPLETED ==="
+                echo "Final build result: ${currentBuild.result ?: 'SUCCESS'}"
+            }
+        }
+        success { 
+            echo '✅ PIPELINE COMPLETED SUCCESSFULLY' 
+        }
+        failure { 
+            echo '❌ PIPELINE FAILURE - Test(s) failed' 
+        }
+    }
 }
