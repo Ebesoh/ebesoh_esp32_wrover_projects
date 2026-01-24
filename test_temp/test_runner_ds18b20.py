@@ -5,21 +5,15 @@ Purpose:
     Execute all DS18B20 validation tests in a controlled sequence and
     produce a single CI verdict.
 
-Tests Included:
-    1. Accuracy validation against reference temperature
-    2. Fault injection (sensor unplug during runtime)
-    3. Stability and jitter detection over multiple samples
-
 CI Rules:
     - Any FAIL => CI_RESULT: FAIL
     - All PASS => CI_RESULT: PASS
-    - Reasons for failure are always printed
     - Exit code reflects CI_RESULT
 
 Intended Use:
-    - CI pipelines (Jenkins, GitHub Actions via mpremote)
+    - Jenkins CI via mpremote
     - Manufacturing test
-    - Hardware bring-up validation
+    - Hardware validation
 """
 
 import sys
@@ -29,27 +23,26 @@ import time
 # Import individual DS18B20 tests
 # -------------------------------------------------
 
+def fail_import(name, exc):
+    print("ERROR: Cannot import", name)
+    print("EXCEPTION:", exc)
+    print("CI_RESULT: FAIL")
+    sys.exit(1)
+
 try:
     from test_ds18b20_accuracy_temp import ds18b20_accuracy_test
 except Exception as e:
-    print("ERROR: Cannot import accuracy test:", e)
-    print("CI_RESULT: FAIL")
-    sys.exit(1)
+    fail_import("accuracy test", e)
 
 try:
     from test_ds18b20_fault_injection import ds18b20_fault_injection_test
 except Exception as e:
-    print("ERROR: Cannot import fault injection test:", e)
-    print("CI_RESULT: FAIL")
-    sys.exit(1)
+    fail_import("fault injection test", e)
 
 try:
     from test_ds18b20_stability import ds18b20_stability_test
 except Exception as e:
-    print("ERROR: Cannot import stability test:", e)
-    print("CI_RESULT: FAIL")
-    sys.exit(1)
-
+    fail_import("stability test", e)
 
 # -------------------------------------------------
 # Helper: run one test safely
@@ -78,7 +71,6 @@ def run_test(name, test_func):
         print("EXCEPTION:", e)
         return False
 
-
 # -------------------------------------------------
 # Runner
 # -------------------------------------------------
@@ -95,7 +87,6 @@ def main():
         run_test("DS18B20 Accuracy Test", ds18b20_accuracy_test)
     ))
 
-    # Fault injection usually requires manual unplug
     results.append((
         "Fault Injection (Unplug Sensor)",
         run_test("DS18B20 Fault Injection Test", ds18b20_fault_injection_test)
@@ -109,6 +100,7 @@ def main():
     # -------------------------------------------------
     # Summary
     # -------------------------------------------------
+
     print("\n" + "=" * 60)
     print("DS18B20 TEST SUMMARY")
     print("=" * 60)
@@ -126,19 +118,20 @@ def main():
     # -------------------------------------------------
     # CI Verdict
     # -------------------------------------------------
+
     if passed == total:
-        print("\n🎉 ALL DS18B20 TESTS PASSED")
+        print("\nALL DS18B20 TESTS PASSED")
         print("CI_RESULT: PASS")
-        raise SystemExit(0)
+        sys.exit(0)
 
-    print("\n❌ DS18B20 TEST FAILURE")
+    print("\nDS18B20 TEST FAILURE")
     print("CI_RESULT: FAIL")
-    raise SystemExit(1)
-
+    sys.exit(1)
 
 # -------------------------------------------------
 # Entry point
 # -------------------------------------------------
+
 if __name__ == "__main__":
     main()
 
