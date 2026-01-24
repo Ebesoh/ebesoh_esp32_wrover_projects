@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         ESP_PORT = 'COM5'
+        FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
         FAILED_TESTS = ''
         FAILURE_COUNT = '0'
@@ -10,28 +11,28 @@ pipeline {
 
     options {
         timestamps()
+        disableConcurrentBuilds()
     }
 
     stages {
 
-        stage('Checkout') {
+        /* =========================================================
+           PREFLIGHT
+        ========================================================= */
+
+        stage('Preflight') {
             steps {
                 checkout scm
-            }
-        }
 
-        stage('Verify Python Environment') {
-            steps {
                 bat '''
                 where python
                 python --version
-                python -m pip --version
                 '''
-            }
-        }
 
-        stage('Install Host Tools') {
-            steps {
+                bat '''
+                python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+                '''
+
                 bat '''
                 python -m pip install --upgrade pip
                 python -m pip install esptool mpremote
@@ -39,29 +40,41 @@ pipeline {
             }
         }
 
-        /* ===== UPLOAD TEST FILES ===== */
+        /* =========================================================
+           FLASH FIRMWARE
+        ========================================================= */
 
-        stage('Upload Test Files') {
+        stage('Flash ESP32 Firmware') {
             steps {
                 script {
-                    try {
-                        bat '''
-                        echo Uploading test files...
-                        for %%f in (test_temp\\*.py) do (
-                            python -m mpremote connect %ESP_PORT% fs cp %%f :
-                        )
-                        echo [PASS] Test files uploaded
-                        '''
-                    } catch (Exception e) {
-                        echo "⚠️ Upload failed but continuing: ${e.message}"
-                        env.FAILED_TESTS += 'File Upload, '
-                        env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
-                    }
+                    bat '''
+                    python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+                    python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+                    '''
                 }
+
+                powershell 'Start-Sleep -Seconds 15'
             }
         }
 
-        /* ===== SYSTEM HARD GATE ===== */
+        /* =========================================================
+           UPLOAD TEST FILES
+        ========================================================= */
+
+        stage('Upload Test Files') {
+            steps {
+                bat '''
+                for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (tests_bt\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                '''
+            }
+        }
+
+        /* =========================================================
+           SYSTEM SELF TEST (HARD GATE)
+        ========================================================= */
 
         stage('System Self-Test (HARD GATE)') {
             steps {
@@ -70,66 +83,89 @@ pipeline {
                         returnStatus: true,
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_system; test_runner_system.main()" ^
-                        > system.txt
+                        "import test_runner_system; test_runner_system.main()" > system.txt
 
                         type system.txt
-                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                        if %errorlevel%==0 (
-                            echo [FAIL] SYSTEM TEST FAILED
-                            exit /b 1
-                        ) else (
-                            echo [PASS] SYSTEM TEST PASSED
-                            exit /b 0
-                        )
+                        findstr /C:"CI_RESULT: PASS" system.txt >nul
+                        if %errorlevel% neq 0 exit /b 1
                         '''
                     )
 
                     if (rc != 0) {
-                        error('System Self-Test failed – stopping pipeline')
+                        error('System self-test failed – stopping pipeline')
                     }
                 }
             }
         }
 
-        /* ===== TEMPERATURE TEST (EXIT-CODE DRIVEN) ===== */
+        /* =========================================================
+           HARDWARE TESTS
+        ========================================================= */
 
-        stage('DS18B20 Temperature Tests') {
+        stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
                 script {
-                    def rc = bat(
+
+                    /* ---- DS18B20 ---- */
+                    def tempRc = bat(
                         returnStatus: true,
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()"
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
                         '''
                     )
 
-                    if (rc != 0) {
-                        echo '❌ Temperature test failed'
-                        env.FAILED_TESTS += 'Temperature, '
+                    if (tempRc != 0) {
+                        env.FAILED_TESTS += 'DS18B20, '
                         env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
-                    } else {
-                        echo '✅ Temperature test passed'
+                    }
+
+                    /* ---- Wi-Fi ---- */
+                    def wifiRc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
+                        '''
+                    )
+
+                    if (wifiRc != 0) {
+                        env.FAILED_TESTS += 'Wi-Fi, '
+                        env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
+                    }
+
+                    /* ---- Bluetooth ---- */
+                    def btRc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
+                        '''
+                    )
+
+                    if (btRc != 0) {
+                        env.FAILED_TESTS += 'Bluetooth, '
+                        env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
                     }
                 }
             }
         }
 
-        /* ===== FINAL VERDICT ===== */
+        /* =========================================================
+           FINAL VERDICT
+        ========================================================= */
 
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo '=== TEST EXECUTION COMPLETE ==='
-                    echo "Total failures: ${env.FAILURE_COUNT}"
+                    echo "Failures: ${env.FAILURE_COUNT}"
 
                     if (env.FAILED_TESTS?.trim()) {
-                        def failedList = env.FAILED_TESTS.substring(0, env.FAILED_TESTS.length() - 2)
-                        echo "❌ Failed tests: ${failedList}"
+                        def failed = env.FAILED_TESTS[0..-3]
+                        echo "FAILED TESTS: ${failed}"
                         currentBuild.result = 'FAILURE'
                     } else {
-                        echo '✅ ALL TESTS PASSED'
+                        echo 'ALL TEST SUITES PASSED'
                         currentBuild.result = 'SUCCESS'
                     }
                 }
@@ -140,25 +176,14 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-
-            script {
-                echo '=== FINAL STATUS ==='
-                echo "Pipeline result: ${currentBuild.result}"
-                echo "Failed tests: ${env.FAILED_TESTS ?: 'None'}"
-                echo "Failure count: ${env.FAILURE_COUNT}"
-            }
         }
 
         success {
-            echo '✅ Pipeline completed successfully'
+            echo 'Pipeline completed successfully'
         }
 
         failure {
-            echo '❌ Pipeline completed with test failures'
-        }
-
-        unstable {
-            echo '⚠️ Pipeline completed with warnings'
+            echo 'Pipeline failed'
         }
     }
 }
