@@ -98,9 +98,8 @@ pipeline {
         stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
                 script {
-                    // Reset to true at the start of this stage
-                    env.HARDWARE_TEST_PASSED = 'true'
                     def failures = []
+                    def hardwareTestPassed = true  // Local variable
                     
                     // Run DS18B20 test
                     def ds18b20Failed = bat(returnStatus: true, script: '''
@@ -109,7 +108,7 @@ pipeline {
                     ''')
                     if (ds18b20Failed != 0) {
                         failures << 'DS18B20'
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        hardwareTestPassed = false
                         echo "DS18B20 test failed"
                     }
 
@@ -120,7 +119,7 @@ pipeline {
                     ''')
                     if (wifiFailed != 0) {
                         failures << 'Wi-Fi'
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        hardwareTestPassed = false
                         echo "Wi-Fi test failed"
                     }
 
@@ -131,15 +130,19 @@ pipeline {
                     ''')
                     if (btFailed != 0) {
                         failures << 'Bluetooth'
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        hardwareTestPassed = false
                         echo "Bluetooth test failed"
                     }
 
                     // After ALL tests have run, check if any failed
-                    if (failures) {
+                    if (!hardwareTestPassed) {
+                        // Store results in environment for later stages
+                        env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
                         // Now fail the stage
                         error("Hardware tests failed: ${failures.join(', ')}")
+                    } else {
+                        env.HARDWARE_TEST_PASSED = 'true'
                     }
                 }
             }
