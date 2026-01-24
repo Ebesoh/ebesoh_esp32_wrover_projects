@@ -122,9 +122,7 @@ jobs:
       - name: Upload DS18B20 test files
         shell: cmd
         run: |
-           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_accuracy_temp.py :
-           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_fault_injection.py :
-           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_stability.py :
+           for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
            python -m mpremote connect %ESP_PORT% fs cp test_temp\test_runner_ds18b20.py :
          
       - name: Run DS18B20 Temperature tests
