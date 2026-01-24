@@ -93,7 +93,7 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS (COLLECT ONLY)
+           HARDWARE TESTS
         ========================================================= */
         stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
