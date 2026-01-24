@@ -4,7 +4,7 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        HARDWARE_TEST_PASSED = 'true'
+        HARDWARE_TEST_PASSED = 'false'
         FAILED_TESTS = ''
     }
 
@@ -53,13 +53,15 @@ pipeline {
                         echo 'DS18B20 TEST PASSED'
                     }
 
+                    // SAFE log output (cannot fail build)
                     bat '''
-                        echo === DS18B20 LOG (first 20 lines) ===
+                        echo === DS18B20 LOG ===
                         if exist temp.txt (
-                            for /f "delims=" %%l in ('findstr /n "^" temp.txt ^| findstr "^[1-2][0-9]:"') do echo %%l
+                            type temp.txt
                         ) else (
                             echo temp.txt not found
                         )
+                        exit /b 0
                     '''
                 }
             }
@@ -92,13 +94,15 @@ pipeline {
                         echo 'WI-FI TEST PASSED'
                     }
 
+                    // SAFE log output (cannot fail build)
                     bat '''
-                        echo === WI-FI LOG (first 20 lines) ===
+                        echo === WI-FI LOG ===
                         if exist wifi.txt (
-                            for /f "delims=" %%l in ('findstr /n "^" wifi.txt ^| findstr "^[1-2][0-9]:"') do echo %%l
+                            type wifi.txt
                         ) else (
                             echo wifi.txt not found
                         )
+                        exit /b 0
                     '''
                 }
             }
@@ -115,7 +119,7 @@ pipeline {
                     echo "Hardware Test Passed: ${env.HARDWARE_TEST_PASSED}"
 
                     if (env.HARDWARE_TEST_PASSED != 'true') {
-                        error("FINAL VERDICT: Hardware tests failed")
+                        error('FINAL VERDICT: Hardware tests failed')
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
@@ -128,11 +132,14 @@ pipeline {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
         }
+
         failure {
             echo 'PIPELINE FAILED'
         }
+
         success {
             echo 'PIPELINE SUCCESS'
         }
     }
 }
+
