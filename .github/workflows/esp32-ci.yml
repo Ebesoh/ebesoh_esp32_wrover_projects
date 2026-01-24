@@ -116,7 +116,6 @@ jobs:
     name: DS18B20 Temperature Tests
     runs-on: self-hosted
     needs: system-self-test
-    continue-on-error: true
 
     steps:
       - name: Run DS18B20 tests
@@ -138,8 +137,6 @@ jobs:
   wifi-tests:
     name: Wi-Fi Tests
     runs-on: self-hosted
-    needs: system-self-test
-    continue-on-error: true
 
     steps:
       - name: Run Wi-Fi tests
@@ -161,8 +158,6 @@ jobs:
   bluetooth-tests:
     name: Bluetooth Tests
     runs-on: self-hosted
-    needs: system-self-test
-    continue-on-error: true
 
     steps:
       - name: Run Bluetooth tests
@@ -185,6 +180,10 @@ jobs:
     name: Final CI Verdict
     runs-on: self-hosted
     needs:
+      - preflight
+      - flash-firmware
+      - upload-test-files
+      - system-self-test
       - ds18b20-tests
       - wifi-tests
       - bluetooth-tests
@@ -194,6 +193,10 @@ jobs:
       - name: Evaluate results
         shell: cmd
         run: |
+          if "${{ needs.preflight.result }}"=="failure" exit /b 1
+          if "${{ needs.flash-firmware.result }}"=="failure" exit /b 1
+          if "${{ needs.upload-test-files.result }}"=="failure" exit /b 1
+          if "${{ needs.system-self-test.result }}"=="failure" exit /b 1
           if "${{ needs.ds18b20-tests.result }}"=="failure" exit /b 1
           if "${{ needs.wifi-tests.result }}"=="failure" exit /b 1
           if "${{ needs.bluetooth-tests.result }}"=="failure" exit /b 1
