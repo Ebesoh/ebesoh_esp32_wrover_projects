@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -99,31 +100,43 @@ pipeline {
             steps {
                 script {
                     def failures = []
-
-                    if (bat(returnStatus: true, script: '''
+                    
+                    // Run DS18B20 test
+                    def ds18b20Failed = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                    ''')) {
+                    ''')
+                    if (ds18b20Failed != 0) {
                         failures << 'DS18B20'
+                        echo "DS18B20 test failed"
                     }
 
-                    if (bat(returnStatus: true, script: '''
+                    // Run Wi-Fi test  
+                    def wifiFailed = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                    ''')) {
+                    ''')
+                    if (wifiFailed != 0) {
                         failures << 'Wi-Fi'
+                        echo "Wi-Fi test failed"
                     }
 
-                    if (bat(returnStatus: true, script: '''
+                    // Run Bluetooth test
+                    def btFailed = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                    ''')) {
+                    ''')
+                    if (btFailed != 0) {
                         failures << 'Bluetooth'
+                        echo "Bluetooth test failed"
                     }
 
+                    // After ALL tests have run, check if any failed
                     if (failures) {
                         env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
+                        // Now fail the stage
+                        error("Hardware tests failed: ${failures.join(', ')}")
                     }
                 }
             }
