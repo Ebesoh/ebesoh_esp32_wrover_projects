@@ -5,7 +5,7 @@ pipeline {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
         FAILED_TESTS = ''
-        HARDWARE_TEST_PASSED = 'true'  // This creates env.HARDWARE_TEST_PASSED
+        HARDWARE_TEST_PASSED = 'false'  // This creates env.HARDWARE_TEST_PASSED
     }
 
     options {
