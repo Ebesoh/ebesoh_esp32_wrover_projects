@@ -1,0 +1,12 @@
+﻿{
+  "repositoryName": "Ebesoh/ebesoh_esp32_wrover_projects",
+  "pipelineDirectory": "ebesoh_esp32_wrover_projects",
+  "workspaceDirectory": "ebesoh_esp32_wrover_projects\\ebesoh_esp32_wrover_projects",
+  "repositories": {
+    "Ebesoh/ebesoh_esp32_wrover_projects": {
+      "repositoryPath": "ebesoh_esp32_wrover_projects\\ebesoh_esp32_wrover_projects",
+      "lastRunOn": "01/23/2026 22:45:11 +01:00"
+    }
+  },
+  "lastRunOn": "01/24/2026 03:07:48 +01:00"
+}
