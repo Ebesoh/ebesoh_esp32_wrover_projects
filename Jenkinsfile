@@ -5,6 +5,9 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
+
+        SYSTEM_TEST_PASSED   = 'false'
+        HARDWARE_TEST_PASSED = 'true'   // assume pass, mark false on failure
         FAILED_TESTS = ''
     }
 
@@ -47,7 +50,6 @@ pipeline {
                 python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
                 python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
                 '''
-
                 powershell 'Start-Sleep -Seconds 15'
             }
         }
@@ -81,8 +83,11 @@ pipeline {
                     )
 
                     if (rc != 0) {
-                        error('System self-test failed')
+                        env.SYSTEM_TEST_PASSED = 'false'
+                        error('System Self-Test failed')
                     }
+
+                    env.SYSTEM_TEST_PASSED = 'true'
                 }
             }
         }
@@ -95,7 +100,6 @@ pipeline {
                 script {
                     def failures = []
 
-                    /* ---- DS18B20 ---- */
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
@@ -103,7 +107,6 @@ pipeline {
                         failures << 'DS18B20'
                     }
 
-                    /* ---- Wi-Fi ---- */
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
@@ -111,7 +114,6 @@ pipeline {
                         failures << 'Wi-Fi'
                     }
 
-                    /* ---- Bluetooth ---- */
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
@@ -120,6 +122,7 @@ pipeline {
                     }
 
                     if (failures) {
+                        env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
                     }
                 }
@@ -127,17 +130,24 @@ pipeline {
         }
 
         /* =========================================================
-           FINAL VERDICT (AUTHORITATIVE)
+           FINAL VERDICT (EXPLICIT AUTHORITY)
         ========================================================= */
         stage('Final CI Verdict') {
             steps {
                 script {
-                    if (env.FAILED_TESTS?.trim()) {
-                        echo "FAILED TESTS: ${env.FAILED_TESTS}"
-                        error('One or more hardware tests failed')
-                    } else {
-                        echo 'ALL TEST SUITES PASSED'
+                    echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
+                    echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
+
+                    if (env.SYSTEM_TEST_PASSED != 'true') {
+                        error('Final verdict: System Self-Test failed')
                     }
+
+                    if (env.HARDWARE_TEST_PASSED != 'true') {
+                        echo "FAILED HARDWARE TESTS: ${env.FAILED_TESTS}"
+                        error('Final verdict: One or more hardware tests failed')
+                    }
+
+                    echo 'FINAL VERDICT: ALL TESTS PASSED'
                 }
             }
         }
@@ -157,4 +167,3 @@ pipeline {
         }
     }
 }
-
