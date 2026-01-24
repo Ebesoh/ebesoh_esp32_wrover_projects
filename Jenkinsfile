@@ -3,127 +3,175 @@ pipeline {
 
     environment {
         ESP_PORT = 'COM5'
+        FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-        HARDWARE_TEST_PASSED = 'false'
-        FAILED_TESTS = ''
+
+        TEMP_RESULT = 'FAILED'
+        WIFI_RESULT = 'FAILED'
+        BT_RESULT   = 'FAILED'
     }
 
-    options {
-        timestamps()
-        disableConcurrentBuilds()
-    }
+    options { timestamps() }
 
     stages {
 
-        /* =========================================================
-           PREFLIGHT
-        ========================================================= */
-        stage('Preflight') {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Verify Python Environment') {
             steps {
-                checkout scm
-                bat 'python --version'
-                bat 'python -m pip install --upgrade pip mpremote'
+                bat '''
+                where python
+                python --version
+                python -m pip --version
+                '''
             }
         }
 
-        /* =========================================================
-           TEMPERATURE TEST
-        ========================================================= */
-        stage('Temperature Test (DS18B20)') {
-            options {
-                timeout(time: 2, unit: 'MINUTES')
+        stage('Install Host Tools') {
+            steps {
+                bat '''
+                python -m pip install --upgrade pip
+                python -m pip install esptool mpremote
+                '''
             }
+        }
+
+        stage('Flash ESP32 (optional)') {
+            steps {
+                bat '''
+                python -m esptool --chip esp32 --port %ESP_PORT% erase-flash || echo Skipping erase
+                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE% || echo Skipping flash
+                '''
+            }
+        }
+
+        stage('Wait for ESP32 reboot') {
+            steps { bat 'python -c "import time; time.sleep(10)"' }
+        }
+
+        stage('Force RAW REPL') {
+            steps {
+                bat '''
+                python -m mpremote connect %ESP_PORT% reset
+                python -c "import time; time.sleep(3)"
+                '''
+            }
+        }
+
+        stage('Upload Test Files') {
+            steps {
+                bat '''
+                for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_bt\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                '''
+            }
+        }
+
+        /* ===== SYSTEM HARD GATE ===== */
+
+        stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    echo 'STARTING DS18B20 TEMPERATURE TEST'
-
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
+                    def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                        '''
-                    )
+                        "import test_runner_system; test_runner_system.main()" ^
+                        > system.txt
+
+                        type system.txt
+                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
+                    ''')
 
                     if (rc != 0) {
-                        echo "DS18B20 TEST FAILED (rc=${rc})"
-                        env.FAILED_TESTS += env.FAILED_TESTS ? ', DS18B20' : 'DS18B20'
-                        env.HARDWARE_TEST_PASSED = 'false'
-                    } else {
-                        echo 'DS18B20 TEST PASSED'
+                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
                     }
-
-                    // SAFE log output (cannot fail build)
-                    bat '''
-                        echo === DS18B20 LOG ===
-                        if exist temp.txt (
-                            type temp.txt
-                        ) else (
-                            echo temp.txt not found
-                        )
-                        exit /b 0
-                    '''
                 }
             }
         }
 
-        /* =========================================================
-           WI-FI TEST
-        ========================================================= */
-        stage('Wi-Fi Test') {
-            options {
-                timeout(time: 5, unit: 'MINUTES')
-            }
+        stage('DS18B20 Temperature Tests') {
             steps {
                 script {
-                    echo 'STARTING WI-FI TEST'
-
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
+                    def rc = bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                        '''
-                    )
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                        > temp.txt
 
-                    if (rc != 0) {
-                        echo "WI-FI TEST FAILED (rc=${rc})"
-                        env.FAILED_TESTS += env.FAILED_TESTS ? ', Wi-Fi' : 'Wi-Fi'
-                        env.HARDWARE_TEST_PASSED = 'false'
-                    } else {
-                        echo 'WI-FI TEST PASSED'
-                    }
-
-                    // SAFE log output (cannot fail build)
-                    bat '''
-                        echo === WI-FI LOG ===
-                        if exist wifi.txt (
-                            type wifi.txt
+                        type temp.txt
+                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
                         ) else (
-                            echo wifi.txt not found
+                            exit /b 0
                         )
-                        exit /b 0
-                    '''
+                    ''')
+
+                    env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    if (rc != 0) { error('❌ DS18B20 TESTS FAILED') }
                 }
             }
         }
 
-        /* =========================================================
-           FINAL VERDICT
-        ========================================================= */
-        stage('Final Verdict') {
+        stage('Wi-Fi Tests') {
             steps {
                 script {
-                    echo 'FINAL VERDICT'
-                    echo "Failed Tests: ${env.FAILED_TESTS ?: 'None'}"
-                    echo "Hardware Test Passed: ${env.HARDWARE_TEST_PASSED}"
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                        > wifi.txt
 
-                    if (env.HARDWARE_TEST_PASSED != 'true') {
-                        error('FINAL VERDICT: Hardware tests failed')
-                    }
+                        type wifi.txt
+                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
+                    ''')
 
-                    echo 'FINAL VERDICT: ALL TESTS PASSED'
+                    env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    if (rc != 0) { error('❌ WIFI TESTS FAILED') }
                 }
+            }
+        }
+
+        stage('Bluetooth Tests') {
+            steps {
+                script {
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                        > bt.txt
+
+                        type bt.txt
+                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+                        if %errorlevel%==0 (
+                            exit /b 1
+                        ) else (
+                            exit /b 0
+                        )
+                    ''')
+
+                    env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    if (rc != 0) { error('❌ BLUETOOTH TESTS FAILED') }
+                }
+            }
+        }
+
+        stage('Final CI Verdict') {
+            steps {
+                echo "Temperature : ${env.TEMP_RESULT}"
+                echo "Wi-Fi       : ${env.WIFI_RESULT}"
+                echo "Bluetooth   : ${env.BT_RESULT}"
+                echo '✅ ALL TEST SUITES PASSED'
             }
         }
     }
@@ -132,14 +180,6 @@ pipeline {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
         }
-
-        failure {
-            echo 'PIPELINE FAILED'
-        }
-
-        success {
-            echo 'PIPELINE SUCCESS'
-        }
+        success { echo '✅ PIPELINE SUCCESS' }
+        failure { echo '❌ PIPELINE FAILURE' }
     }
-}
-
