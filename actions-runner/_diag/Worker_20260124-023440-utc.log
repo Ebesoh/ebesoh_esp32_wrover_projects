@@ -1,0 +1,3475 @@
+[2026-01-24 02:34:40Z INFO HostContext] No proxy settings were found based on environmental variables (http_proxy/https_proxy/HTTP_PROXY/HTTPS_PROXY)
+[2026-01-24 02:34:40Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:40Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:40Z INFO HostContext] Well known config file 'Credentials': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'Runner': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.runner'
+[2026-01-24 02:34:41Z INFO Worker] Version: 2.331.0
+[2026-01-24 02:34:41Z INFO Worker] Commit: 39f6c643d3032f8795fa71f1482731ca90c8e038
+[2026-01-24 02:34:41Z INFO Worker] Culture: en-US
+[2026-01-24 02:34:41Z INFO Worker] UI Culture: en-US
+[2026-01-24 02:34:41Z INFO Worker] Waiting to receive the job message from the channel.
+[2026-01-24 02:34:41Z INFO ProcessChannel] Receiving message of length 20557, with hash 'a90e292f88635346ff258e5abcc4cc2f7d9854fa85a62e03d17578d4ee06dcf2'
+[2026-01-24 02:34:41Z INFO Worker] Message received.
+[2026-01-24 02:34:41Z INFO Worker] Job message:
+ {
+  "environmentVariables": [
+    {
+      "type": 2,
+      "file": 1,
+      "line": 16,
+      "col": 3,
+      "map": [
+        {
+          "key": {
+            "type": 0,
+            "file": 1,
+            "line": 16,
+            "col": 3,
+            "lit": "ESP_PORT"
+          },
+          "value": {
+            "type": 0,
+            "file": 1,
+            "line": 16,
+            "col": 13,
+            "lit": "COM5"
+          }
+        },
+        {
+          "key": {
+            "type": 0,
+            "file": 1,
+            "line": 17,
+            "col": 3,
+            "lit": "FIRMWARE"
+          },
+          "value": {
+            "type": 0,
+            "file": 1,
+            "line": 17,
+            "col": 13,
+            "lit": "firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin"
+          }
+        },
+        {
+          "key": {
+            "type": 0,
+            "file": 1,
+            "line": 18,
+            "col": 3,
+            "lit": "PYTHONUNBUFFERED"
+          },
+          "value": {
+            "type": 0,
+            "file": 1,
+            "line": 18,
+            "col": 21,
+            "lit": "1"
+          }
+        }
+      ]
+    }
+  ],
+  "fileTable": [
+    ".github/workflows/esp32-ci.yml"
+  ],
+  "mask": [
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    },
+    {
+      "type": "regex",
+      "value": "***"
+    }
+  ],
+  "steps": [
+    {
+      "type": "action",
+      "reference": {
+        "type": "repository",
+        "name": "actions/checkout",
+        "ref": "v4",
+        "repositoryType": "GitHub"
+      },
+      "contextName": "__actions_checkout",
+      "condition": "success()",
+      "id": "1c5e5ba2-050b-4ccf-a94b-2551b53b388a",
+      "name": "__actions_checkout"
+    },
+    {
+      "type": "action",
+      "reference": {
+        "type": "script"
+      },
+      "displayNameToken": {
+        "type": 0,
+        "file": 1,
+        "line": 81,
+        "col": 15,
+        "lit": "Upload ALL test files"
+      },
+      "contextName": "__run",
+      "inputs": {
+        "type": 2,
+        "map": [
+          {
+            "key": "script",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 83,
+              "col": 14,
+              "lit": "for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp \"%%f\" :\nfor %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp \"%%f\" :\nfor %%f in (tests_bt\\*.py) do python -m mpremote connect %ESP_PORT% fs cp \"%%f\" :\nfor %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp \"%%f\" :\n"
+            }
+          },
+          {
+            "key": "shell",
+            "value": {
+              "type": 0,
+              "file": 1,
+              "line": 82,
+              "col": 16,
+              "lit": "cmd"
+            }
+          }
+        ]
+      },
+      "condition": "success()",
+      "id": "24c80966-f6a3-4b0e-ad03-5d445bce0731",
+      "name": "__run"
+    }
+  ],
+  "variables": {
+    "Actions.EnableHttpRedirects": {
+      "value": "true"
+    },
+    "DistributedTask.AddWarningToNode12Action": {
+      "value": "true"
+    },
+    "DistributedTask.AddWarningToNode16Action": {
+      "value": "true"
+    },
+    "DistributedTask.AllowRunnerContainerHooks": {
+      "value": "true"
+    },
+    "DistributedTask.DeprecateStepOutputCommands": {
+      "value": "true"
+    },
+    "DistributedTask.DetailUntarFailure": {
+      "value": "true"
+    },
+    "DistributedTask.EnableCompositeActions": {
+      "value": "true"
+    },
+    "DistributedTask.EnableJobServerQueueTelemetry": {
+      "value": "true"
+    },
+    "DistributedTask.EnhancedAnnotations": {
+      "value": "true"
+    },
+    "DistributedTask.ForceGithubJavascriptActionsToNode16": {
+      "value": "true"
+    },
+    "DistributedTask.ForceGithubJavascriptActionsToNode20": {
+      "value": "true"
+    },
+    "DistributedTask.LogTemplateErrorsAsDebugMessages": {
+      "value": "true"
+    },
+    "DistributedTask.MarkJobAsFailedOnWorkerCrash": {
+      "value": "true"
+    },
+    "DistributedTask.NewActionMetadata": {
+      "value": "true"
+    },
+    "DistributedTask.UploadStepSummary": {
+      "value": "true"
+    },
+    "DistributedTask.UseActionArchiveCache": {
+      "value": "true"
+    },
+    "DistributedTask.UseWhich2": {
+      "value": "true"
+    },
+    "RunService.FixEmbeddedIssues": {
+      "value": "true"
+    },
+    "actions_add_check_run_id_to_job_context": {
+      "value": "true"
+    },
+    "actions_container_action_runner_temp": {
+      "value": "true"
+    },
+    "actions_display_helpful_actions_download_errors": {
+      "value": "true"
+    },
+    "actions_runner_compare_workflow_parser": {
+      "value": "false"
+    },
+    "actions_set_orchestration_id_env_for_actions": {
+      "value": "false"
+    },
+    "actions_skip_retry_complete_job_upon_known_errors": {
+      "value": "true"
+    },
+    "actions_uses_cache_service_v2": {
+      "value": "true"
+    },
+    "github_token": {
+      "value": "***",
+      "isSecret": true
+    },
+    "system.from_run_service": {
+      "value": "true"
+    },
+    "system.github.job": {
+      "value": "upload-test-files"
+    },
+    "system.github.launch_endpoint": {
+      "value": "https://launch.actions.githubusercontent.com"
+    },
+    "system.github.results_endpoint": {
+      "value": "https://results-receiver.actions.githubusercontent.com/"
+    },
+    "system.github.results_upload_with_sdk": {
+      "value": "true"
+    },
+    "system.github.token": {
+      "value": "***",
+      "isSecret": true
+    },
+    "system.github.token.permissions": {
+      "value": "{\"Contents\":\"read\",\"Metadata\":\"read\",\"Packages\":\"read\"}"
+    },
+    "system.orchestrationId": {
+      "value": "e7fb25d5-81ed-4df6-8e4b-48bb3789111a.upload-test-files.__default"
+    },
+    "system.phaseDisplayName": {
+      "value": "Upload Test Files"
+    },
+    "system.runner.lowdiskspacethreshold": {
+      "value": "100"
+    },
+    "system.runnerEnvironment": {
+      "value": "self-hosted"
+    },
+    "system.runnerGroupName": {
+      "value": "Default"
+    }
+  },
+  "messageType": "RunnerJobRequest",
+  "plan": {
+    "scopeIdentifier": "00000000-0000-0000-0000-000000000000",
+    "planType": "actions",
+    "version": 0,
+    "planId": "e7fb25d5-81ed-4df6-8e4b-48bb3789111a",
+    "planGroup": null,
+    "artifactUri": null,
+    "artifactLocation": null,
+    "definition": null,
+    "owner": null
+  },
+  "timeline": {
+    "id": "e7fb25d5-81ed-4df6-8e4b-48bb3789111a",
+    "changeId": 0,
+    "location": null
+  },
+  "jobId": "8152cf3f-d617-5d5f-9d0c-df2f517891fe",
+  "jobDisplayName": "Upload Test Files",
+  "jobName": "__default",
+  "requestId": 0,
+  "lockedUntil": "0001-01-01T00:00:00",
+  "resources": {
+    "endpoints": [
+      {
+        "data": {
+          "ServerId": "",
+          "ServerName": "",
+          "CacheServerUrl": "https://artifactcache.actions.githubusercontent.com/34JA5Uwd79UWO7O3EL9bnmESHaWSbMRpXIKH2Ha9fSKf2CpyCy/",
+          "FeedStreamUrl": "wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock",
+          "ResultsServiceUrl": "https://results-receiver.actions.githubusercontent.com/",
+          "PipelinesServiceUrl": "https://pipelinesghubeus2.actions.githubusercontent.com/34JA5Uwd79UWO7O3EL9bnmESHaWSbMRpXIKH2Ha9fSKf2CpyCy/",
+          "GenerateIdTokenUrl": "",
+          "ConnectivityChecks": "[\"https://broker.actions.githubusercontent.com/health\",\"https://token.actions.githubusercontent.com/ready\"]"
+        },
+        "name": "SystemVssConnection",
+        "url": "https://run-actions-2-azure-eastus.actions.githubusercontent.com/161/",
+        "authorization": {
+          "parameters": {
+            "AccessToken": "***"
+          },
+          "scheme": "OAuth"
+        },
+        "isShared": false,
+        "isReady": true
+      }
+    ]
+  },
+  "contextData": {
+    "github": {
+      "t": 2,
+      "d": [
+        {
+          "k": "ref",
+          "v": "refs/heads/main"
+        },
+        {
+          "k": "sha",
+          "v": "50538d711409a004d27ea1b2bc6588ad7f7583e2"
+        },
+        {
+          "k": "repository",
+          "v": "Ebesoh/ebesoh_esp32_wrover_projects"
+        },
+        {
+          "k": "repository_owner",
+          "v": "Ebesoh"
+        },
+        {
+          "k": "repository_owner_id",
+          "v": "98786507"
+        },
+        {
+          "k": "repositoryUrl",
+          "v": "git://github.com/Ebesoh/ebesoh_esp32_wrover_projects.git"
+        },
+        {
+          "k": "run_id",
+          "v": "21307500019"
+        },
+        {
+          "k": "run_number",
+          "v": "35"
+        },
+        {
+          "k": "retention_days",
+          "v": "90"
+        },
+        {
+          "k": "run_attempt",
+          "v": "2"
+        },
+        {
+          "k": "artifact_cache_size_limit",
+          "v": "10"
+        },
+        {
+          "k": "repository_visibility",
+          "v": "public"
+        },
+        {
+          "k": "actor_id",
+          "v": "98786507"
+        },
+        {
+          "k": "actor",
+          "v": "Ebesoh"
+        },
+        {
+          "k": "workflow",
+          "v": "ESP32 Hardware Testing"
+        },
+        {
+          "k": "head_ref",
+          "v": ""
+        },
+        {
+          "k": "base_ref",
+          "v": ""
+        },
+        {
+          "k": "event_name",
+          "v": "push"
+        },
+        {
+          "k": "server_url",
+          "v": "https://github.com"
+        },
+        {
+          "k": "api_url",
+          "v": "https://api.github.com"
+        },
+        {
+          "k": "graphql_url",
+          "v": "https://api.github.com/graphql"
+        },
+        {
+          "k": "ref_name",
+          "v": "main"
+        },
+        {
+          "k": "ref_protected",
+          "v": false
+        },
+        {
+          "k": "ref_type",
+          "v": "branch"
+        },
+        {
+          "k": "secret_source",
+          "v": "Actions"
+        },
+        {
+          "k": "event",
+          "v": {
+            "t": 2,
+            "d": [
+              {
+                "k": "after",
+                "v": "50538d711409a004d27ea1b2bc6588ad7f7583e2"
+              },
+              {
+                "k": "base_ref",
+                "v": null
+              },
+              {
+                "k": "before",
+                "v": "3363913159ffb5a644d8f113cf9a1344fd6a8828"
+              },
+              {
+                "k": "commits",
+                "v": {
+                  "t": 1,
+                  "a": [
+                    {
+                      "t": 2,
+                      "d": [
+                        {
+                          "k": "author",
+                          "v": {
+                            "t": 2,
+                            "d": [
+                              {
+                                "k": "email",
+                                "v": "ebesoh82@gmail.com"
+                              },
+                              {
+                                "k": "name",
+                                "v": "Ebesoh"
+                              },
+                              {
+                                "k": "username",
+                                "v": "Ebesoh"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "k": "committer",
+                          "v": {
+                            "t": 2,
+                            "d": [
+                              {
+                                "k": "email",
+                                "v": "ebesoh82@gmail.com"
+                              },
+                              {
+                                "k": "name",
+                                "v": "Ebesoh"
+                              },
+                              {
+                                "k": "username",
+                                "v": "Ebesoh"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "k": "distinct",
+                          "v": true
+                        },
+                        {
+                          "k": "id",
+                          "v": "50538d711409a004d27ea1b2bc6588ad7f7583e2"
+                        },
+                        {
+                          "k": "message",
+                          "v": "changes made"
+                        },
+                        {
+                          "k": "timestamp",
+                          "v": "2026-01-24T03:16:10+01:00"
+                        },
+                        {
+                          "k": "tree_id",
+                          "v": "bb690d34a6f45e38f0f84bfba335d1e3f16042fc"
+                        },
+                        {
+                          "k": "url",
+                          "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects/commit/50538d711409a004d27ea1b2bc6588ad7f7583e2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "compare",
+                "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects/compare/3363913159ff...50538d711409"
+              },
+              {
+                "k": "created",
+                "v": false
+              },
+              {
+                "k": "deleted",
+                "v": false
+              },
+              {
+                "k": "forced",
+                "v": false
+              },
+              {
+                "k": "head_commit",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "author",
+                      "v": {
+                        "t": 2,
+                        "d": [
+                          {
+                            "k": "email",
+                            "v": "ebesoh82@gmail.com"
+                          },
+                          {
+                            "k": "name",
+                            "v": "Ebesoh"
+                          },
+                          {
+                            "k": "username",
+                            "v": "Ebesoh"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "k": "committer",
+                      "v": {
+                        "t": 2,
+                        "d": [
+                          {
+                            "k": "email",
+                            "v": "ebesoh82@gmail.com"
+                          },
+                          {
+                            "k": "name",
+                            "v": "Ebesoh"
+                          },
+                          {
+                            "k": "username",
+                            "v": "Ebesoh"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "k": "distinct",
+                      "v": true
+                    },
+                    {
+                      "k": "id",
+                      "v": "50538d711409a004d27ea1b2bc6588ad7f7583e2"
+                    },
+                    {
+                      "k": "message",
+                      "v": "changes made"
+                    },
+                    {
+                      "k": "timestamp",
+                      "v": "2026-01-24T03:16:10+01:00"
+                    },
+                    {
+                      "k": "tree_id",
+                      "v": "bb690d34a6f45e38f0f84bfba335d1e3f16042fc"
+                    },
+                    {
+                      "k": "url",
+                      "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects/commit/50538d711409a004d27ea1b2bc6588ad7f7583e2"
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "pusher",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "email",
+                      "v": "98786507+Ebesoh@users.noreply.github.com"
+                    },
+                    {
+                      "k": "name",
+                      "v": "Ebesoh"
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "ref",
+                "v": "refs/heads/main"
+              },
+              {
+                "k": "repository",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "allow_forking",
+                      "v": true
+                    },
+                    {
+                      "k": "archive_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/{archive_format}{/ref}"
+                    },
+                    {
+                      "k": "archived",
+                      "v": false
+                    },
+                    {
+                      "k": "assignees_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/assignees{/user}"
+                    },
+                    {
+                      "k": "blobs_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/git/blobs{/sha}"
+                    },
+                    {
+                      "k": "branches_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/branches{/branch}"
+                    },
+                    {
+                      "k": "clone_url",
+                      "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects.git"
+                    },
+                    {
+                      "k": "collaborators_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/collaborators{/collaborator}"
+                    },
+                    {
+                      "k": "comments_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/comments{/number}"
+                    },
+                    {
+                      "k": "commits_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/commits{/sha}"
+                    },
+                    {
+                      "k": "compare_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/compare/{base}...{head}"
+                    },
+                    {
+                      "k": "contents_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/contents/{+path}"
+                    },
+                    {
+                      "k": "contributors_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/contributors"
+                    },
+                    {
+                      "k": "created_at",
+                      "v": 1769125078.0
+                    },
+                    {
+                      "k": "default_branch",
+                      "v": "main"
+                    },
+                    {
+                      "k": "deployments_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/deployments"
+                    },
+                    {
+                      "k": "description",
+                      "v": "esp32 wrover projects created by ebesoh "
+                    },
+                    {
+                      "k": "disabled",
+                      "v": false
+                    },
+                    {
+                      "k": "downloads_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/downloads"
+                    },
+                    {
+                      "k": "events_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/events"
+                    },
+                    {
+                      "k": "fork",
+                      "v": false
+                    },
+                    {
+                      "k": "forks",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "forks_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "forks_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/forks"
+                    },
+                    {
+                      "k": "full_name",
+                      "v": "Ebesoh/ebesoh_esp32_wrover_projects"
+                    },
+                    {
+                      "k": "git_commits_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/git/commits{/sha}"
+                    },
+                    {
+                      "k": "git_refs_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/git/refs{/sha}"
+                    },
+                    {
+                      "k": "git_tags_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/git/tags{/sha}"
+                    },
+                    {
+                      "k": "git_url",
+                      "v": "git://github.com/Ebesoh/ebesoh_esp32_wrover_projects.git"
+                    },
+                    {
+                      "k": "has_discussions",
+                      "v": false
+                    },
+                    {
+                      "k": "has_downloads",
+                      "v": true
+                    },
+                    {
+                      "k": "has_issues",
+                      "v": true
+                    },
+                    {
+                      "k": "has_pages",
+                      "v": false
+                    },
+                    {
+                      "k": "has_projects",
+                      "v": true
+                    },
+                    {
+                      "k": "has_wiki",
+                      "v": true
+                    },
+                    {
+                      "k": "homepage",
+                      "v": null
+                    },
+                    {
+                      "k": "hooks_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/hooks"
+                    },
+                    {
+                      "k": "html_url",
+                      "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects"
+                    },
+                    {
+                      "k": "id",
+                      "v": 1140178483.0
+                    },
+                    {
+                      "k": "is_template",
+                      "v": false
+                    },
+                    {
+                      "k": "issue_comment_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/issues/comments{/number}"
+                    },
+                    {
+                      "k": "issue_events_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/issues/events{/number}"
+                    },
+                    {
+                      "k": "issues_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/issues{/number}"
+                    },
+                    {
+                      "k": "keys_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/keys{/key_id}"
+                    },
+                    {
+                      "k": "labels_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/labels{/name}"
+                    },
+                    {
+                      "k": "language",
+                      "v": "Python"
+                    },
+                    {
+                      "k": "languages_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/languages"
+                    },
+                    {
+                      "k": "license",
+                      "v": null
+                    },
+                    {
+                      "k": "master_branch",
+                      "v": "main"
+                    },
+                    {
+                      "k": "merges_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/merges"
+                    },
+                    {
+                      "k": "milestones_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/milestones{/number}"
+                    },
+                    {
+                      "k": "mirror_url",
+                      "v": null
+                    },
+                    {
+                      "k": "name",
+                      "v": "ebesoh_esp32_wrover_projects"
+                    },
+                    {
+                      "k": "node_id",
+                      "v": "R_kgDOQ_W-Mw"
+                    },
+                    {
+                      "k": "notifications_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/notifications{?since,all,participating}"
+                    },
+                    {
+                      "k": "open_issues",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "open_issues_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "owner",
+                      "v": {
+                        "t": 2,
+                        "d": [
+                          {
+                            "k": "avatar_url",
+                            "v": "https://avatars.githubusercontent.com/u/98786507?v=4"
+                          },
+                          {
+                            "k": "email",
+                            "v": "98786507+Ebesoh@users.noreply.github.com"
+                          },
+                          {
+                            "k": "events_url",
+                            "v": "https://api.github.com/users/Ebesoh/events{/privacy}"
+                          },
+                          {
+                            "k": "followers_url",
+                            "v": "https://api.github.com/users/Ebesoh/followers"
+                          },
+                          {
+                            "k": "following_url",
+                            "v": "https://api.github.com/users/Ebesoh/following{/other_user}"
+                          },
+                          {
+                            "k": "gists_url",
+                            "v": "https://api.github.com/users/Ebesoh/gists{/gist_id}"
+                          },
+                          {
+                            "k": "gravatar_id",
+                            "v": ""
+                          },
+                          {
+                            "k": "html_url",
+                            "v": "https://github.com/Ebesoh"
+                          },
+                          {
+                            "k": "id",
+                            "v": 98786507.0
+                          },
+                          {
+                            "k": "login",
+                            "v": "Ebesoh"
+                          },
+                          {
+                            "k": "name",
+                            "v": "Ebesoh"
+                          },
+                          {
+                            "k": "node_id",
+                            "v": "U_kgDOBeNcyw"
+                          },
+                          {
+                            "k": "organizations_url",
+                            "v": "https://api.github.com/users/Ebesoh/orgs"
+                          },
+                          {
+                            "k": "received_events_url",
+                            "v": "https://api.github.com/users/Ebesoh/received_events"
+                          },
+                          {
+                            "k": "repos_url",
+                            "v": "https://api.github.com/users/Ebesoh/repos"
+                          },
+                          {
+                            "k": "site_admin",
+                            "v": false
+                          },
+                          {
+                            "k": "starred_url",
+                            "v": "https://api.github.com/users/Ebesoh/starred{/owner}{/repo}"
+                          },
+                          {
+                            "k": "subscriptions_url",
+                            "v": "https://api.github.com/users/Ebesoh/subscriptions"
+                          },
+                          {
+                            "k": "type",
+                            "v": "User"
+                          },
+                          {
+                            "k": "url",
+                            "v": "https://api.github.com/users/Ebesoh"
+                          },
+                          {
+                            "k": "user_view_type",
+                            "v": "public"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "k": "private",
+                      "v": false
+                    },
+                    {
+                      "k": "pulls_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/pulls{/number}"
+                    },
+                    {
+                      "k": "pushed_at",
+                      "v": 1769221088.0
+                    },
+                    {
+                      "k": "releases_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/releases{/id}"
+                    },
+                    {
+                      "k": "size",
+                      "v": 1168.0
+                    },
+                    {
+                      "k": "ssh_url",
+                      "v": "git@github.com:Ebesoh/ebesoh_esp32_wrover_projects.git"
+                    },
+                    {
+                      "k": "stargazers",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "stargazers_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "stargazers_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/stargazers"
+                    },
+                    {
+                      "k": "statuses_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/statuses/{sha}"
+                    },
+                    {
+                      "k": "subscribers_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/subscribers"
+                    },
+                    {
+                      "k": "subscription_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/subscription"
+                    },
+                    {
+                      "k": "svn_url",
+                      "v": "https://github.com/Ebesoh/ebesoh_esp32_wrover_projects"
+                    },
+                    {
+                      "k": "tags_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/tags"
+                    },
+                    {
+                      "k": "teams_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/teams"
+                    },
+                    {
+                      "k": "topics",
+                      "v": {
+                        "t": 1
+                      }
+                    },
+                    {
+                      "k": "trees_url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects/git/trees{/sha}"
+                    },
+                    {
+                      "k": "updated_at",
+                      "v": "2026-01-24T01:58:10Z"
+                    },
+                    {
+                      "k": "url",
+                      "v": "https://api.github.com/repos/Ebesoh/ebesoh_esp32_wrover_projects"
+                    },
+                    {
+                      "k": "visibility",
+                      "v": "public"
+                    },
+                    {
+                      "k": "watchers",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "watchers_count",
+                      "v": 0.0
+                    },
+                    {
+                      "k": "web_commit_signoff_required",
+                      "v": false
+                    }
+                  ]
+                }
+              },
+              {
+                "k": "sender",
+                "v": {
+                  "t": 2,
+                  "d": [
+                    {
+                      "k": "avatar_url",
+                      "v": "https://avatars.githubusercontent.com/u/98786507?v=4"
+                    },
+                    {
+                      "k": "events_url",
+                      "v": "https://api.github.com/users/Ebesoh/events{/privacy}"
+                    },
+                    {
+                      "k": "followers_url",
+                      "v": "https://api.github.com/users/Ebesoh/followers"
+                    },
+                    {
+                      "k": "following_url",
+                      "v": "https://api.github.com/users/Ebesoh/following{/other_user}"
+                    },
+                    {
+                      "k": "gists_url",
+                      "v": "https://api.github.com/users/Ebesoh/gists{/gist_id}"
+                    },
+                    {
+                      "k": "gravatar_id",
+                      "v": ""
+                    },
+                    {
+                      "k": "html_url",
+                      "v": "https://github.com/Ebesoh"
+                    },
+                    {
+                      "k": "id",
+                      "v": 98786507.0
+                    },
+                    {
+                      "k": "login",
+                      "v": "Ebesoh"
+                    },
+                    {
+                      "k": "node_id",
+                      "v": "U_kgDOBeNcyw"
+                    },
+                    {
+                      "k": "organizations_url",
+                      "v": "https://api.github.com/users/Ebesoh/orgs"
+                    },
+                    {
+                      "k": "received_events_url",
+                      "v": "https://api.github.com/users/Ebesoh/received_events"
+                    },
+                    {
+                      "k": "repos_url",
+                      "v": "https://api.github.com/users/Ebesoh/repos"
+                    },
+                    {
+                      "k": "site_admin",
+                      "v": false
+                    },
+                    {
+                      "k": "starred_url",
+                      "v": "https://api.github.com/users/Ebesoh/starred{/owner}{/repo}"
+                    },
+                    {
+                      "k": "subscriptions_url",
+                      "v": "https://api.github.com/users/Ebesoh/subscriptions"
+                    },
+                    {
+                      "k": "type",
+                      "v": "User"
+                    },
+                    {
+                      "k": "url",
+                      "v": "https://api.github.com/users/Ebesoh"
+                    },
+                    {
+                      "k": "user_view_type",
+                      "v": "public"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "k": "workflow_ref",
+          "v": "Ebesoh/ebesoh_esp32_wrover_projects/.github/workflows/esp32-ci.yml@refs/heads/main"
+        },
+        {
+          "k": "workflow_sha",
+          "v": "50538d711409a004d27ea1b2bc6588ad7f7583e2"
+        },
+        {
+          "k": "repository_id",
+          "v": "1140178483"
+        },
+        {
+          "k": "triggering_actor",
+          "v": "Ebesoh"
+        }
+      ]
+    },
+    "inputs": {
+      "t": 2
+    },
+    "job": {
+      "t": 2,
+      "d": [
+        {
+          "k": "check_run_id",
+          "v": 61338574988.0
+        }
+      ]
+    },
+    "matrix": null,
+    "needs": {
+      "t": 2,
+      "d": [
+        {
+          "k": "flash-firmware",
+          "v": {
+            "t": 2,
+            "d": [
+              {
+                "k": "result",
+                "v": "success"
+              },
+              {
+                "k": "outputs",
+                "v": {
+                  "t": 2
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "strategy": {
+      "t": 2,
+      "d": [
+        {
+          "k": "fail-fast",
+          "v": true
+        },
+        {
+          "k": "job-index",
+          "v": 0.0
+        },
+        {
+          "k": "job-total",
+          "v": 1.0
+        },
+        {
+          "k": "max-parallel",
+          "v": 1.0
+        }
+      ]
+    },
+    "vars": {
+      "t": 2
+    }
+  },
+  "billingOwnerId": "U_kgDOBeNcyw"
+}
+[2026-01-24 02:34:41Z INFO JobRunner] Job ID 8152cf3f-d617-5d5f-9d0c-df2f517891fe
+[2026-01-24 02:34:41Z INFO ConfigurationStore] currentAssemblyLocation: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin\Runner.Worker.dll
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] binPath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] RootFolder: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'Runner': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.runner'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] ConfigFilePath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.runner
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'MigratedRunner': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.runner_migrated'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] MigratedConfigFilePath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.runner_migrated
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'Credentials': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] CredFilePath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'MigratedCredentials': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials_migrated'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] MigratedCredFilePath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials_migrated
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'Service': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.service'
+[2026-01-24 02:34:41Z INFO ConfigurationStore] ServiceConfigFilePath: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.service
+[2026-01-24 02:34:41Z INFO ConfigurationStore] Read setting file: 413 chars
+[2026-01-24 02:34:41Z INFO JobRunner] Initializing launch client
+[2026-01-24 02:34:41Z INFO JobServerQueue] Initializing results client
+[2026-01-24 02:34:41Z INFO ResultServer] Creating websocket client ...wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock
+[2026-01-24 02:34:41Z INFO ResultServer] Attempting to start websocket client with delay 00:00:00.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Start process web console line queue.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Start process file upload queue.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Start results file upload queue.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Starting results-based upload queue...
+[2026-01-24 02:34:41Z INFO JobServerQueue] Start process timeline update queue.
+[2026-01-24 02:34:41Z INFO ExecutionContext] Initializing Job context
+[2026-01-24 02:34:41Z INFO ExecutionContext] Initialize GitHub context
+[2026-01-24 02:34:41Z INFO ExecutionContext] Initialize Env context
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:41Z INFO JobRunner] Starting the job execution context.
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO JobRunner] Validating directory permissions for: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Tools': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_tool'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:34:41Z INFO JobRunner] Getting job extension.
+[2026-01-24 02:34:41Z INFO JobRunner] Initialize job. Getting all job steps.
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'Credentials': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.credentials'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known config file 'SetupInfo': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\.setup_info'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO PipelineDirectoryManager] Loading tracking config if exists: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_PipelineMapping\Ebesoh/ebesoh_esp32_wrover_projects\PipelineFolder.json
+[2026-01-24 02:34:41Z INFO PipelineDirectoryManager] Updating job run properties.
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO JobExtension] Downloading actions
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:41Z INFO Worker] Listening for cancel message from the channel.
+[2026-01-24 02:34:41Z INFO Worker] Waiting for the job to complete or for a cancel message from the channel.
+[2026-01-24 02:34:41Z INFO ResultServer] Successfully started websocket client.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a711f65d-8896-44b5-902b-f616fcef44cf', success rate: 1/1.
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:41Z INFO ActionManager] Save archive 'https://api.github.com/repos/actions/checkout/zipball/34e114876b0b11c390a56381ad16ebd13914f8d5' into C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\_temp_884e3ce9-75c3-481f-9016-b5901204880e\fa980e1e-bf9e-4bd1-9189-965b017e7509.zip.
+[2026-01-24 02:34:41Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a711f65d-8896-44b5-902b-f616fcef44cf', success rate: 1/1.
+[2026-01-24 02:34:42Z INFO JobServerQueue] Job timeline record has been updated for the first time.
+[2026-01-24 02:34:42Z INFO ActionManager] Request URL: https://api.github.com/repos/actions/checkout/zipball/34e114876b0b11c390a56381ad16ebd13914f8d5 X-GitHub-Request-Id: DDBC:2597DD:29D13:132769:69742FC2 Http Status: OK
+[2026-01-24 02:34:42Z INFO ActionManager] Finished getting action repository.
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Load schema file with definitions: [
+  "null",
+  "boolean",
+  "number",
+  "string",
+  "sequence",
+  "mapping",
+  "any",
+  "action-root",
+  "inputs",
+  "input",
+  "outputs",
+  "output-definition",
+  "runs",
+  "container-runs",
+  "container-runs-args",
+  "container-runs-env",
+  "node-runs",
+  "plugin-runs",
+  "composite-runs",
+  "composite-steps",
+  "composite-step",
+  "run-step",
+  "uses-step",
+  "container-runs-context",
+  "output-value",
+  "input-default-context",
+  "non-empty-string",
+  "string-steps-context",
+  "boolean-steps-context",
+  "step-env",
+  "step-if",
+  "step-with"
+]
+[2026-01-24 02:34:42Z INFO ActionManifestManager] Load schema file with definitions: [
+  "null",
+  "boolean",
+  "number",
+  "string",
+  "sequence",
+  "mapping",
+  "any",
+  "action-root",
+  "inputs",
+  "input",
+  "outputs",
+  "output-definition",
+  "runs",
+  "container-runs",
+  "container-runs-args",
+  "container-runs-env",
+  "node-runs",
+  "plugin-runs",
+  "composite-runs",
+  "composite-steps",
+  "composite-step",
+  "run-step",
+  "uses-step",
+  "container-runs-context",
+  "output-value",
+  "input-default-context",
+  "non-empty-string",
+  "string-steps-context",
+  "boolean-steps-context",
+  "step-env",
+  "step-if",
+  "step-with"
+]
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Checkout",
+  "description": "Checkout a Git repository at a particular version",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 4,
+          "col": 3,
+          "lit": "repository"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 6,
+          "col": 14,
+          "expr": "github.repository"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 3,
+          "lit": "ref"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 12,
+          "col": 3,
+          "lit": "token"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 24,
+          "col": 14,
+          "expr": "github.token"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 25,
+          "col": 3,
+          "lit": "ssh-key"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "ssh-known-hosts"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 3,
+          "lit": "ssh-strict"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 48,
+          "col": 3,
+          "lit": "ssh-user"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 51,
+          "col": 14,
+          "lit": "git"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 52,
+          "col": 3,
+          "lit": "persist-credentials"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 54,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 55,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 57,
+          "col": 3,
+          "lit": "clean"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 59,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 60,
+          "col": 3,
+          "lit": "filter"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 64,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 65,
+          "col": 3,
+          "lit": "sparse-checkout"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 69,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 70,
+          "col": 3,
+          "lit": "sparse-checkout-cone-mode"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 73,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 74,
+          "col": 3,
+          "lit": "fetch-depth"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 76,
+          "col": 14,
+          "lit": "1"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 77,
+          "col": 3,
+          "lit": "fetch-tags"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 79,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 80,
+          "col": 3,
+          "lit": "show-progress"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 82,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 83,
+          "col": 3,
+          "lit": "lfs"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 85,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 86,
+          "col": 3,
+          "lit": "submodules"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 94,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 95,
+          "col": 3,
+          "lit": "set-safe-directory"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 97,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 98,
+          "col": 3,
+          "lit": "github-server-url"
+        },
+        "value": ""
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": true,
+    "script": "dist/index.js",
+    "pre": null,
+    "post": "dist/index.js",
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:34:42Z INFO ActionManager] Action node.js file: dist/index.js, no more preparation.
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManager] Load action that reference repository from 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\checkout\v4'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Checkout",
+  "description": "Checkout a Git repository at a particular version",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 4,
+          "col": 3,
+          "lit": "repository"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 6,
+          "col": 14,
+          "expr": "github.repository"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 3,
+          "lit": "ref"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 12,
+          "col": 3,
+          "lit": "token"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 24,
+          "col": 14,
+          "expr": "github.token"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 25,
+          "col": 3,
+          "lit": "ssh-key"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "ssh-known-hosts"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 3,
+          "lit": "ssh-strict"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 48,
+          "col": 3,
+          "lit": "ssh-user"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 51,
+          "col": 14,
+          "lit": "git"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 52,
+          "col": 3,
+          "lit": "persist-credentials"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 54,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 55,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 57,
+          "col": 3,
+          "lit": "clean"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 59,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 60,
+          "col": 3,
+          "lit": "filter"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 64,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 65,
+          "col": 3,
+          "lit": "sparse-checkout"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 69,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 70,
+          "col": 3,
+          "lit": "sparse-checkout-cone-mode"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 73,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 74,
+          "col": 3,
+          "lit": "fetch-depth"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 76,
+          "col": 14,
+          "lit": "1"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 77,
+          "col": 3,
+          "lit": "fetch-tags"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 79,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 80,
+          "col": 3,
+          "lit": "show-progress"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 82,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 83,
+          "col": 3,
+          "lit": "lfs"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 85,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 86,
+          "col": 3,
+          "lit": "submodules"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 94,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 95,
+          "col": 3,
+          "lit": "set-safe-directory"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 97,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 98,
+          "col": 3,
+          "lit": "github-server-url"
+        },
+        "value": ""
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": true,
+    "script": "dist/index.js",
+    "pre": null,
+    "post": "dist/index.js",
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:34:42Z INFO ActionManager] Action pre node.js file: N/A.
+[2026-01-24 02:34:42Z INFO ActionManager] Action node.js file: dist/index.js.
+[2026-01-24 02:34:42Z INFO ActionManager] Action post node.js file: dist/index.js.
+[2026-01-24 02:34:42Z INFO JobExtension] Adding .
+[2026-01-24 02:34:42Z INFO JobExtension] Adding .
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO JobExtension] Total accessible running process: 379.
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO JobExtension] Start checking server connectivity.
+[2026-01-24 02:34:42Z INFO JobExtension] Check server connectivity for https://broker.actions.githubusercontent.com/health.
+[2026-01-24 02:34:42Z INFO JobExtension] Check server connectivity for https://token.actions.githubusercontent.com/ready.
+[2026-01-24 02:34:42Z INFO JobExtension] Start checking service connectivity in background.
+[2026-01-24 02:34:42Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "setup_job",
+  "type": "runner",
+  "stage": "Pre",
+  "stepId": "a711f65d-8896-44b5-902b-f616fcef44cf",
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 2,
+  "startTime": "2026-01-24T02:34:41.3121625Z",
+  "finishTime": "2026-01-24T02:34:42.8910411Z"
+}.
+[2026-01-24 02:34:42Z INFO JobRunner] Total job steps: 2.
+[2026-01-24 02:34:42Z INFO JobRunner] Run all job steps.
+[2026-01-24 02:34:42Z INFO StepsRunner] Processing step: DisplayName='Run actions/checkout@v4'
+[2026-01-24 02:34:42Z INFO StepsRunner] Evaluating: success()
+[2026-01-24 02:34:42Z INFO StepsRunner] Result: true
+[2026-01-24 02:34:42Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:34:42Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:34:42Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a711f65d-8896-44b5-902b-f616fcef44cf', success rate: 1/1.
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] Process started with process id 3044, waiting for process exit.
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] Finished process 3044 with exit code 0, and elapsed time 00:00:00.0177918.
+[2026-01-24 02:34:42Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManager] Load action that reference repository from 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\checkout\v4'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Checkout",
+  "description": "Checkout a Git repository at a particular version",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 4,
+          "col": 3,
+          "lit": "repository"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 6,
+          "col": 14,
+          "expr": "github.repository"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 3,
+          "lit": "ref"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 12,
+          "col": 3,
+          "lit": "token"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 24,
+          "col": 14,
+          "expr": "github.token"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 25,
+          "col": 3,
+          "lit": "ssh-key"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "ssh-known-hosts"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 3,
+          "lit": "ssh-strict"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 48,
+          "col": 3,
+          "lit": "ssh-user"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 51,
+          "col": 14,
+          "lit": "git"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 52,
+          "col": 3,
+          "lit": "persist-credentials"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 54,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 55,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 57,
+          "col": 3,
+          "lit": "clean"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 59,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 60,
+          "col": 3,
+          "lit": "filter"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 64,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 65,
+          "col": 3,
+          "lit": "sparse-checkout"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 69,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 70,
+          "col": 3,
+          "lit": "sparse-checkout-cone-mode"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 73,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 74,
+          "col": 3,
+          "lit": "fetch-depth"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 76,
+          "col": 14,
+          "lit": "1"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 77,
+          "col": 3,
+          "lit": "fetch-tags"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 79,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 80,
+          "col": 3,
+          "lit": "show-progress"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 82,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 83,
+          "col": 3,
+          "lit": "lfs"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 85,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 86,
+          "col": 3,
+          "lit": "submodules"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 94,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 95,
+          "col": 3,
+          "lit": "set-safe-directory"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 97,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 98,
+          "col": 3,
+          "lit": "github-server-url"
+        },
+        "value": ""
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": true,
+    "script": "dist/index.js",
+    "pre": null,
+    "post": "dist/index.js",
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:34:42Z INFO ActionManager] Action pre node.js file: N/A.
+[2026-01-24 02:34:42Z INFO ActionManager] Action node.js file: dist/index.js.
+[2026-01-24 02:34:42Z INFO ActionManager] Action post node.js file: dist/index.js.
+[2026-01-24 02:34:42Z INFO ExecutionContext] Reserve record order 4 to 6 for post job actions.
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:34:42Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:34:42Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddPathFileCommand, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetEnvFileCommand, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.CreateStepSummaryCommand, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SaveStateFileCommand, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetOutputFileCommand, Runner.Worker
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'repository': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 6,
+  "col": 14,
+  "lit": "Ebesoh/ebesoh_esp32_wrover_projects"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'ref': default value evaluate result: ""
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'token': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 24,
+  "col": 14,
+  "lit": "***"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'ssh-key': default value evaluate result: ""
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'ssh-known-hosts': default value evaluate result: ""
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'ssh-strict': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 47,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'ssh-user': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 51,
+  "col": 14,
+  "lit": "git"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'persist-credentials': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 54,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'path': default value evaluate result: ""
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'clean': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 59,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'filter': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 64,
+  "col": 14,
+  "lit": ""
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'sparse-checkout': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 69,
+  "col": 14,
+  "lit": ""
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'sparse-checkout-cone-mode': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 73,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'fetch-depth': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 76,
+  "col": 14,
+  "lit": "1"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'fetch-tags': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 79,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'show-progress': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 82,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'lfs': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 85,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'submodules': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 94,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'set-safe-directory': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 97,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:34:42Z INFO ActionManifestManagerLegacy] Input 'github-server-url': default value evaluate result: ""
+[2026-01-24 02:34:42Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.InternalPluginSetRepoPathCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetEnvCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetOutputCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SaveStateCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddPathCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddMaskCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddMatcherCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.RemoveMatcherCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.WarningCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.ErrorCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.NoticeCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.DebugCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.GroupCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.EndGroupCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.EchoCommandExtension, Runner.Worker
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:34:42Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:42Z INFO HostContext] Well known directory 'Externals': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   File name: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals\node20\bin\node.exe'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Arguments: '"C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\checkout\v4\dist/index.js"'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Encoding web name: utf-8 ; code page: '65001'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:34:42Z INFO ProcessInvokerWrapper] Process started with process id 6720, waiting for process exit.
+[2026-01-24 02:34:43Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:43Z INFO AddMaskCommandExtension] Add new secret mask with length of 76
+[2026-01-24 02:34:43Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:34:43Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_a711f65d-8896-44b5-902b-f616fcef44cf.1
+[2026-01-24 02:34:43Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:34:43Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:43Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:44Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:34:44Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:47Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:47Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:47Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:50Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:50Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:52Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:34:52Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:34:52Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:34:53Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:34:56Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:35:02Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:02Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:02Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:35:12Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:12Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:12Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:35:22Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:22Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:22Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:35:32Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:32Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:32Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:35:42Z INFO JobServerQueue] Stop aggressive process web console line queue.
+[2026-01-24 02:35:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:35:52Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:35:52Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:35:52Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:02Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:02Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:02Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:12Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:12Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:12Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:22Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:22Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:22Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:32Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:32Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:32Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:36:52Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:36:52Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:36:52Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:02Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:02Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:02Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:06Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:07Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:08Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:08Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:09Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:10Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:10Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Finished process 6720 with exit code 0, and elapsed time 00:02:27.8467990.
+[2026-01-24 02:37:10Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_dec7a302-621d-4131-8533-509c50eaf56a) is empty; skipping attachment upload
+[2026-01-24 02:37:10Z INFO StepsRunner] Step result: 
+[2026-01-24 02:37:10Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "actions/checkout",
+  "ref": "v4",
+  "type": "node20",
+  "stage": "Main",
+  "stepId": "1c5e5ba2-050b-4ccf-a94b-2551b53b388a",
+  "stepContextName": "__actions_checkout",
+  "hasPreStep": false,
+  "hasPostStep": true,
+  "result": "succeeded",
+  "errorMessages": [
+    "no submodule mapping found in .gitmodules for path 'actions-runner/_work/ebesoh_esp32_wrover_projects/ebesoh_esp32_wrover_projects'",
+    "Unable to clean or reset the repository. The repository will be recreated instead."
+  ],
+  "executionTimeInSeconds": 148,
+  "startTime": "2026-01-24T02:34:42.9010504Z",
+  "finishTime": "2026-01-24T02:37:10.8341795Z"
+}.
+[2026-01-24 02:37:10Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:37:10Z INFO StepsRunner] Current state: job state = ''
+[2026-01-24 02:37:10Z INFO StepsRunner] Processing step: DisplayName='Upload ALL test files'
+[2026-01-24 02:37:10Z INFO StepsRunner] Evaluating: success()
+[2026-01-24 02:37:10Z INFO StepsRunner] Result: true
+[2026-01-24 02:37:10Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:10Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:37:10Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Process started with process id 25552, waiting for process exit.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Finished process 25552 with exit code 0, and elapsed time 00:00:00.0197108.
+[2026-01-24 02:37:10Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:37:10Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:37:10Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:37:10Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:37:10Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:37:10Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:37:10Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:10Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:37:10Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:37:10Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Arguments: '/D /E:ON /V:OFF /S /C "CALL "C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\7236f58f-16a5-4440-bf7c-ecb25f168360.cmd""'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:37:10Z INFO ProcessInvokerWrapper] Process started with process id 30892, waiting for process exit.
+[2026-01-24 02:37:11Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:37:11Z INFO JobServerQueue] Try to append 1 batches web console lines for record '1c5e5ba2-050b-4ccf-a94b-2551b53b388a', success rate: 1/1.
+[2026-01-24 02:37:11Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:11Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:37:11Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_1c5e5ba2-050b-4ccf-a94b-2551b53b388a.1
+[2026-01-24 02:37:12Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:37:12Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:12Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:12Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:21Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:21Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:22Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:22Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:22Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:22Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:24Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:25Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:27Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:29Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:30Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:32Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:33Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:33Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:33Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:34Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:35Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:37Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:39Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:41Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:42Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:43Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:43Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:43Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:44Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:46Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:47Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:49Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:51Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:52Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:53Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:53Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:53Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:54Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:56Z INFO JobServerQueue] Try to append 1 batches web console lines for record '24c80966-f6a3-4b0e-ad03-5d445bce0731', success rate: 1/1.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Finished process 30892 with exit code 0, and elapsed time 00:00:46.5878156.
+[2026-01-24 02:37:57Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_713b505f-a095-4152-8590-1395403ee853) is empty; skipping attachment upload
+[2026-01-24 02:37:57Z INFO StepsRunner] Step result: 
+[2026-01-24 02:37:57Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "cmd",
+  "type": "run",
+  "stage": "Main",
+  "stepId": "24c80966-f6a3-4b0e-ad03-5d445bce0731",
+  "stepContextName": "__run",
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 47,
+  "startTime": "2026-01-24T02:37:10.8360081Z",
+  "finishTime": "2026-01-24T02:37:57.4576597Z"
+}.
+[2026-01-24 02:37:57Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:37:57Z INFO StepsRunner] Current state: job state = ''
+[2026-01-24 02:37:57Z INFO StepsRunner] Processing step: DisplayName='Post Run actions/checkout@v4'
+[2026-01-24 02:37:57Z INFO StepsRunner] Evaluating: always()
+[2026-01-24 02:37:57Z INFO StepsRunner] Result: true
+[2026-01-24 02:37:57Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:37:57Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Process started with process id 14572, waiting for process exit.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Finished process 14572 with exit code 0, and elapsed time 00:00:00.0179120.
+[2026-01-24 02:37:57Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:37:57Z INFO ActionManager] Load action that reference repository from 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\checkout\v4'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Checkout",
+  "description": "Checkout a Git repository at a particular version",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 4,
+          "col": 3,
+          "lit": "repository"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 6,
+          "col": 14,
+          "expr": "github.repository"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 3,
+          "lit": "ref"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 12,
+          "col": 3,
+          "lit": "token"
+        },
+        "value": {
+          "type": 3,
+          "file": 2,
+          "line": 24,
+          "col": 14,
+          "expr": "github.token"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 25,
+          "col": 3,
+          "lit": "ssh-key"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "ssh-known-hosts"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 3,
+          "lit": "ssh-strict"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 48,
+          "col": 3,
+          "lit": "ssh-user"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 51,
+          "col": 14,
+          "lit": "git"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 52,
+          "col": 3,
+          "lit": "persist-credentials"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 54,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 55,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 57,
+          "col": 3,
+          "lit": "clean"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 59,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 60,
+          "col": 3,
+          "lit": "filter"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 64,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 65,
+          "col": 3,
+          "lit": "sparse-checkout"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 69,
+          "col": 14,
+          "lit": ""
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 70,
+          "col": 3,
+          "lit": "sparse-checkout-cone-mode"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 73,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 74,
+          "col": 3,
+          "lit": "fetch-depth"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 76,
+          "col": 14,
+          "lit": "1"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 77,
+          "col": 3,
+          "lit": "fetch-tags"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 79,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 80,
+          "col": 3,
+          "lit": "show-progress"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 82,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 83,
+          "col": 3,
+          "lit": "lfs"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 85,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 86,
+          "col": 3,
+          "lit": "submodules"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 94,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 95,
+          "col": 3,
+          "lit": "set-safe-directory"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 97,
+          "col": 14,
+          "lit": "true"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 98,
+          "col": 3,
+          "lit": "github-server-url"
+        },
+        "value": ""
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": true,
+    "script": "dist/index.js",
+    "pre": null,
+    "post": "dist/index.js",
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:37:57Z INFO ActionManager] Action pre node.js file: N/A.
+[2026-01-24 02:37:57Z INFO ActionManager] Action node.js file: dist/index.js.
+[2026-01-24 02:37:57Z INFO ActionManager] Action post node.js file: dist/index.js.
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:37:57Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:37:57Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'repository': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 6,
+  "col": 14,
+  "lit": "Ebesoh/ebesoh_esp32_wrover_projects"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'ref': default value evaluate result: ""
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'token': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 24,
+  "col": 14,
+  "lit": "***"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'ssh-key': default value evaluate result: ""
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'ssh-known-hosts': default value evaluate result: ""
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'ssh-strict': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 47,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'ssh-user': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 51,
+  "col": 14,
+  "lit": "git"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'persist-credentials': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 54,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'path': default value evaluate result: ""
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'clean': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 59,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'filter': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 64,
+  "col": 14,
+  "lit": ""
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'sparse-checkout': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 69,
+  "col": 14,
+  "lit": ""
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'sparse-checkout-cone-mode': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 73,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'fetch-depth': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 76,
+  "col": 14,
+  "lit": "1"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'fetch-tags': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 79,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'show-progress': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 82,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'lfs': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 85,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'submodules': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 94,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'set-safe-directory': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 97,
+  "col": 14,
+  "lit": "true"
+}
+[2026-01-24 02:37:57Z INFO ActionManifestManagerLegacy] Input 'github-server-url': default value evaluate result: ""
+[2026-01-24 02:37:57Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:37:57Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:37:57Z INFO HostContext] Well known directory 'Externals': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   File name: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals\node20\bin\node.exe'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Arguments: '"C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\checkout\v4\dist/index.js"'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Encoding web name: utf-8 ; code page: '65001'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:37:57Z INFO ProcessInvokerWrapper] Process started with process id 34520, waiting for process exit.
+[2026-01-24 02:37:57Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:37:57Z INFO AddMaskCommandExtension] Add new secret mask with length of 32
+[2026-01-24 02:37:57Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:37:57Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_24c80966-f6a3-4b0e-ad03-5d445bce0731.1
+[2026-01-24 02:37:58Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'c041cc13-d91b-4191-8187-fd6948aefe1b', success rate: 1/1.
+[2026-01-24 02:37:58Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:38:00Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:00Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:00Z INFO ProcessInvokerWrapper] Finished process 34520 with exit code 0, and elapsed time 00:00:03.4272822.
+[2026-01-24 02:38:00Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_a19a48a1-6758-4409-b199-a76f02156556) is empty; skipping attachment upload
+[2026-01-24 02:38:00Z INFO StepsRunner] Step result: 
+[2026-01-24 02:38:00Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "actions/checkout",
+  "ref": "v4",
+  "type": "node20",
+  "stage": "Post",
+  "stepId": "c041cc13-d91b-4191-8187-fd6948aefe1b",
+  "result": "succeeded",
+  "errorMessages": [
+    "The process 'C:\\Program Files\\Git\\cmd\\git.exe' failed with exit code 128"
+  ],
+  "executionTimeInSeconds": 4,
+  "startTime": "2026-01-24T02:37:57.4585098Z",
+  "finishTime": "2026-01-24T02:38:00.9304282Z"
+}.
+[2026-01-24 02:38:00Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:38:00Z INFO StepsRunner] Current state: job state = ''
+[2026-01-24 02:38:00Z INFO JobRunner] Finalize job.
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:00Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:00Z INFO JobExtension] Initialize Env context
+[2026-01-24 02:38:00Z INFO JobExtension] Initialize steps context
+[2026-01-24 02:38:00Z INFO JobExtension] Total accessible running process: 382.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 31836 (backgroundTaskHost)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 32976 (RuntimeBroker)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 18208 (svchost)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 26384 (WmiPrvSE)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 29532 (svchost)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 15364 (MoUsoCoreWorker)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 35724 (svchost)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Inspecting process environment variables. PID: 7756 (SearchProtocolHost)
+[2026-01-24 02:38:00Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:38:00Z INFO JobExtension] Wait for all connectivity checks to finish.
+[2026-01-24 02:38:00Z INFO JobExtension] Connectivity check result: GitHub.Runner.Worker.JobExtension+CheckResult
+[2026-01-24 02:38:00Z INFO JobExtension] Connectivity check result: GitHub.Runner.Worker.JobExtension+CheckResult
+[2026-01-24 02:38:00Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "complete_job",
+  "type": "runner",
+  "stage": "Post",
+  "stepId": "cb1f43e6-b3bf-4613-b008-ef3bed518498",
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 1,
+  "startTime": "2026-01-24T02:38:00.9354038Z",
+  "finishTime": "2026-01-24T02:38:00.9855347Z"
+}.
+[2026-01-24 02:38:00Z INFO JobRunner] Job result after all job steps finish: Succeeded
+[2026-01-24 02:38:00Z INFO JobRunner] Completing the job execution context.
+[2026-01-24 02:38:00Z INFO JobRunner] Shutting down the job server queue.
+[2026-01-24 02:38:00Z INFO JobServerQueue] Fire signal to shutdown all queues.
+[2026-01-24 02:38:01Z INFO JobServerQueue] All queue process task stopped.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'c041cc13-d91b-4191-8187-fd6948aefe1b', success rate: 1/1.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'cb1f43e6-b3bf-4613-b008-ef3bed518498', success rate: 1/1.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Web console line queue drained.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Uploading 3 files in one shot.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Try to upload 3 log files or attachments, success rate: 3/3.
+[2026-01-24 02:38:01Z INFO JobServerQueue] File upload queue drained.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Starting results-based upload queue...
+[2026-01-24 02:38:01Z INFO JobServerQueue] Uploading 3 file(s) in one shot through results service.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_c041cc13-d91b-4191-8187-fd6948aefe1b.1
+[2026-01-24 02:38:01Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:38:01Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_cb1f43e6-b3bf-4613-b008-ef3bed518498.1
+[2026-01-24 02:38:02Z INFO JobServerQueue] Got a job log file to send to results service.
+[2026-01-24 02:38:02Z INFO JobServerQueue] Starting upload of job log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_8152cf3f-d617-5d5f-9d0c-df2f517891fe.1
+[2026-01-24 02:38:02Z INFO JobServerQueue] Tried to upload 3 file(s) to results, success rate: 3/3.
+[2026-01-24 02:38:02Z INFO JobServerQueue] Results upload queue drained.
+[2026-01-24 02:38:02Z INFO JobServerQueue] Timeline update queue drained.
+[2026-01-24 02:38:02Z INFO JobServerQueue] Disposing job server ...
+[2026-01-24 02:38:02Z INFO JobServerQueue] Disposing results server ...
+[2026-01-24 02:38:02Z INFO JobServerQueue] All queue process tasks have been stopped, and all queues are drained.
+[2026-01-24 02:38:02Z INFO TempDirectoryManager] Cleaning runner temp folder: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp
+[2026-01-24 02:38:02Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:02Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:02Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:02Z INFO HostContext] Well known config file 'Telemetry': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\.telemetry'
+[2026-01-24 02:38:02Z INFO JobRunner] Raising job completed against run service
+[2026-01-24 02:38:03Z INFO Worker] Job completed.
