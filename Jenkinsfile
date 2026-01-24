@@ -96,7 +96,7 @@ pipeline {
             }
         }
 
-        stage('Temperature basic functional Tests') {
+        stage('DS18B20 Temperature Tests') {
             steps {
                 script {
                     def rc = bat(
@@ -115,7 +115,7 @@ pipeline {
             }
         }
 
-        stage('Wi-Fi basic functional Tests') {
+        stage('Wi-Fi Tests') {
             steps {
                 script {
                     def rc = bat(
@@ -134,7 +134,7 @@ pipeline {
             }
         }
 
-        stage('Bluetooth basic functional Tests') {
+        stage('Bluetooth Tests') {
             steps {
                 script {
                     def rc = bat(
@@ -182,6 +182,4 @@ pipeline {
             echo 'PIPELINE FAILURE'
         }
     }
-}
-
 }
