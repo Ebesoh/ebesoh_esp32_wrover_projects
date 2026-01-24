@@ -136,7 +136,6 @@ jobs:
 
       - name: Run Bluetooth tests
         shell: cmd
-        continue-on-error: true
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
           type bt.txt
