@@ -9,6 +9,7 @@ pipeline {
         TEMP_RESULT = 'PASS'
         WIFI_RESULT = 'PASS'
         BT_RESULT   = 'PASS'
+        ANY_TEST_FAILED = 'false'
     }
 
     options { timestamps() }
@@ -106,34 +107,32 @@ pipeline {
             }
         }
 
-        /* ===== TEST STAGES WITH catchError ===== */
+        /* ===== TEST STAGES ===== */
 
         stage('DS18B20 Temperature Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                            > temp.txt
+                script {
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                        > temp.txt
 
-                            type temp.txt
-                            findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                            if %errorlevel%==0 (
-                                echo ❌ DS18B20 TEST FAILED
-                                exit /b 1
-                            ) else (
-                                echo ✅ DS18B20 TEST PASSED
-                                exit /b 0
-                            )
-                        ''')
+                        type temp.txt
+                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ DS18B20 TEST FAILED
+                            exit /b 1
+                        ) else (
+                            echo ✅ DS18B20 TEST PASSED
+                            exit /b 0
+                        )
+                    ''')
 
-                        env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                        
-                        if (rc != 0) {
-                            echo "DS18B20 test failed but pipeline continues..."
-                            currentBuild.result = 'UNSTABLE'
-                        }
+                    env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    if (rc != 0) {
+                        echo "DS18B20 test failed"
+                        env.ANY_TEST_FAILED = 'true'
                     }
                 }
             }
@@ -141,30 +140,28 @@ pipeline {
 
         stage('Wi-Fi Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
-                            > wifi.txt
+                script {
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                        > wifi.txt
 
-                            type wifi.txt
-                            findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
-                            if %errorlevel%==0 (
-                                echo ❌ WIFI TEST FAILED
-                                exit /b 1
-                            ) else (
-                                echo ✅ WIFI TEST PASSED
-                                exit /b 0
-                            )
-                        ''')
+                        type wifi.txt
+                        findstr /C:"CI_RESULT: FAIL" wifi.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ WIFI TEST FAILED
+                            exit /b 1
+                        ) else (
+                            echo ✅ WIFI TEST PASSED
+                            exit /b 0
+                        )
+                    ''')
 
-                        env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                        
-                        if (rc != 0) {
-                            echo "Wi-Fi test failed but pipeline continues..."
-                            currentBuild.result = 'UNSTABLE'
-                        }
+                    env.WIFI_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    if (rc != 0) {
+                        echo "Wi-Fi test failed"
+                        env.ANY_TEST_FAILED = 'true'
                     }
                 }
             }
@@ -172,30 +169,28 @@ pipeline {
 
         stage('Bluetooth Tests') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_bt; test_runner_bt.run_all_tests()" ^
-                            > bt.txt
+                script {
+                    def rc = bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                        > bt.txt
 
-                            type bt.txt
-                            findstr /C:"CI_RESULT: FAIL" bt.txt >nul
-                            if %errorlevel%==0 (
-                                echo ❌ BLUETOOTH TEST FAILED
-                                exit /b 1
-                            ) else (
-                                echo ✅ BLUETOOTH TEST PASSED
-                                exit /b 0
-                            )
-                        ''')
+                        type bt.txt
+                        findstr /C:"CI_RESULT: FAIL" bt.txt >nul
+                        if %errorlevel%==0 (
+                            echo ❌ BLUETOOTH TEST FAILED
+                            exit /b 1
+                        ) else (
+                            echo ✅ BLUETOOTH TEST PASSED
+                            exit /b 0
+                        )
+                    ''')
 
-                        env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                        
-                        if (rc != 0) {
-                            echo "Bluetooth test failed but pipeline continues..."
-                            currentBuild.result = 'UNSTABLE'
-                        }
+                    env.BT_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
+                    
+                    if (rc != 0) {
+                        echo "Bluetooth test failed"
+                        env.ANY_TEST_FAILED = 'true'
                     }
                 }
             }
@@ -210,23 +205,10 @@ pipeline {
                     echo "Temperature : ${env.TEMP_RESULT}"
                     echo "Wi-Fi       : ${env.WIFI_RESULT}"
                     echo "Bluetooth   : ${env.BT_RESULT}"
-                    echo ""
                     
-                    // Count failures
-                    def failures = []
-                    if (env.TEMP_RESULT == 'FAIL') failures.add('Temperature')
-                    if (env.WIFI_RESULT == 'FAIL') failures.add('Wi-Fi')
-                    if (env.BT_RESULT == 'FAIL') failures.add('Bluetooth')
-                    
-                    if (!failures.isEmpty()) {
-                        echo "❌ Failed tests: ${failures.join(', ')}"
-                        
-                        // Optional: Fail the pipeline at the very end
-                        // error("${failures.size()} test suite(s) failed")
-                        
-                        // Or just mark as unstable
-                        currentBuild.result = 'UNSTABLE'
-                        echo "⚠️ Build marked as UNSTABLE due to test failures"
+                    if (env.ANY_TEST_FAILED == 'true') {
+                        // This makes the ENTIRE PIPELINE RED
+                        error("❌ ONE OR MORE TESTS FAILED")
                     } else {
                         echo '✅ ALL TEST SUITES PASSED'
                     }
@@ -246,11 +228,8 @@ pipeline {
         success { 
             echo '✅ PIPELINE COMPLETED SUCCESSFULLY' 
         }
-        unstable { 
-            echo '⚠️ PIPELINE COMPLETED WITH TEST FAILURES' 
-        }
         failure { 
-            echo '❌ PIPELINE FAILED' 
+            echo '❌ PIPELINE FAILURE - Tests failed' 
         }
     }
 }
