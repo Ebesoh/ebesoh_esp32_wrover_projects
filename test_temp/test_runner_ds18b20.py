@@ -129,11 +129,11 @@ def main():
     if passed == total:
         print("\n🎉 ALL DS18B20 TESTS PASSED")
         print("CI_RESULT: PASS")
-        sys.exit(0)
+        raise SystemExit(0)
 
     print("\n❌ DS18B20 TEST FAILURE")
     print("CI_RESULT: FAIL")
-    sys.exit(1)
+    raise SystemExit(1)
 
 
 # -------------------------------------------------

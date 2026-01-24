@@ -92,38 +92,25 @@ pipeline {
             }
         }
 
-        /* ===== TEMPERATURE TEST ===== */
+        /* ===== TEMPERATURE TEST (EXIT-CODE DRIVEN) ===== */
 
         stage('DS18B20 Temperature Tests') {
             steps {
                 script {
-                    try {
-                        def rc = bat(
-                            returnStatus: true,
-                            script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                            > temp.txt
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()"
+                        '''
+                    )
 
-                            type temp.txt
-                            findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                            if %errorlevel%==0 (
-                                echo [FAIL] DS18B20 TEST FAILED
-                                exit /b 1
-                            ) else (
-                                echo [PASS] DS18B20 TEST PASSED
-                                exit /b 0
-                            )
-                            '''
-                        )
-
-                        if (rc != 0) {
-                            throw new Exception('DS18B20 Temperature test failed')
-                        }
-                    } catch (Exception e) {
-                        echo "❌ Temperature test failed but continuing: ${e.message}"
+                    if (rc != 0) {
+                        echo '❌ Temperature test failed'
                         env.FAILED_TESTS += 'Temperature, '
                         env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
+                    } else {
+                        echo '✅ Temperature test passed'
                     }
                 }
             }
