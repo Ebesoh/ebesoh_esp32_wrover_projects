@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -99,6 +98,8 @@ pipeline {
         stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
                 script {
+                    // Reset to true at the start of this stage
+                    env.HARDWARE_TEST_PASSED = 'true'
                     def failures = []
                     
                     // Run DS18B20 test
@@ -108,6 +109,7 @@ pipeline {
                     ''')
                     if (ds18b20Failed != 0) {
                         failures << 'DS18B20'
+                        env.HARDWARE_TEST_PASSED = 'false'
                         echo "DS18B20 test failed"
                     }
 
@@ -118,6 +120,7 @@ pipeline {
                     ''')
                     if (wifiFailed != 0) {
                         failures << 'Wi-Fi'
+                        env.HARDWARE_TEST_PASSED = 'false'
                         echo "Wi-Fi test failed"
                     }
 
@@ -128,12 +131,12 @@ pipeline {
                     ''')
                     if (btFailed != 0) {
                         failures << 'Bluetooth'
+                        env.HARDWARE_TEST_PASSED = 'false'
                         echo "Bluetooth test failed"
                     }
 
                     // After ALL tests have run, check if any failed
                     if (failures) {
-                        env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
                         // Now fail the stage
                         error("Hardware tests failed: ${failures.join(', ')}")
