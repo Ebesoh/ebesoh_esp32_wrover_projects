@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# 🔒 Ensure only ONE job touches COM5 at a time
+# 🔒 One hardware user at a time
 concurrency:
   group: esp32-hardware
   cancel-in-progress: false
@@ -17,12 +17,13 @@ env:
   FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
   PYTHONUNBUFFERED: "1"
 
+jobs:
+
 # =========================================================
 # PREFLIGHT
 # =========================================================
-jobs:
   preflight:
-    name: Preflight checks
+    name: Preflight
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -39,10 +40,10 @@ jobs:
           python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
 
 # =========================================================
-# SYSTEM SELF TEST (HARD GATE)
+# FLASH + UPLOAD TEST FILES (ONCE)
 # =========================================================
-  system-self-test:
-    name: System Self-Test (HARD GATE)
+  setup-hardware:
+    name: Flash & Upload Tests
     runs-on: self-hosted
     needs: preflight
 
@@ -66,11 +67,23 @@ jobs:
         shell: powershell
         run: Start-Sleep -Seconds 15
 
-      - name: Upload test files
+      - name: Upload ALL test files
         shell: cmd
         run: |
+          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
+# =========================================================
+# SYSTEM SELF TEST (HARD GATE)
+# =========================================================
+  system-self-test:
+    name: System Self-Test (HARD GATE)
+    runs-on: self-hosted
+    needs: setup-hardware
+
+    steps:
       - name: Run system self-test
         shell: cmd
         run: |
@@ -98,13 +111,6 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Upload tests
-        shell: cmd
-        run: |
-          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-
       - name: Run DS18B20 tests
         shell: cmd
         run: |
@@ -131,13 +137,6 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Upload tests
-        shell: cmd
-        run: |
-          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-
       - name: Run Wi-Fi tests
         shell: cmd
         run: |
@@ -164,13 +163,6 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Upload tests
-        shell: cmd
-        run: |
-          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-
       - name: Run Bluetooth tests
         shell: cmd
         run: |
@@ -200,13 +192,11 @@ jobs:
     if: always()
 
     steps:
-      - name: Fail build if any test failed
+      - name: Evaluate results
         shell: cmd
         run: |
-          echo Evaluating results...
           if "${{ needs.ds18b20-tests.result }}"=="failure" exit /b 1
           if "${{ needs.wifi-tests.result }}"=="failure" exit /b 1
           if "${{ needs.bluetooth-tests.result }}"=="failure" exit /b 1
           echo ALL TEST SUITES PASSED
-
 
