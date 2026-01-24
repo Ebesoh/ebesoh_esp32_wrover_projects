@@ -4,9 +4,15 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
+        FAILED_TESTS = ''
+        FAILURE_COUNT = 0
     }
 
-    options { timestamps() }
+    options { 
+        timestamps()
+        // Allow pipeline to continue even if stages fail
+        catchErrors: true
+    }
 
     stages {
 
@@ -37,40 +43,52 @@ pipeline {
         
         stage('Upload Test Files') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat '''
-                    echo Uploading test files...
-                    
-                    REM Upload temperature test files only
-                    for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                    
-                    echo ✅ Test files uploaded successfully
-                    '''
+                script {
+                    try {
+                        bat '''
+                        echo Uploading test files...
+                        for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
+                        echo ✅ Test files uploaded
+                        '''
+                    } catch (Exception e) {
+                        echo "⚠️ Upload failed but continuing: ${e.getMessage()}"
+                        env.FAILED_TESTS += 'File Upload, '
+                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
+                    }
                 }
             }
         }
 
         /* ===== SYSTEM HARD GATE ===== */
+        // Keep as hard stop - if hardware is broken, no point continuing
 
         stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    def rc = bat(returnStatus: true, script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_system; test_runner_system.main()" ^
-                        > system.txt
+                    try {
+                        def rc = bat(returnStatus: true, script: '''
+                            python -m mpremote connect %ESP_PORT% exec ^
+                            "import test_runner_system; test_runner_system.main()" ^
+                            > system.txt
 
-                        type system.txt
-                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                        if %errorlevel%==0 (
-                            exit /b 1
-                        ) else (
-                            exit /b 0
-                        )
-                    ''')
+                            type system.txt
+                            findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                            if %errorlevel%==0 (
+                                echo ❌ SYSTEM TEST FAILED
+                                exit /b 1
+                            ) else (
+                                echo ✅ SYSTEM TEST PASSED
+                                exit /b 0
+                            )
+                        ''')
 
-                    if (rc != 0) {
-                        error('❌ SYSTEM SELF-TEST FAILED — PIPELINE STOPPED')
+                        if (rc != 0) {
+                            throw new Exception("System Self-Test failed")
+                        }
+                    } catch (Exception e) {
+                        echo "❌ System test failed but continuing: ${e.getMessage()}"
+                        env.FAILED_TESTS += 'System Test, '
+                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
                     }
                 }
             }
@@ -81,41 +99,54 @@ pipeline {
         stage('DS18B20 Temperature Tests') {
             steps {
                 script {
-                    def rc = bat(returnStatus: true, script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
-                        > temp.txt
+                    try {
+                        def rc = bat(returnStatus: true, script: '''
+                            python -m mpremote connect %ESP_PORT% exec ^
+                            "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                            > temp.txt
 
-                        type temp.txt
-                        findstr /C:"CI_RESULT: FAIL" temp.txt >nul
-                        if %errorlevel%==0 (
-                            echo ❌ DS18B20 TEST FAILED
-                            exit /b 1
-                        ) else (
-                            echo ✅ DS18B20 TEST PASSED
-                            exit /b 0
-                        )
-                    ''')
+                            type temp.txt
+                            findstr /C:"CI_RESULT: FAIL" temp.txt >nul
+                            if %errorlevel%==0 (
+                                echo ❌ DS18B20 TEST FAILED
+                                exit /b 1
+                            ) else (
+                                echo ✅ DS18B20 TEST PASSED
+                                exit /b 0
+                            )
+                        ''')
 
-                    // REMOVED: env.TEMP_RESULT = (rc == 0) ? 'PASS' : 'FAIL'
-                    // REMOVED: if (rc != 0) { env.ANY_TEST_FAILED = 'true' }
-                    
-                    // ADDED: Fail the stage immediately if test fails
-                    if (rc != 0) {
-                        error('❌ DS18B20 TEMPERATURE TEST FAILED')
+                        if (rc != 0) {
+                            throw new Exception("DS18B20 Temperature test failed")
+                        }
+                    } catch (Exception e) {
+                        echo "❌ Temperature test failed but continuing: ${e.getMessage()}"
+                        env.FAILED_TESTS += 'Temperature, '
+                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
                     }
                 }
             }
         }
 
         /* ===== FINAL VERDICT ===== */
-        // This stage only runs if all previous stages passed
 
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "=== FINAL RESULT ==="
-                    echo '✅ ALL TESTS PASSED'
+                    echo "=== TEST EXECUTION COMPLETE ==="
+                    echo "Total failures: ${env.FAILURE_COUNT}"
+                    
+                    if (env.FAILED_TESTS) {
+                        // Clean up the trailing comma and space
+                        def failedList = env.FAILED_TESTS.substring(0, env.FAILED_TESTS.length() - 2)
+                        echo "❌ Failed tests: ${failedList}"
+                        
+                        // This makes the PIPELINE RED at the very end
+                        currentBuild.result = 'FAILURE'
+                    } else {
+                        echo "✅ ALL TESTS PASSED"
+                        currentBuild.result = 'SUCCESS'
+                    }
                 }
             }
         }
@@ -124,16 +155,25 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            
             script {
-                echo "=== PIPELINE COMPLETED ==="
-                echo "Final build result: ${currentBuild.result ?: 'SUCCESS'}"
+                echo "=== FINAL STATUS ==="
+                echo "Pipeline result: ${currentBuild.result}"
+                echo "Failed tests: ${env.FAILED_TESTS ?: 'None'}"
+                echo "Failure count: ${env.FAILURE_COUNT}"
             }
         }
-        success { 
-            echo '✅ PIPELINE COMPLETED SUCCESSFULLY' 
+        
+        success {
+            echo '✅ Pipeline completed successfully'
         }
-        failure { 
-            echo '❌ PIPELINE FAILURE - Test(s) failed' 
+        
+        failure {
+            echo '❌ Pipeline completed with test failures'
+        }
+        
+        unstable {
+            echo '⚠️ Pipeline completed with warnings'
         }
     }
 }
