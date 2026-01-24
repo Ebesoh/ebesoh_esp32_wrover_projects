@@ -124,7 +124,7 @@ jobs:
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
           type temp.txt
-          findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
+          findstr /C:"CI_RESULT: PASS" temp.txt >nul && exit /b 1
 
       - name: Run Wi-Fi tests
         shell: cmd
