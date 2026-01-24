@@ -66,20 +66,8 @@ pipeline {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                     bat '''
-                    echo Cleaning existing test files from ESP32...
-                    python -m mpremote connect %ESP_PORT% exec "
-                    import os
-                    files = os.listdir()
-                    for f in files:
-                        if f.endswith('.py') and ('test' in f or 'runner' in f):
-                            try:
-                                os.remove(f)
-                                print(f'Removed: {f}')
-                            except:
-                                pass
-                    "
+                    echo Uploading test files (will overwrite existing)...
                     
-                    echo Uploading new test files...
                     for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
                     for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
                     for %%f in (tests_bt\\*.py)   do python -m mpremote connect %ESP_PORT% fs cp %%f :
@@ -87,8 +75,6 @@ pipeline {
                     
                     echo ✅ Test files uploaded successfully
                     '''
-                    
-                    // If upload fails, stage will be red but pipeline continues
                 }
             }
         }
