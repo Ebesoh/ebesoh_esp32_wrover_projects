@@ -121,9 +121,11 @@ pipeline {
                         failures << 'Bluetooth'
                     }
 
+                    // THIS LINE MAKES STAGE RED
                     if (failures) {
                         env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
+                        error("Hardware tests failed: ${failures.join(', ')}")
                     }
                 }
             }
