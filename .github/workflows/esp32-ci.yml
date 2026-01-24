@@ -118,6 +118,15 @@ jobs:
     needs: system-self-test
 
     steps:
+      # -------- Upload DS18B20 test files (JUST-IN-TIME) --------
+      - name: Upload DS18B20 test files
+        shell: cmd
+        run: |
+           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_accuracy_temp.py :
+           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_fault_injection.py :
+           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_ds18b20_stability.py :
+           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_runner_ds18b20.py :
+         
       - name: Run DS18B20 Temperature tests
         shell: cmd
         continue-on-error: true
