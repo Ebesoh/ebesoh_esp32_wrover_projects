@@ -186,10 +186,10 @@ pipeline {
         stage('Hardware Tests Verdict') {
             steps {
                 script {
-                    if (env.HARDWARE_TEST_PASSED == 'false') {
+                    if (env.CI_RESULT_WiFi == 'false') {
                         error("Hardware tests failed: ${env.FAILED_TESTS}")
                     } else {
-                        env.HARDWARE_TEST_PASSED = 'true'
+                        env.CI_RESULT_WiFi = 'true'
                     }
                 }
             }
@@ -202,15 +202,15 @@ pipeline {
             steps {
                 script {
                     echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
-                    echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
+                    echo "CI_RESULT_WiFi = ${env.CI_RESULT_WiFi}"
                     echo "FAILED_TESTS         = ${env.FAILED_TESTS}"
 
                     if (env.SYSTEM_TEST_PASSED != 'true') {
                         error('Final verdict: System Self-Test failed')
                     }
 
-                    if (env.HARDWARE_TEST_PASSED != 'true') {
-                        echo "FAILED HARDWARE TESTS: ${env.FAILED_TESTS}"
+                    if (env.CI_RESULT_WiFi != 'true') {
+                        echo "CI_RESULT_WiFi: ${env.FAILED_TESTS}"
                         error('Final verdict: One or more hardware tests failed')
                     }
 
