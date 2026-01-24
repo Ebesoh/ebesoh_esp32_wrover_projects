@@ -30,7 +30,7 @@ import time
 # -------------------------------------------------
 
 try:
-    from test_ds18b20_accuracy import ds18b20_accuracy_test
+    from test_ds18b20_accuracy_temp import ds18b20_accuracy_test
 except Exception as e:
     print("ERROR: Cannot import accuracy test:", e)
     print("CI_RESULT: FAIL")
