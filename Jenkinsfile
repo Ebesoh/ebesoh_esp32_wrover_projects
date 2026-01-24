@@ -5,32 +5,36 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
+        // Remove these from here - they're read-only!
+        // SYSTEM_TEST_PASSED   = 'false'
+        // HARDWARE_TEST_PASSED = 'true'
+        // FAILED_TESTS = ''
     }
 
     options {
         timestamps()
-        disableConcurrentBuilds(abortPrevious: true)
+        disableConcurrentBuilds()
     }
 
     stages {
 
         /* =========================================================
-           INITIALIZE STATE (IMPORTANT)
+           INITIALIZE VARIABLES
         ========================================================= */
-        stage('Initialize State') {
+        stage('Initialize Variables') {
             steps {
                 script {
-                    // REAL pipeline state (Groovy variables)
-                    SYSTEM_TEST_PASSED   = false
-                    HARDWARE_TEST_PASSED = true
-                    FAILED_TESTS = []
+                    // Initialize variables here - they'll be mutable
+                    env.SYSTEM_TEST_PASSED = 'false'
+                    env.HARDWARE_TEST_PASSED = 'true'
+                    env.FAILED_TESTS = ''
                 }
             }
         }
 
         /* =========================================================
-           PREFLIGHT
-        ========================================================= */
+           Setup
+        =========================================================------*/
         stage('Preflight') {
             steps {
                 checkout scm
@@ -93,44 +97,53 @@ pipeline {
                     )
 
                     if (rc != 0) {
-                        SYSTEM_TEST_PASSED = false
+                        env.SYSTEM_TEST_PASSED = 'false'
                         error('System Self-Test failed')
+                    } else {
+                        // Explicitly set to true when test passes
+                        env.SYSTEM_TEST_PASSED = 'true'
                     }
-
-                    SYSTEM_TEST_PASSED = true
                 }
             }
         }
 
         /* =========================================================
-           HARDWARE TESTS (COLLECT ONLY)
+           HARDWARE TESTS
         ========================================================= */
-        stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
+        stage('Hardware Tests') {
             steps {
                 script {
+                    def failures = []
 
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
                     ''')) {
-                        HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'DS18B20'
+                        failures << 'DS18B20'
                     }
 
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
                     ''')) {
-                        HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'Wi-Fi'
+                        failures << 'Wi-Fi'
                     }
 
                     if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
                     ''')) {
-                        HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'Bluetooth'
+                        failures << 'Bluetooth'
+                    }
+
+                    // THIS LINE MAKES STAGE RED
+                    if (failures) {
+                        env.HARDWARE_TEST_PASSED = 'false'
+                        env.FAILED_TESTS = failures.join(', ')
+                        error("Hardware tests failed: ${failures.join(', ')}")
+                    } else {
+                        // Explicitly set to true when all tests pass
+                        env.HARDWARE_TEST_PASSED = 'true'
                     }
                 }
             }
@@ -142,20 +155,16 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    // Export state for logging / post steps
-                    env.SYSTEM_TEST_PASSED   = SYSTEM_TEST_PASSED.toString()
-                    env.HARDWARE_TEST_PASSED = HARDWARE_TEST_PASSED.toString()
-                    env.FAILED_TESTS         = FAILED_TESTS.join(', ')
-
                     echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
                     echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
+                    echo "FAILED_TESTS         = ${env.FAILED_TESTS}"
 
-                    if (!SYSTEM_TEST_PASSED) {
+                    if (env.SYSTEM_TEST_PASSED != 'true') {
                         error('Final verdict: System Self-Test failed')
                     }
 
-                    if (!HARDWARE_TEST_PASSED) {
-                        echo "FAILED HARDWARE TESTS: ${FAILED_TESTS.join(', ')}"
+                    if (env.HARDWARE_TEST_PASSED != 'true') {
+                        echo "FAILED HARDWARE TESTS: ${env.FAILED_TESTS}"
                         error('Final verdict: One or more hardware tests failed')
                     }
 
