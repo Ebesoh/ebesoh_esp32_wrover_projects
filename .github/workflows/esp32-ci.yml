@@ -118,13 +118,20 @@ jobs:
     needs: system-self-test
 
     steps:
+      # -------- Upload DS18B20 test files (JUST-IN-TIME) --------
+      - name: Upload DS18B20 test files
+        shell: cmd
+        run: |
+           for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+           python -m mpremote connect %ESP_PORT% fs cp test_temp\test_runner_ds18b20.py :
+         
       - name: Run DS18B20 Temperature tests
         shell: cmd
         continue-on-error: true
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
           type temp.txt
-          findstr /C:"CI_RESULT: FAIL" temp.txt >nul && exit /b 1
+          findstr /C:"CI_RESULT: PASS" temp.txt >nul && exit /b 1
 
       - name: Run Wi-Fi tests
         shell: cmd
@@ -132,7 +139,7 @@ jobs:
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
           type wifi.txt
-          findstr /C:"CI_RESULT: FAIL" wifi.txt >nul && exit /b 1
+          findstr /C:"CI_RESULT: PASS" wifi.txt >nul && exit /b 1
 
       - name: Run Bluetooth tests
         shell: cmd
