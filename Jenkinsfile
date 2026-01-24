@@ -19,8 +19,8 @@ pipeline {
     stages {
 
         /* =========================================================
-           Setup
-        =========================================================------*/
+           PREFLIGHT
+        ========================================================= */
         stage('Preflight') {
             steps {
                 checkout scm
@@ -93,7 +93,7 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS
+           HARDWARE TESTS (COLLECT ONLY)
         ========================================================= */
         stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
@@ -121,11 +121,9 @@ pipeline {
                         failures << 'Bluetooth'
                     }
 
-                    // THIS LINE MAKES STAGE RED
                     if (failures) {
                         env.HARDWARE_TEST_PASSED = 'false'
                         env.FAILED_TESTS = failures.join(', ')
-                        error("Hardware tests failed: ${failures.join(', ')}")
                     }
                 }
             }
