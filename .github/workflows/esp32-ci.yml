@@ -87,9 +87,7 @@ jobs:
       - name: Run system self-test
         shell: cmd
         run: |
-          python -m mpremote connect %ESP_PORT% exec ^
-          "import test_runner_system; test_runner_system.main()" ^
-          > system.txt
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > system.txt
 
           type system.txt
           findstr /C:"CI_RESULT: PASS" system.txt >nul
