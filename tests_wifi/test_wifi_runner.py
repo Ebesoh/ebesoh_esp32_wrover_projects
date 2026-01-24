@@ -55,7 +55,7 @@ def run_all_wifi_tests():
 
     except ImportError as e:
         print(f"ERROR: Import failed: {e}")
-        print("CI_RESULT: FAIL")
+        print("CI_RESULT_WiFi: FAIL")
         sys.exit(1)
 
     test_functions = [
@@ -132,17 +132,17 @@ def run_all_wifi_tests():
     # ===== CI VERDICT =====
     if passed == total:
         print("🎉 ALL TESTS PASSED")
-        print("CI_RESULT: PASS")
+        print("CI_RESULT_WiFi: PASS")
         sys.exit(0)
 
     elif passed >= int(total * 0.7):
         print("⚠️ PARTIAL PASS — WiFi functional but issues detected")
-        print("CI_RESULT: UNSTABLE")
+        print("CI_RESULT_WiFi: UNSTABLE")
         sys.exit(1)
 
     else:
         print("❌ TEST FAILURE — WiFi not reliable")
-        print("CI_RESULT: FAIL")
+        print("CI_RESULT_WiFi: FAIL")
         sys.exit(1)
 
 

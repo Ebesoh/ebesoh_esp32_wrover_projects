@@ -21,7 +21,9 @@ pipeline {
                 script {
                     env.SYSTEM_TEST_PASSED = 'false'
                     env.HARDWARE_TEST_PASSED = 'true'
+                    env.CI_RESULT_WiFi = 'true'
                     env.FAILED_TESTS = ''
+                    
                 }
             }
         }
@@ -101,7 +103,7 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS - TEMPERATURE
+           Functional TESTS - TEMPERATURE
         ========================================================= */
         stage('Temperature Test (DS18B20)') {
             steps {
@@ -127,7 +129,7 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS - WI-FI
+           Functional TESTS - WI-FI
         ========================================================= */
         stage('Wi-Fi Test') {
             steps {
@@ -146,14 +148,14 @@ pipeline {
                         } else {
                             env.FAILED_TESTS = env.FAILED_TESTS + ', Wi-Fi'
                         }
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        env.CI_RESULT_WiFi = 'false'
                     }
                 }
             }
         }
 
         /* =========================================================
-           HARDWARE TESTS - BLUETOOTH
+          Functional TESTS - BLUETOOTH
         ========================================================= */
         stage('Bluetooth Test') {
             steps {
@@ -179,7 +181,7 @@ pipeline {
         }
 
         /* =========================================================
-           HARDWARE TESTS VERDICT
+          Functional TESTS VERDICT
         ========================================================= */
         stage('Hardware Tests Verdict') {
             steps {
