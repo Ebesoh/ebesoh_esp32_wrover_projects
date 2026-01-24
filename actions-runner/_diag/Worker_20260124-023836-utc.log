@@ -1502,3 +1502,1129 @@
 [2026-01-24 02:38:37Z INFO Worker] Waiting for the job to complete or for a cancel message from the channel.
 [2026-01-24 02:38:37Z INFO ResultServer] Successfully started websocket client.
 [2026-01-24 02:38:37Z INFO JobServerQueue] Try to append 1 batches web console lines for record '629dcbaa-fddd-489f-833e-9d1159dfff49', success rate: 1/1.
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:37Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:37Z INFO ActionManager] Save archive 'https://api.github.com/repos/actions/upload-artifact/zipball/ea165f8d65b6e75b540449e92b4886f43607fa02' into C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\_temp_9b4a9141-6313-417c-b9f3-1a5382bdb474\e154e87c-43fc-4a12-895b-11195af7b996.zip.
+[2026-01-24 02:38:37Z INFO JobServerQueue] Try to append 1 batches web console lines for record '629dcbaa-fddd-489f-833e-9d1159dfff49', success rate: 1/1.
+[2026-01-24 02:38:37Z INFO JobServerQueue] Job timeline record has been updated for the first time.
+[2026-01-24 02:38:40Z INFO ActionManager] Request URL: https://api.github.com/repos/actions/upload-artifact/zipball/ea165f8d65b6e75b540449e92b4886f43607fa02 X-GitHub-Request-Id: DDAB:26F4F8:2B003:134237:697430AE Http Status: OK
+[2026-01-24 02:38:41Z INFO ActionManager] Finished getting action repository.
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:41Z INFO ActionManifestManagerLegacy] Load schema file with definitions: [
+  "null",
+  "boolean",
+  "number",
+  "string",
+  "sequence",
+  "mapping",
+  "any",
+  "action-root",
+  "inputs",
+  "input",
+  "outputs",
+  "output-definition",
+  "runs",
+  "container-runs",
+  "container-runs-args",
+  "container-runs-env",
+  "node-runs",
+  "plugin-runs",
+  "composite-runs",
+  "composite-steps",
+  "composite-step",
+  "run-step",
+  "uses-step",
+  "container-runs-context",
+  "output-value",
+  "input-default-context",
+  "non-empty-string",
+  "string-steps-context",
+  "boolean-steps-context",
+  "step-env",
+  "step-if",
+  "step-with"
+]
+[2026-01-24 02:38:41Z INFO ActionManifestManager] Load schema file with definitions: [
+  "null",
+  "boolean",
+  "number",
+  "string",
+  "sequence",
+  "mapping",
+  "any",
+  "action-root",
+  "inputs",
+  "input",
+  "outputs",
+  "output-definition",
+  "runs",
+  "container-runs",
+  "container-runs-args",
+  "container-runs-env",
+  "node-runs",
+  "plugin-runs",
+  "composite-runs",
+  "composite-steps",
+  "composite-step",
+  "run-step",
+  "uses-step",
+  "container-runs-context",
+  "output-value",
+  "input-default-context",
+  "non-empty-string",
+  "string-steps-context",
+  "boolean-steps-context",
+  "step-env",
+  "step-if",
+  "step-with"
+]
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:41Z INFO ActionManifestManagerLegacy] Ignore action property author.
+[2026-01-24 02:38:41Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Upload a Build Artifact",
+  "description": "Upload a build artifact that can be used by subsequent workflow steps",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 5,
+          "col": 3,
+          "lit": "name"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 14,
+          "lit": "artifact"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 8,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 11,
+          "col": 3,
+          "lit": "if-no-files-found"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 19,
+          "col": 14,
+          "lit": "warn"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 20,
+          "col": 3,
+          "lit": "retention-days"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 26,
+          "col": 3,
+          "lit": "compression-level"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 36,
+          "col": 14,
+          "lit": "6"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "overwrite"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 43,
+          "col": 3,
+          "lit": "include-hidden-files"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "false"
+        }
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": false,
+    "script": "dist/upload/index.js",
+    "pre": null,
+    "post": null,
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:38:41Z INFO ActionManager] Action node.js file: dist/upload/index.js, no more preparation.
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:41Z INFO ActionManager] Load action that reference repository from 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\upload-artifact\v4'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:38:41Z INFO ActionManifestManagerLegacy] Ignore action property author.
+[2026-01-24 02:38:41Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Upload a Build Artifact",
+  "description": "Upload a build artifact that can be used by subsequent workflow steps",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 5,
+          "col": 3,
+          "lit": "name"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 14,
+          "lit": "artifact"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 8,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 11,
+          "col": 3,
+          "lit": "if-no-files-found"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 19,
+          "col": 14,
+          "lit": "warn"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 20,
+          "col": 3,
+          "lit": "retention-days"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 26,
+          "col": 3,
+          "lit": "compression-level"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 36,
+          "col": 14,
+          "lit": "6"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "overwrite"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 43,
+          "col": 3,
+          "lit": "include-hidden-files"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "false"
+        }
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": false,
+    "script": "dist/upload/index.js",
+    "pre": null,
+    "post": null,
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:38:41Z INFO ActionManager] Action pre node.js file: N/A.
+[2026-01-24 02:38:41Z INFO ActionManager] Action node.js file: dist/upload/index.js.
+[2026-01-24 02:38:41Z INFO ActionManager] Action post node.js file: N/A.
+[2026-01-24 02:38:41Z INFO JobExtension] Adding .
+[2026-01-24 02:38:41Z INFO JobExtension] Adding .
+[2026-01-24 02:38:41Z INFO JobExtension] Adding .
+[2026-01-24 02:38:41Z INFO JobExtension] Adding .
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:38:41Z INFO JobExtension] Total accessible running process: 379.
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO JobExtension] Start checking server connectivity.
+[2026-01-24 02:38:41Z INFO JobExtension] Check server connectivity for https://broker.actions.githubusercontent.com/health.
+[2026-01-24 02:38:41Z INFO JobExtension] Check server connectivity for https://token.actions.githubusercontent.com/ready.
+[2026-01-24 02:38:41Z INFO JobExtension] Start checking service connectivity in background.
+[2026-01-24 02:38:41Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "setup_job",
+  "type": "runner",
+  "stage": "Pre",
+  "stepId": "629dcbaa-fddd-489f-833e-9d1159dfff49",
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 5,
+  "startTime": "2026-01-24T02:38:37.0702368Z",
+  "finishTime": "2026-01-24T02:38:41.3517138Z"
+}.
+[2026-01-24 02:38:41Z INFO JobRunner] Total job steps: 4.
+[2026-01-24 02:38:41Z INFO JobRunner] Run all job steps.
+[2026-01-24 02:38:41Z INFO StepsRunner] Processing step: DisplayName='Run DS18B20 Temperature tests'
+[2026-01-24 02:38:41Z INFO StepsRunner] Evaluating: success()
+[2026-01-24 02:38:41Z INFO StepsRunner] Result: true
+[2026-01-24 02:38:41Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:38:41Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] Process started with process id 12892, waiting for process exit.
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] Finished process 12892 with exit code 0, and elapsed time 00:00:00.0196038.
+[2026-01-24 02:38:41Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:41Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:41Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddPathFileCommand, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetEnvFileCommand, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.CreateStepSummaryCommand, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SaveStateFileCommand, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetOutputFileCommand, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.InternalPluginSetRepoPathCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetEnvCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SetOutputCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.SaveStateCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddPathCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddMaskCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.AddMatcherCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.RemoveMatcherCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.WarningCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.ErrorCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.NoticeCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.DebugCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.GroupCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.EndGroupCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ExtensionManager] Creating instance: GitHub.Runner.Worker.EchoCommandExtension, Runner.Worker
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:38:41Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:38:41Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:38:41Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:41Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:41Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:38:41Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Arguments: '/D /E:ON /V:OFF /S /C "CALL "C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\2be9434d-6b2c-4af2-8539-c14847ed6721.cmd""'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:38:41Z INFO ProcessInvokerWrapper] Process started with process id 29144, waiting for process exit.
+[2026-01-24 02:38:41Z INFO JobServerQueue] Try to append 1 batches web console lines for record '629dcbaa-fddd-489f-833e-9d1159dfff49', success rate: 1/1.
+[2026-01-24 02:38:41Z INFO JobServerQueue] Try to append 1 batches web console lines for record '49b539a6-b41f-40ae-841f-0193a648bc5e', success rate: 1/1.
+[2026-01-24 02:38:42Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:38:42Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_629dcbaa-fddd-489f-833e-9d1159dfff49.1
+[2026-01-24 02:38:42Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Finished process 29144 with exit code 1, and elapsed time 00:00:00.8880784.
+[2026-01-24 02:38:42Z INFO JobServerQueue] Try to append 1 batches web console lines for record '49b539a6-b41f-40ae-841f-0193a648bc5e', success rate: 1/1.
+[2026-01-24 02:38:42Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_93f2ae35-3a27-4b07-8114-201c92be230e) is empty; skipping attachment upload
+[2026-01-24 02:38:42Z INFO ExecutionContext] Updated step result (continue on error)
+[2026-01-24 02:38:42Z INFO StepsRunner] Step result: Succeeded
+[2026-01-24 02:38:42Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "cmd",
+  "type": "run",
+  "stage": "Main",
+  "stepId": "49b539a6-b41f-40ae-841f-0193a648bc5e",
+  "stepContextName": "__run",
+  "result": "succeeded",
+  "errorMessages": [
+    "Process completed with exit code 1."
+  ],
+  "executionTimeInSeconds": 1,
+  "startTime": "2026-01-24T02:38:41.3645034Z",
+  "finishTime": "2026-01-24T02:38:42.3419487Z"
+}.
+[2026-01-24 02:38:42Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:38:42Z INFO StepsRunner] Current state: job state = ''
+[2026-01-24 02:38:42Z INFO StepsRunner] Processing step: DisplayName='Run Wi-Fi tests'
+[2026-01-24 02:38:42Z INFO StepsRunner] Evaluating: success()
+[2026-01-24 02:38:42Z INFO StepsRunner] Result: true
+[2026-01-24 02:38:42Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:42Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:38:42Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Process started with process id 15132, waiting for process exit.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Finished process 15132 with exit code 0, and elapsed time 00:00:00.0183609.
+[2026-01-24 02:38:42Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:42Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:42Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:38:42Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:38:42Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:38:42Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:38:42Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:38:42Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:38:42Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:38:42Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Arguments: '/D /E:ON /V:OFF /S /C "CALL "C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\c1d7fb73-32c2-43b8-ad8a-79a1c4192bb1.cmd""'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:38:42Z INFO ProcessInvokerWrapper] Process started with process id 26200, waiting for process exit.
+[2026-01-24 02:38:42Z INFO JobServerQueue] Try to append 1 batches web console lines for record '67dbf8b5-9a8a-46ed-90b0-488ff5a28f49', success rate: 1/1.
+[2026-01-24 02:38:42Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:38:43Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:38:43Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:38:43Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_49b539a6-b41f-40ae-841f-0193a648bc5e.1
+[2026-01-24 02:38:44Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:38:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:38:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:38:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:01Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:01Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:01Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:11Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:11Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:11Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:21Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:21Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:21Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:31Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:31Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:31Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:38Z INFO JobServerQueue] Stop aggressive process web console line queue.
+[2026-01-24 02:39:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:39:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:39:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:39:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:01Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:01Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:01Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:11Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:11Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:11Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:21Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:21Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:21Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:31Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:31Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:31Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO JobServerQueue] Try to append 1 batches web console lines for record '67dbf8b5-9a8a-46ed-90b0-488ff5a28f49', success rate: 1/1.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Finished process 26200 with exit code 1, and elapsed time 00:02:09.0987653.
+[2026-01-24 02:40:51Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_c8710a0a-7820-4a1c-8f1a-7920fe2bd082) is empty; skipping attachment upload
+[2026-01-24 02:40:51Z INFO ExecutionContext] Updated step result (continue on error)
+[2026-01-24 02:40:51Z INFO StepsRunner] Step result: Succeeded
+[2026-01-24 02:40:51Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "cmd",
+  "type": "run",
+  "stage": "Main",
+  "stepId": "67dbf8b5-9a8a-46ed-90b0-488ff5a28f49",
+  "stepContextName": "__run_2",
+  "result": "succeeded",
+  "errorMessages": [
+    "Process completed with exit code 1."
+  ],
+  "executionTimeInSeconds": 130,
+  "startTime": "2026-01-24T02:38:42.3437835Z",
+  "finishTime": "2026-01-24T02:40:51.4822604Z"
+}.
+[2026-01-24 02:40:51Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:40:51Z INFO StepsRunner] Current state: job state = ''
+[2026-01-24 02:40:51Z INFO StepsRunner] Processing step: DisplayName='Run Bluetooth tests'
+[2026-01-24 02:40:51Z INFO StepsRunner] Evaluating: success()
+[2026-01-24 02:40:51Z INFO StepsRunner] Result: true
+[2026-01-24 02:40:51Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:40:51Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Process started with process id 27088, waiting for process exit.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Finished process 27088 with exit code 0, and elapsed time 00:00:00.0165457.
+[2026-01-24 02:40:51Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:40:51Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:40:51Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:40:51Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:40:51Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:40:51Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:40:51Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:40:51Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:40:51Z INFO ScriptHandler] Which2: 'cmd'
+[2026-01-24 02:40:51Z INFO ScriptHandler] Location: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\cmd.EXE'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Arguments: '/D /E:ON /V:OFF /S /C "CALL "C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\e4ddc128-3824-4838-bf36-dc7bc1d69df0.cmd""'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:40:51Z INFO ProcessInvokerWrapper] Process started with process id 27120, waiting for process exit.
+[2026-01-24 02:40:51Z INFO JobServerQueue] Try to append 3 batches web console lines for record '67dbf8b5-9a8a-46ed-90b0-488ff5a28f49', success rate: 3/3.
+[2026-01-24 02:40:51Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'e77563a9-5009-4ca6-a108-6b9eae91ebcb', success rate: 1/1.
+[2026-01-24 02:40:52Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:40:52Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_67dbf8b5-9a8a-46ed-90b0-488ff5a28f49.1
+[2026-01-24 02:40:52Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:40:53Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:41:01Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:01Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:01Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:41:11Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:11Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:11Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:41:21Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:21Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:21Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:41:31Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:31Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:31Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:41:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:41:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:41:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:41:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:01Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:01Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:01Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:11Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:11Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:11Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:21Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:21Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:21Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:31Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:31Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:31Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:41Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:41Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:41Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:42:51Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:42:51Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:42:51Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:01Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:01Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:01Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:11Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:11Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:11Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO JobServerQueue] Try to append 3 batches web console lines for record 'e77563a9-5009-4ca6-a108-6b9eae91ebcb', success rate: 3/3.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Finished process 27120 with exit code 1, and elapsed time 00:02:22.8544384.
+[2026-01-24 02:43:14Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_b189e452-08f1-4698-9d24-54b2db1b7a0b) is empty; skipping attachment upload
+[2026-01-24 02:43:14Z INFO StepsRunner] Step result: Failed
+[2026-01-24 02:43:14Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "cmd",
+  "type": "run",
+  "stage": "Main",
+  "stepId": "e77563a9-5009-4ca6-a108-6b9eae91ebcb",
+  "stepContextName": "__run_3",
+  "result": "failed",
+  "errorMessages": [
+    "Process completed with exit code 1."
+  ],
+  "executionTimeInSeconds": 143,
+  "startTime": "2026-01-24T02:40:51.482996Z",
+  "finishTime": "2026-01-24T02:43:14.3638152Z"
+}.
+[2026-01-24 02:43:14Z INFO StepsRunner] Update job result with current step result 'Failed'.
+[2026-01-24 02:43:14Z INFO StepsRunner] Current state: job state = 'Failed'
+[2026-01-24 02:43:14Z INFO StepsRunner] Processing step: DisplayName='Run actions/upload-artifact@v4'
+[2026-01-24 02:43:14Z INFO StepsRunner] Evaluating: always()
+[2026-01-24 02:43:14Z INFO StepsRunner] Result: true
+[2026-01-24 02:43:14Z INFO StepsRunner] Starting the step.
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO StepsRunner] Which2: 'chcp'
+[2026-01-24 02:43:14Z INFO StepsRunner] Location: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   File name: 'C:\WINDOWS\system32\chcp.COM'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Arguments: '65001'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Encoding web name:  ; code page: ''
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Process started with process id 15900, waiting for process exit.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Finished process 15900 with exit code 0, and elapsed time 00:00:00.0174950.
+[2026-01-24 02:43:14Z INFO StepsRunner] Successfully returned to code page 65001 (UTF8)
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:43:14Z INFO ActionManager] Load action that reference repository from 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\upload-artifact\v4'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Actions': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions'
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Ignore action property author.
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Loaded action.yml file: {
+  "name": "Upload a Build Artifact",
+  "description": "Upload a build artifact that can be used by subsequent workflow steps",
+  "inputs": {
+    "type": 2,
+    "map": [
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 5,
+          "col": 3,
+          "lit": "name"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 7,
+          "col": 14,
+          "lit": "artifact"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 8,
+          "col": 3,
+          "lit": "path"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 11,
+          "col": 3,
+          "lit": "if-no-files-found"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 19,
+          "col": 14,
+          "lit": "warn"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 20,
+          "col": 3,
+          "lit": "retention-days"
+        },
+        "value": ""
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 26,
+          "col": 3,
+          "lit": "compression-level"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 36,
+          "col": 14,
+          "lit": "6"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 37,
+          "col": 3,
+          "lit": "overwrite"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 42,
+          "col": 14,
+          "lit": "false"
+        }
+      },
+      {
+        "key": {
+          "type": 0,
+          "file": 2,
+          "line": 43,
+          "col": 3,
+          "lit": "include-hidden-files"
+        },
+        "value": {
+          "type": 0,
+          "file": 2,
+          "line": 47,
+          "col": 14,
+          "lit": "false"
+        }
+      }
+    ]
+  },
+  "execution": {
+    "executionType": "nodeJS",
+    "hasPre": false,
+    "hasPost": false,
+    "script": "dist/upload/index.js",
+    "pre": null,
+    "post": null,
+    "nodeVersion": "node20",
+    "cleanupCondition": "always()",
+    "initCondition": "always()"
+  },
+  "deprecated": null
+}
+[2026-01-24 02:43:14Z INFO ActionManager] Action pre node.js file: N/A.
+[2026-01-24 02:43:14Z INFO ActionManager] Action node.js file: dist/upload/index.js.
+[2026-01-24 02:43:14Z INFO ActionManager] Action post node.js file: N/A.
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:43:14Z INFO ExecutionContext] Write event payload to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_github_workflow\event.json
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Work': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Temp': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp'
+[2026-01-24 02:43:14Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IFileCommandExtension'
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Input 'if-no-files-found': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 19,
+  "col": 14,
+  "lit": "warn"
+}
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Input 'retention-days': default value evaluate result: ""
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Input 'compression-level': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 36,
+  "col": 14,
+  "lit": "6"
+}
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Input 'overwrite': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 42,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:43:14Z INFO ActionManifestManagerLegacy] Input 'include-hidden-files': default value evaluate result: {
+  "type": 0,
+  "file": 2,
+  "line": 47,
+  "col": 14,
+  "lit": "false"
+}
+[2026-01-24 02:43:14Z INFO ExtensionManager] Getting extensions for interface: 'GitHub.Runner.Worker.IActionCommandExtension'
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command internal-set-repo-path
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command set-env
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command set-output
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command save-state
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command add-path
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command add-mask
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command add-matcher
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command remove-matcher
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command warning
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command error
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command notice
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command debug
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command group
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command endgroup
+[2026-01-24 02:43:14Z INFO ActionCommandManager] Register action command extension for command echo
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:14Z INFO HostContext] Well known directory 'Externals': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Starting process:
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   File name: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\externals\node20\bin\node.exe'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Arguments: '"C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_actions\actions\upload-artifact\v4\dist/upload/index.js"'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Working directory: 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\ebesoh_esp32_wrover_projects\ebesoh_esp32_wrover_projects'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Require exit code zero: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Encoding web name: utf-8 ; code page: '65001'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Force kill process on cancellation: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Redirected STDIN: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Persist current code page: 'True'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   Keep redirected STDIN open: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper]   High priority process: 'False'
+[2026-01-24 02:43:14Z INFO ProcessInvokerWrapper] Process started with process id 36172, waiting for process exit.
+[2026-01-24 02:43:14Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'e77563a9-5009-4ca6-a108-6b9eae91ebcb', success rate: 1/1.
+[2026-01-24 02:43:14Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a5b59537-c07f-42a1-9d12-db507163bd08', success rate: 1/1.
+[2026-01-24 02:43:14Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:43:14Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_e77563a9-5009-4ca6-a108-6b9eae91ebcb.1
+[2026-01-24 02:43:15Z INFO JobServerQueue] Try to upload 1 log files or attachments, success rate: 1/1.
+[2026-01-24 02:43:15Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a5b59537-c07f-42a1-9d12-db507163bd08', success rate: 1/1.
+[2026-01-24 02:43:15Z INFO AddMaskCommandExtension] Add new secret mask with length of 44
+[2026-01-24 02:43:15Z INFO AddMaskCommandExtension] Add new secret mask with length of 50
+[2026-01-24 02:43:15Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a5b59537-c07f-42a1-9d12-db507163bd08', success rate: 1/1.
+[2026-01-24 02:43:15Z INFO JobServerQueue] Tried to upload 1 file(s) to results, success rate: 1/1.
+[2026-01-24 02:43:16Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:16Z INFO ProcessInvokerWrapper] STDOUT/STDERR stream read finished.
+[2026-01-24 02:43:16Z INFO ProcessInvokerWrapper] Finished process 36172 with exit code 0, and elapsed time 00:00:01.8639270.
+[2026-01-24 02:43:16Z INFO CreateStepSummaryCommand] Step Summary file (C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp\_runner_file_commands\step_summary_a67eb9ee-902a-4917-baae-9a28c4892859) is empty; skipping attachment upload
+[2026-01-24 02:43:16Z INFO StepsRunner] Step result: 
+[2026-01-24 02:43:16Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "actions/upload-artifact",
+  "ref": "v4",
+  "type": "node20",
+  "stage": "Main",
+  "stepId": "a5b59537-c07f-42a1-9d12-db507163bd08",
+  "stepContextName": "__actions_upload-artifact",
+  "hasPreStep": false,
+  "hasPostStep": false,
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 2,
+  "startTime": "2026-01-24T02:43:14.3646543Z",
+  "finishTime": "2026-01-24T02:43:16.2638789Z"
+}.
+[2026-01-24 02:43:16Z INFO StepsRunner] No need for updating job result with current step result 'Succeeded'.
+[2026-01-24 02:43:16Z INFO StepsRunner] Current state: job state = 'Failed'
+[2026-01-24 02:43:16Z INFO JobRunner] Finalize job.
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:16Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:43:16Z INFO JobExtension] Initialize Env context
+[2026-01-24 02:43:16Z INFO JobExtension] Initialize steps context
+[2026-01-24 02:43:16Z INFO JobExtension] Total accessible running process: 381.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 10380 (svchost)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 10656 (SearchProtocolHost)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 33964 (ClientCertCheck)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 24552 (conhost)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 21032 (audiodg)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 34792 (backgroundTaskHost)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Inspecting process environment variables. PID: 35888 (WmiPrvSE)
+[2026-01-24 02:43:16Z WARN JobExtension] Ignore exception during read process environment variables: Access is denied.
+[2026-01-24 02:43:16Z INFO JobExtension] Wait for all connectivity checks to finish.
+[2026-01-24 02:43:16Z INFO JobExtension] Connectivity check result: GitHub.Runner.Worker.JobExtension+CheckResult
+[2026-01-24 02:43:16Z INFO JobExtension] Connectivity check result: GitHub.Runner.Worker.JobExtension+CheckResult
+[2026-01-24 02:43:16Z INFO ExecutionContext] Publish step telemetry for current step {
+  "action": "complete_job",
+  "type": "runner",
+  "stage": "Post",
+  "stepId": "85499be7-8e12-43b0-916a-0a07c056913f",
+  "result": "succeeded",
+  "errorMessages": [],
+  "executionTimeInSeconds": 1,
+  "startTime": "2026-01-24T02:43:16.2689687Z",
+  "finishTime": "2026-01-24T02:43:16.2936226Z"
+}.
+[2026-01-24 02:43:16Z INFO JobRunner] Job result after all job steps finish: Failed
+[2026-01-24 02:43:16Z INFO JobRunner] Completing the job execution context.
+[2026-01-24 02:43:16Z INFO JobRunner] Shutting down the job server queue.
+[2026-01-24 02:43:16Z INFO JobServerQueue] Fire signal to shutdown all queues.
+[2026-01-24 02:43:17Z INFO JobServerQueue] All queue process task stopped.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Try to append 1 batches web console lines for record 'a5b59537-c07f-42a1-9d12-db507163bd08', success rate: 1/1.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Try to append 1 batches web console lines for record '85499be7-8e12-43b0-916a-0a07c056913f', success rate: 1/1.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Web console line queue drained.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Uploading 3 files in one shot.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Try to upload 3 log files or attachments, success rate: 3/3.
+[2026-01-24 02:43:17Z INFO JobServerQueue] File upload queue drained.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Starting results-based upload queue...
+[2026-01-24 02:43:17Z INFO JobServerQueue] Uploading 3 file(s) in one shot through results service.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_a5b59537-c07f-42a1-9d12-db507163bd08.1
+[2026-01-24 02:43:17Z INFO JobServerQueue] Got a step log file to send to results service.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Starting upload of step log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_85499be7-8e12-43b0-916a-0a07c056913f.1
+[2026-01-24 02:43:17Z INFO JobServerQueue] Got a job log file to send to results service.
+[2026-01-24 02:43:17Z INFO JobServerQueue] Starting upload of job log file to results service ResultsLog, C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\blocks\e7fb25d5-81ed-4df6-8e4b-48bb3789111a_29d98d34-41bc-585f-8663-e81b24c7565b.1
+[2026-01-24 02:43:18Z INFO JobServerQueue] Tried to upload 3 file(s) to results, success rate: 3/3.
+[2026-01-24 02:43:18Z INFO JobServerQueue] Results upload queue drained.
+[2026-01-24 02:43:18Z INFO JobServerQueue] Timeline update queue drained.
+[2026-01-24 02:43:18Z INFO JobServerQueue] Disposing job server ...
+[2026-01-24 02:43:18Z INFO JobServerQueue] Disposing results server ...
+[2026-01-24 02:43:18Z INFO JobServerQueue] All queue process tasks have been stopped, and all queues are drained.
+[2026-01-24 02:43:18Z INFO TempDirectoryManager] Cleaning runner temp folder: C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_work\_temp
+[2026-01-24 02:43:18Z INFO HostContext] Well known directory 'Bin': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\bin'
+[2026-01-24 02:43:18Z INFO HostContext] Well known directory 'Root': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner'
+[2026-01-24 02:43:18Z INFO HostContext] Well known directory 'Diag': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag'
+[2026-01-24 02:43:18Z INFO HostContext] Well known config file 'Telemetry': 'C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\actions-runner\_diag\.telemetry'
+[2026-01-24 02:43:18Z INFO JobRunner] Raising job completed against run service
+[2026-01-24 02:43:18Z INFO Worker] Job completed.
