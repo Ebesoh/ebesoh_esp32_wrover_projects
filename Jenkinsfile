@@ -107,52 +107,20 @@ pipeline {
         stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
                 script {
-                    def failures = []
-                    def hardwareTestPassed = true  // Local variable
-                    
-                    // Run DS18B20 test
-                    def ds18b20Failed = bat(returnStatus: true, script: '''
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                    ''')
-                    if (ds18b20Failed != 0) {
-                        failures << 'DS18B20'
-                        hardwareTestPassed = false
-                        echo "DS18B20 test failed"
-                    }
+                        "import test_runner_hardware; test_runner_hardware.run_all_tests()" > hardware.txt
+                        '''
+                    )
 
-                    // Run Wi-Fi test  
-                    def wifiFailed = bat(returnStatus: true, script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                    ''')
-                    if (wifiFailed != 0) {
-                        failures << 'Wi-Fi'
-                        hardwareTestPassed = false
-                        echo "Wi-Fi test failed"
-                    }
-
-                    // Run Bluetooth test
-                    def btFailed = bat(returnStatus: true, script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                    ''')
-                    if (btFailed != 0) {
-                        failures << 'Bluetooth'
-                        hardwareTestPassed = false
-                        echo "Bluetooth test failed"
-                    }
-
-                    // After ALL tests have run, check if any failed
-                    if (!hardwareTestPassed) {
-                        // Store results in environment for later stages
+                    if (rc != 0) {
                         env.HARDWARE_TEST_PASSED = 'false'
-                        env.FAILED_TESTS = failures.join(', ')
-                        // Now fail the stage
-                        error("Hardware tests failed: ${failures.join(', ')}")
-                    } else {
-                        env.HARDWARE_TEST_PASSED = 'true'
+                        error('Hardware Tests failed')
                     }
+
+                    env.HARDWARE_TEST_PASSED = 'true'
                 }
             }
         }
