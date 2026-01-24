@@ -5,19 +5,19 @@ pipeline {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
         FAILED_TESTS = ''
-        FAILURE_COUNT = 0
+        FAILURE_COUNT = '0'
     }
 
-    options { 
+    options {
         timestamps()
-        // Allow pipeline to continue even if stages fail
-        catchErrors: true
     }
 
     stages {
 
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
         stage('Verify Python Environment') {
@@ -40,55 +40,53 @@ pipeline {
         }
 
         /* ===== UPLOAD TEST FILES ===== */
-        
+
         stage('Upload Test Files') {
             steps {
                 script {
                     try {
                         bat '''
                         echo Uploading test files...
-                        for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp %%f :
-                        echo ✅ Test files uploaded
+                        for %%f in (test_temp\\*.py) do (
+                            python -m mpremote connect %ESP_PORT% fs cp %%f :
+                        )
+                        echo [PASS] Test files uploaded
                         '''
                     } catch (Exception e) {
-                        echo "⚠️ Upload failed but continuing: ${e.getMessage()}"
+                        echo "⚠️ Upload failed but continuing: ${e.message}"
                         env.FAILED_TESTS += 'File Upload, '
-                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
+                        env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
                     }
                 }
             }
         }
 
         /* ===== SYSTEM HARD GATE ===== */
-        // Keep as hard stop - if hardware is broken, no point continuing
 
         stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    try {
-                        def rc = bat(returnStatus: true, script: '''
-                            python -m mpremote connect %ESP_PORT% exec ^
-                            "import test_runner_system; test_runner_system.main()" ^
-                            > system.txt
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_system; test_runner_system.main()" ^
+                        > system.txt
 
-                            type system.txt
-                            findstr /C:"CI_RESULT: FAIL" system.txt >nul
-                            if %errorlevel%==0 (
-                                echo ❌ SYSTEM TEST FAILED
-                                exit /b 1
-                            ) else (
-                                echo ✅ SYSTEM TEST PASSED
-                                exit /b 0
-                            )
-                        ''')
+                        type system.txt
+                        findstr /C:"CI_RESULT: FAIL" system.txt >nul
+                        if %errorlevel%==0 (
+                            echo [FAIL] SYSTEM TEST FAILED
+                            exit /b 1
+                        ) else (
+                            echo [PASS] SYSTEM TEST PASSED
+                            exit /b 0
+                        )
+                        '''
+                    )
 
-                        if (rc != 0) {
-                            throw new Exception("System Self-Test failed")
-                        }
-                    } catch (Exception e) {
-                        echo "❌ System test failed but continuing: ${e.getMessage()}"
-                        env.FAILED_TESTS += 'System Test, '
-                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
+                    if (rc != 0) {
+                        error('System Self-Test failed – stopping pipeline')
                     }
                 }
             }
@@ -100,7 +98,9 @@ pipeline {
             steps {
                 script {
                     try {
-                        def rc = bat(returnStatus: true, script: '''
+                        def rc = bat(
+                            returnStatus: true,
+                            script: '''
                             python -m mpremote connect %ESP_PORT% exec ^
                             "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
                             > temp.txt
@@ -108,21 +108,22 @@ pipeline {
                             type temp.txt
                             findstr /C:"CI_RESULT: FAIL" temp.txt >nul
                             if %errorlevel%==0 (
-                                echo ❌ DS18B20 TEST FAILED
+                                echo [FAIL] DS18B20 TEST FAILED
                                 exit /b 1
                             ) else (
-                                echo ✅ DS18B20 TEST PASSED
+                                echo [PASS] DS18B20 TEST PASSED
                                 exit /b 0
                             )
-                        ''')
+                            '''
+                        )
 
                         if (rc != 0) {
-                            throw new Exception("DS18B20 Temperature test failed")
+                            throw new Exception('DS18B20 Temperature test failed')
                         }
                     } catch (Exception e) {
-                        echo "❌ Temperature test failed but continuing: ${e.getMessage()}"
+                        echo "❌ Temperature test failed but continuing: ${e.message}"
                         env.FAILED_TESTS += 'Temperature, '
-                        env.FAILURE_COUNT = (env.FAILURE_COUNT as int) + 1
+                        env.FAILURE_COUNT = ((env.FAILURE_COUNT as int) + 1).toString()
                     }
                 }
             }
@@ -133,18 +134,15 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "=== TEST EXECUTION COMPLETE ==="
+                    echo '=== TEST EXECUTION COMPLETE ==='
                     echo "Total failures: ${env.FAILURE_COUNT}"
-                    
-                    if (env.FAILED_TESTS) {
-                        // Clean up the trailing comma and space
+
+                    if (env.FAILED_TESTS?.trim()) {
                         def failedList = env.FAILED_TESTS.substring(0, env.FAILED_TESTS.length() - 2)
                         echo "❌ Failed tests: ${failedList}"
-                        
-                        // This makes the PIPELINE RED at the very end
                         currentBuild.result = 'FAILURE'
                     } else {
-                        echo "✅ ALL TESTS PASSED"
+                        echo '✅ ALL TESTS PASSED'
                         currentBuild.result = 'SUCCESS'
                     }
                 }
@@ -155,23 +153,23 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-            
+
             script {
-                echo "=== FINAL STATUS ==="
+                echo '=== FINAL STATUS ==='
                 echo "Pipeline result: ${currentBuild.result}"
                 echo "Failed tests: ${env.FAILED_TESTS ?: 'None'}"
                 echo "Failure count: ${env.FAILURE_COUNT}"
             }
         }
-        
+
         success {
             echo '✅ Pipeline completed successfully'
         }
-        
+
         failure {
             echo '❌ Pipeline completed with test failures'
         }
-        
+
         unstable {
             echo '⚠️ Pipeline completed with warnings'
         }
