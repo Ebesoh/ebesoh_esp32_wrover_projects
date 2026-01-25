@@ -77,7 +77,8 @@ pipeline {
 
                     if (rc != 0) {
                         env.CI_RESULT_WiFi = 'false'
-                        env.FAILED_TESTS += env.FAILED_TESTS ? ', Wi-Fi' : 'Wi-Fi'
+                        def current = env.FAILED_TESTS ?: ''
+                        env.FAILED_TESTS = current ? "${current}, Wi-Fi" : "Wi-Fi"
                     }
                 }
             }
