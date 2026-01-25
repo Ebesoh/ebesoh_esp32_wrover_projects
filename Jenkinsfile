@@ -106,7 +106,6 @@ pipeline {
                     if (failed == 0) {
                         HARDWARE_TEST_PASSED = false
                         FAILED_TESTS << 'DS18B20'
-                        error('DS18B20 test FAILED')
                     } else {
                         echo 'DS18B20 test PASSED'
                     }
