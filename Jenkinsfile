@@ -81,41 +81,86 @@ pipeline {
                         SYSTEM_TEST_PASSED = false
                         error('System Self-Test failed')
                     }
-                    else 
-                         SYSTEM_TEST_PASSED = true
+                    else
+                       SYSTEM_TEST_PASSED = true
                 }
             }
         }
 
         /* =========================================================
-           HARDWARE TESTS (COLLECT RESULTS)
+           DS18B20 TEMPERATURE TEST
         ========================================================= */
-        stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
+        stage('DS18B20 Temperature Test') {
             steps {
                 script {
-
-                    if (bat(returnStatus: true, script: '''
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                    ''')) {
+                        '''
+                    )
+
+                    if (rc != 0) {
                         HARDWARE_TEST_PASSED = false
                         FAILED_TESTS << 'DS18B20'
+                        echo 'DS18B20 test FAILED'
+                    } 
+                     else {
+                         HARDWARE_TEST_PASSED = true
+                         echo 'DS18B20 test Passed'
                     }
+                }
+            }
+        }
 
-                    if (bat(returnStatus: true, script: '''
+        /* =========================================================
+           WI-FI TEST
+        ========================================================= */
+        stage('Wi-Fi Test') {
+            steps {
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                    ''')) {
+                        '''
+                    )
+
+                    if (rc != 0) {
                         HARDWARE_TEST_PASSED = false
                         FAILED_TESTS << 'Wi-Fi'
+                        echo 'Wi-Fi test FAILED'
+                    } 
+                    
+                    else {
+                        echo 'Wi-Fi test PASSED'
                     }
+                }
+            }
+        }
 
-                    if (bat(returnStatus: true, script: '''
+        /* =========================================================
+           BLUETOOTH TEST
+        ========================================================= */
+        stage('Bluetooth Test') {
+            steps {
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                    ''')) {
+                        '''
+                    )
+
+                    if (rc != 0) {
                         HARDWARE_TEST_PASSED = false
                         FAILED_TESTS << 'Bluetooth'
+                        echo 'Bluetooth test FAILED'
+                    } else {
+                        echo 'Bluetooth test PASSED'
                     }
                 }
             }
@@ -127,21 +172,20 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    // Export for logs / post steps
                     env.SYSTEM_TEST_PASSED   = SYSTEM_TEST_PASSED.toString()
                     env.HARDWARE_TEST_PASSED = HARDWARE_TEST_PASSED.toString()
                     env.FAILED_TESTS         = FAILED_TESTS.join(', ')
 
                     echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
                     echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
+                    echo "FAILED_TESTS         = ${env.FAILED_TESTS ?: 'None'}"
 
                     if (!SYSTEM_TEST_PASSED) {
                         error('Final verdict: System Self-Test failed')
                     }
 
                     if (!HARDWARE_TEST_PASSED) {
-                        echo "FAILED HARDWARE TESTS: ${FAILED_TESTS.join(', ')}"
-                        error('Final verdict: One or more hardware tests failed')
+                        error("Final verdict: Hardware tests failed: ${FAILED_TESTS.join(', ')}")
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
