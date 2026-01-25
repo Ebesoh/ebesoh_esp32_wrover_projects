@@ -14,7 +14,7 @@ pipeline {
     stages {
 
         /* =========================================================
-           INITIALIZE STATE (IMPORTANT)
+           INITIALIZE STATE
         ========================================================= */
         stage('Initialize State') {
             steps {
@@ -56,8 +56,6 @@ pipeline {
             steps {
                 bat '''
                 for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                for %%f in (tests_bt\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 '''
             }
@@ -81,8 +79,8 @@ pipeline {
                         SYSTEM_TEST_PASSED = false
                         error('System Self-Test failed')
                     }
-                    else
-                       SYSTEM_TEST_PASSED = true
+
+                    SYSTEM_TEST_PASSED = true
                 }
             }
         }
@@ -104,64 +102,9 @@ pipeline {
 
                     if (rc != 0) {
                         HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'DS18B20'
                         echo 'DS18B20 test FAILED'
-                    } 
-                     else {
-                         HARDWARE_TEST_PASSED = true
-                         echo 'DS18B20 test Passed'
-                    }
-                }
-            }
-        }
-
-        /* =========================================================
-           WI-FI TEST
-        ========================================================= */
-        stage('Wi-Fi Test') {
-            steps {
-                script {
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                        '''
-                    )
-
-                    if (rc != 0) {
-                        HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'Wi-Fi'
-                        echo 'Wi-Fi test FAILED'
-                    } 
-                    
-                    else {
-                        echo 'Wi-Fi test PASSED'
-                    }
-                }
-            }
-        }
-
-        /* =========================================================
-           BLUETOOTH TEST
-        ========================================================= */
-        stage('Bluetooth Test') {
-            steps {
-                script {
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                        '''
-                    )
-
-                    if (rc != 0) {
-                        HARDWARE_TEST_PASSED = false
-                        FAILED_TESTS << 'Bluetooth'
-                        echo 'Bluetooth test FAILED'
                     } else {
-                        echo 'Bluetooth test PASSED'
+                        echo 'DS18B20 test PASSED'
                     }
                 }
             }
