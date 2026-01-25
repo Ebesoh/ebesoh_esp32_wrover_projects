@@ -74,7 +74,7 @@ pipeline {
 
                     def failed = bat(
                         returnStatus: true,
-                        script: 'findstr /C:"CI_EXIT_CODE=1" system.txt >nul'
+                        script: 'findstr /C:"CI_RESULT=1" system.txt >nul'
                     )
 
                     if (failed == 0) {

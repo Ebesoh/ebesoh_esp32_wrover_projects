@@ -105,12 +105,12 @@ def main():
     # -------------------------------------------------
     if passed == total:
         print("\n🎉 ALL SYSTEM TESTS PASSED")
-        print("CI_RESULT: PASS")
+        print("CI_RESULT=0")
         sys.exit(0)
 
     else:
         print("\n❌ SYSTEM TEST FAILURE")
-        print("CI_RESULT: FAIL")
+        print("CI_RESULT=1")
         sys.exit(1)
 
 
