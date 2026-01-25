@@ -81,8 +81,8 @@ pipeline {
                         SYSTEM_TEST_PASSED = false
                         error('System Self-Test failed')
                     }
-
-                    SYSTEM_TEST_PASSED = true
+                    else 
+                         SYSTEM_TEST_PASSED = true
                 }
             }
         }
