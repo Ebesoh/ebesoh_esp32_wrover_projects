@@ -57,7 +57,7 @@ def run_all_tests():
     except ImportError as e:
         print("❌ ERROR: Failed to import Bluetooth test modules")
         print("EXCEPTION:", e)
-        print("CI_RESULT: FAIL")
+        print("CI_RESULT=1")
         sys.exit(1)
 
     # -------------------------------------------------
@@ -143,11 +143,11 @@ def run_all_tests():
     if failed_tests > 0:
         print("\n❌ BLUETOOTH TEST SUITE FAILED")
         print(f"Failed tests: {failed_tests}")
-        print("CI_RESULT: FAIL")
+        print("CI_RESULT=1")
         sys.exit(1)
 
     print("\n✅ BLUETOOTH TEST SUITE PASSED")
-    print("CI_RESULT: PASS")
+    print("CI_RESULT=0")
     sys.exit(0)
 
 

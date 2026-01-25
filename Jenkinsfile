@@ -104,6 +104,7 @@ pipeline {
                     )
 
                     if (failed == 0) {
+                        currentBuild.result = 'UNSTABLE'
                         HARDWARE_TEST_PASSED = false
                         FAILED_TESTS << 'DS18B20'
                     } else {
@@ -153,4 +154,3 @@ pipeline {
         }
     }
 }
-
