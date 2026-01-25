@@ -4,6 +4,10 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
+
+        SYSTEM_TEST_PASSED   = 'false'
+        HARDWARE_TEST_PASSED = 'true'   // assume pass, mark false on failure
+        FAILED_TESTS = ''
     }
 
     options {
@@ -12,19 +16,6 @@ pipeline {
     }
 
     stages {
-
-        /* =========================================================
-           INITIALIZE VARIABLES
-        ========================================================= */
-        stage('Initialize Variables') {
-            steps {
-                script {
-                    env.CI_RESULT_WiFi = 'true'
-                    env.CI_RESULT_BT = 'true'
-                    env.FAILED_TESTS = ''
-                }
-            }
-        }
 
         /* =========================================================
            PREFLIGHT
@@ -49,75 +40,70 @@ pipeline {
             }
         }
 
+
         /* =========================================================
            UPLOAD TEST FILES
         ========================================================= */
         stage('Upload Test Files') {
             steps {
                 bat '''
+                for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 for %%f in (tests_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 for %%f in (tests_bt\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 '''
             }
         }
 
+
         /* =========================================================
-           FUNCTIONAL TESTS - WI-FI
+           HARDWARE TESTS
         ========================================================= */
-        stage('Wi-Fi Test') {
+        stage('Hardware Tests (Temperature, Wi-Fi, Bluetooth)') {
             steps {
                 script {
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
+                    def failures = []
+
+                    if (bat(returnStatus: true, script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+                    ''')) {
+                        failures << 'DS18B20'
+                    }
+
+                    if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-                        '''
-                    )
-
-                    if (rc != 0) {
-                        env.CI_RESULT_WiFi = 'false'
-                        def current = env.FAILED_TESTS ?: ''
-                        env.FAILED_TESTS = current ? "${current}, Wi-Fi" : "Wi-Fi"
+                    ''')) {
+                        failures << 'Wi-Fi'
                     }
-                }
-            }
-        }
 
-        /* =========================================================
-           FUNCTIONAL TESTS - BLUETOOTH
-        ========================================================= */
-        stage('Bluetooth Test') {
-            steps {
-                script {
-                    def rc = bat(
-                        returnStatus: true,
-                        script: '''
+                    if (bat(returnStatus: true, script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-                        '''
-                    )
+                    ''')) {
+                        failures << 'Bluetooth'
+                    }
 
-                    if (rc != 0) {
-                        env.CI_RESULT_BT = 'false'
-                        env.FAILED_TESTS += env.FAILED_TESTS ? ', Bluetooth' : 'Bluetooth'
+                    if (failures) {
+                        env.HARDWARE_TEST_PASSED = 'false'
+                        env.FAILED_TESTS = failures.join(', ')
                     }
                 }
             }
         }
 
         /* =========================================================
-           FINAL CI VERDICT (EXPLICIT AUTHORITY)
+           FINAL VERDICT (EXPLICIT AUTHORITY)
         ========================================================= */
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "WI-FI RESULT     = ${env.CI_RESULT_WiFi}"
-                    echo "BLUETOOTH RESULT = ${env.CI_RESULT_BT}"
-                    echo "FAILED_TESTS     = ${env.FAILED_TESTS ?: 'None'}"
+                    echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
 
-                    if (env.CI_RESULT_WiFi != 'true' || env.CI_RESULT_BT != 'true') {
-                        error("Final verdict: Hardware tests failed: ${env.FAILED_TESTS}")
+                    if (env.HARDWARE_TEST_PASSED != 'true') {
+                        echo "FAILED HARDWARE TESTS: ${env.FAILED_TESTS}"
+                        error('Final verdict: One or more hardware tests failed')
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
@@ -130,12 +116,13 @@ pipeline {
         always {
             archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
         }
+
         success {
             echo 'Pipeline completed successfully'
         }
+
         failure {
             echo 'Pipeline FAILED'
         }
     }
 }
-
