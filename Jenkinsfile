@@ -12,7 +12,7 @@ pipeline {
 
     options {
         timestamps()
-        disableConcurrentBuilds(abortPrevious: true)
+        disableConcurrentBuilds()
     }
 
     stages {
@@ -40,7 +40,6 @@ pipeline {
             }
         }
 
-
         /* =========================================================
            UPLOAD TEST FILES
         ========================================================= */
@@ -55,6 +54,29 @@ pipeline {
             }
         }
 
+        /* =========================================================
+           SYSTEM SELF TEST (HARD GATE)
+        ========================================================= */
+        stage('System Self-Test (HARD GATE)') {
+            steps {
+                script {
+                    def rc = bat(
+                        returnStatus: true,
+                        script: '''
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import test_runner_system; test_runner_system.main()" > system.txt
+                        '''
+                    )
+
+                    if (rc != 0) {
+                        env.SYSTEM_TEST_PASSED = 'false'
+                        error('System Self-Test failed')
+                    }
+
+                    env.SYSTEM_TEST_PASSED = 'true'
+                }
+            }
+        }
 
         /* =========================================================
            HARDWARE TESTS
@@ -99,7 +121,12 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
+                    echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
                     echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
+
+                    if (env.SYSTEM_TEST_PASSED != 'true') {
+                        error('Final verdict: System Self-Test failed')
+                    }
 
                     if (env.HARDWARE_TEST_PASSED != 'true') {
                         echo "FAILED HARDWARE TESTS: ${env.FAILED_TESTS}"
@@ -125,4 +152,3 @@ pipeline {
             echo 'Pipeline FAILED'
         }
     }
-}
