@@ -195,6 +195,7 @@ pipeline {
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
+                    echo 'Congratulations for successful run!!'
                 }
             }
         }

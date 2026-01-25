@@ -1,20 +1,17 @@
-# test_runner.py
-#This test suite performs a comprehensive validation of the ESP32 Bluetooth (BLE) functionality running under MicroPython. It verifies that the Bluetooth stack initializes #correctly, operates reliably, and remains stable under real-world usage conditions.
-
-#The tests cover core BLE features including initialization, configuration, advertising, scanning, GATT services, connections, performance, and memory usage. Both basic #functionality and advanced scenarios such as long-running advertising, MTU negotiation, and multi-service stress testing are included.
-
-#The suite is designed for automated execution in CI environments (e.g. Jenkins using mpremote). Each test produces explicit pass/fail results, and the overall CI verdict is #determined strictly: any failed test results in a CI failure, while all passing tests produce a CI success.
-
-#This ensures reliable Bluetooth operation during hardware bring-up, regression testing, and manufacturing or lab validation of ESP32-based systems
+# test_runner_bt.py
+# Comprehensive ESP32 Bluetooth (BLE) CI Test Suite
 
 import time
 import sys
 
+PASS = True
+FAIL = False
+
+
 def run_all_tests():
-    """Run all Bluetooth tests sequentially with CI verdict"""
-    print("=" * 60)
-    print("ESP32-WROVER BLUETOOTH COMPLETE TEST SUITE")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("ESP32-WROVER BLUETOOTH CI TEST SUITE")
+    print("=" * 70)
 
     # -------------------------------------------------
     # Import test modules (FAIL HARD if missing)
@@ -54,14 +51,14 @@ def run_all_tests():
             test_stress_multiple_services
         )
 
-    except ImportError as e:
-        print("❌ ERROR: Failed to import Bluetooth test modules")
+    except Exception as e:
+        print("\n❌ FATAL: Bluetooth test module import failed")
         print("EXCEPTION:", e)
-        print("CI_RESULT=1")
+        print("CI_EXIT_CODE=1")
         sys.exit(1)
 
     # -------------------------------------------------
-    # Test execution order
+    # Test list (ordered, deterministic)
     # -------------------------------------------------
     test_functions = [
         ("Bluetooth Initialization", test_ble_initialization),
@@ -88,97 +85,72 @@ def run_all_tests():
     ]
 
     results = []
-    failed_tests = 0
+    failed_tests = []
 
     # -------------------------------------------------
-    # Run tests
+    # Execute tests
     # -------------------------------------------------
     for test_name, test_func in test_functions:
-        print("\n" + "=" * 60)
-        print("RUNNING:", test_name)
-        print("=" * 60)
+        print("\n" + "-" * 60)
+        print(f"RUNNING TEST: {test_name}")
+        print("-" * 60)
+
+        start = time.time()
 
         try:
-            start_time = time.time()
             success = bool(test_func())
-            elapsed = time.time() - start_time
-
-            results.append((test_name, success, elapsed))
+            duration = time.time() - start
 
             if success:
-                print(f"\n✓ {test_name}: PASSED ({elapsed:.1f}s)")
+                print(f"✓ RESULT: PASS  | {test_name} ({duration:.2f}s)")
+                results.append((test_name, PASS, duration))
             else:
-                print(f"\n✗ {test_name}: FAILED ({elapsed:.1f}s)")
-                failed_tests += 1
+                print(f"✗ RESULT: FAIL  | {test_name} ({duration:.2f}s)")
+                results.append((test_name, FAIL, duration))
+                failed_tests.append(test_name)
 
         except Exception as e:
-            print(f"\n✗ {test_name}: EXCEPTION")
+            print(f"✗ RESULT: EXCEPTION | {test_name}")
             print("EXCEPTION:", e)
-            results.append((test_name, False, 0.0))
-            failed_tests += 1
+            results.append((test_name, FAIL, 0.0))
+            failed_tests.append(test_name)
 
         time.sleep(1)
 
     # -------------------------------------------------
     # Summary
     # -------------------------------------------------
-    print("\n" + "=" * 60)
-    print("TEST SUMMARY")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("BLUETOOTH TEST SUMMARY")
+    print("=" * 70)
 
-    passed = 0
-    for test_name, success, elapsed in results:
-        status = "✓ PASS" if success else "✗ FAIL"
-        print(f"{test_name:<30} {status:<10} {elapsed:.1f}s")
+    passed_count = 0
+    for name, success, elapsed in results:
+        status = "PASS" if success else "FAIL"
+        symbol = "✓" if success else "✗"
+        print(f"{symbol} {name:<35} {status:<5} {elapsed:.2f}s")
         if success:
-            passed += 1
+            passed_count += 1
 
     total = len(results)
-    print(f"\nTotal: {passed}/{total} tests passed")
-    print("=" * 60)
+    print("\n" + "-" * 70)
+    print(f"TOTAL RESULT: {passed_count}/{total} TESTS PASSED")
+    print("-" * 70)
 
     # -------------------------------------------------
-    # CI VERDICT (AUTHORITATIVE)
+    # CI VERDICT (AUTHORITATIVE, SINGLE SOURCE OF TRUTH)
     # -------------------------------------------------
-    if failed_tests > 0:
-        print("\n❌ BLUETOOTH TEST SUITE FAILED")
-        print(f"Failed tests: {failed_tests}")
+    if failed_tests:
+        print("\n❌ CI VERDICT: BLUETOOTH TEST SUITE FAILED")
+        print("FAILED TESTS:")
+        for name in failed_tests:
+            print(f" - {name}")
         print("CI_RESULT=1")
         sys.exit(1)
 
-    print("\n✅ BLUETOOTH TEST SUITE PASSED")
+    print("\n✅ CI VERDICT: BLUETOOTH TEST SUITE PASSED")
     print("CI_RESULT=0")
     sys.exit(0)
-
-
-# -------------------------------------------------
-# Optional helpers (non-CI)
-# -------------------------------------------------
-
-def quick_smoke_test():
-    """Run a quick smoke test (not CI-critical)"""
-    print("Running Quick Bluetooth Smoke Test...")
-
-    try:
-        import ubluetooth as bt
-
-        ble = bt.BLE()
-        ble.active(True)
-        print("✓ Bluetooth initialized")
-
-        ble.gap_advertise(100, b'\x02\x01\x06\x08\x09ESP32-SMOKE')
-        print("✓ Advertising started")
-        time.sleep(2)
-        ble.gap_advertise(None)
-        print("✓ Advertising stopped")
-
-        ble.active(False)
-        print("\n✅ Smoke test passed!")
-        return True
-
-    except Exception as e:
-        print("\n❌ Smoke test failed:", e)
-        return False
 
 
 # -------------------------------------------------
@@ -186,3 +158,4 @@ def quick_smoke_test():
 # -------------------------------------------------
 if __name__ == "__main__":
     run_all_tests()
+
