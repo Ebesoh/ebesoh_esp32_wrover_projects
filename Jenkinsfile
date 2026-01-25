@@ -94,9 +94,9 @@ pipeline {
                     def rc = bat(
                         returnStatus: true,
                         script: '''
-                        cmd /c ^
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+                        exit /b %ERRORLEVEL%
                         '''
                     )
 
