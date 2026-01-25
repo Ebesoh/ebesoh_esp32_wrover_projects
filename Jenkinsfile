@@ -67,15 +67,17 @@ pipeline {
         stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
-                    def rc = bat(
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_system; test_runner_system.main()" > system.txt
+                    '''
+
+                    def failed = bat(
                         returnStatus: true,
-                        script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_system; test_runner_system.main()" > system.txt
-                        '''
+                        script: 'findstr /C:"CI_EXIT_CODE=1" system.txt >nul'
                     )
 
-                    if (rc != 0) {
+                    if (failed == 0) {
                         SYSTEM_TEST_PASSED = false
                         error('System Self-Test failed')
                     }
@@ -91,18 +93,20 @@ pipeline {
         stage('DS18B20 Temperature Test') {
             steps {
                 script {
-                    def rc = bat(
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+                    '''
+
+                    def failed = bat(
                         returnStatus: true,
-                        script: '''
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                        exit /b %ERRORLEVEL%
-                        '''
+                        script: 'findstr /C:"CI_RESULT=1" temp.txt >nul'
                     )
 
-                    if (rc != 0) {
+                    if (failed == 0) {
                         HARDWARE_TEST_PASSED = false
-                        echo 'DS18B20 test FAILED'
+                        FAILED_TESTS << 'DS18B20'
+                        error('DS18B20 test FAILED')
                     } else {
                         echo 'DS18B20 test PASSED'
                     }
@@ -150,3 +154,4 @@ pipeline {
         }
     }
 }
+
