@@ -1,4 +1,4 @@
-name: ESP32 Hardware Testing
+name: ESP32 functional Testing
 
 on:
   workflow_dispatch:
