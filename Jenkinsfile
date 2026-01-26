@@ -92,7 +92,7 @@ pipeline {
                     }
 
                     env. SELF_TEST_PASSED D = 'true'
-                    echo 'Self-Test Passed'
+                    echo 'Self-Test Passed '
                 }
             }
         }
