@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        ESP_PORT = 'COM5'
+        ESP_PORT = ' COM5 '
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
