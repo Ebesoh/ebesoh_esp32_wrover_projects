@@ -6,9 +6,11 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        SYSTEM_TEST_PASSED   = 'false'
-        HARDWARE_TEST_PASSED = 'true'
-        FAILED_TESTS = ''
+        SELF_TEST_PASSED      = 'false'
+        TEMP_TEST_PASSED      = 'true'
+        WI-FI_TEST_PASSED     = 'true'
+        BT TEST_PASSED        = 'true'
+        FAILED_TESTS          = ''
     }
 
     options {
@@ -69,7 +71,7 @@ pipeline {
         }
 
         /* =========================================================
-           SYSTEM SELF TEST (HARD GATE)
+           SELF TEST (HARD GATE)
         ========================================================= */
         stage('System Self-Test (HARD GATE)') {
             steps {
@@ -85,12 +87,12 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.SYSTEM_TEST_PASSED = 'false'
-                        error('System Self-Test failed')
+                        env. SELF_TEST_PASSED  = 'false'
+                        error('Self-Test failed')
                     }
 
-                    env.SYSTEM_TEST_PASSED = 'true'
-                    echo 'DS18B20 test Passed'
+                    env. SELF_TEST_PASSED D = 'true'
+                    echo 'Self-Test Passed'
                 }
             }
         }
@@ -112,12 +114,12 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        env. TEMP_TEST_PASSED = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', DS18B20' : 'DS18B20'
-                        echo 'DS18B20 test FAILED'
+                        echo 'Temperature test FAILED'
                     }
 
-                    echo 'DS18B20 test PASSED'
+                    echo 'Temperature test PASSED'
                 }
             }
         }
@@ -139,7 +141,7 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        env.WI-FI_TEST_PASSED = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', Wi-Fi' : 'Wi-Fi'
                         echo 'Wi-Fi test FAILED'
                     }
@@ -166,7 +168,7 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.HARDWARE_TEST_PASSED = 'false'
+                        env.BT TEST_PASSED  = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', Bluetooth' : 'Bluetooth'
                         echo 'Bluetooth test FAILED'
                     }
@@ -182,16 +184,26 @@ pipeline {
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "SYSTEM_TEST_PASSED   = ${env.SYSTEM_TEST_PASSED}"
-                    echo "HARDWARE_TEST_PASSED = ${env.HARDWARE_TEST_PASSED}"
-                    echo "FAILED_TESTS         = ${env.FAILED_TESTS ?: 'None'}"
+                    echo "SELF_TEST_PASSED      = ${env.SELF_TEST_PASSED}"
+                    echo "TEMP_TEST_PASSED      = ${env.TEMP_TEST_PASSED}"
+                    echo "WI-FI_TEST_PASSED     = ${env.WI-FI_TEST_PASSED}" 
+                    echo "BT TEST_PASSE         = ${env.BT TEST_PASSE}" 
+                    echo "FAILED_TESTS          = ${env.FAILED_TESTS ?: 'None'}"
 
-                    if (env.SYSTEM_TEST_PASSED != 'true') {
-                        error('Final verdict: System Self-Test failed')
+                    if (env.SELF_TEST_PASSED != 'true') {
+                        error('Final verdict: Self-Test failed')
+                    }
+                    
+                    if (env.TEMP_TEST_PASSED != 'true') {
+                        error('Final verdict: Temp-Test failed')
+                    }
+                    
+                    if (env.env.WI-FI_TEST_PASSED != 'true') {
+                        error('Final verdict: WI-FI-Test failed')
                     }
 
-                    if (env.HARDWARE_TEST_PASSED != 'true') {
-                        error("Final verdict: Hardware tests failed: ${env.FAILED_TESTS}")
+                    if (env.env.BT TEST_PASSE != 'true') {
+                        error("Final verdict: BT-Tests failed: ${env.FAILED_TESTS}")
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
