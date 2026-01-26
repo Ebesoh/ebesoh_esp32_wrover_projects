@@ -16,7 +16,7 @@ env:
 jobs:
 
 # =========================================================
-# PREFLIGHT
+# Setup
 # =========================================================
   preflight:
     name: Preflight
@@ -106,10 +106,10 @@ jobs:
           path: system.txt
 
 # =========================================================
-# ALL HARDWARE TESTS (DS18B20, Wi-Fi, Bluetooth)
+# ALL functional TESTS (DS18B20, Wi-Fi, Bluetooth)
 # =========================================================
   hardware-tests:
-    name: Hardware Tests (Temperature, Wi-Fi, Bluetooth)
+    name: functional Tests (Temperature, Wi-Fi, Bluetooth)
     runs-on: self-hosted
     needs: system-self-test
 
