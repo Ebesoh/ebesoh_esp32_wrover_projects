@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        ESP_PORT = ' COM5 '
+        ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        SELF_TEST_PASSED      = 'false'
-        TEMP_TEST_PASSED      = 'true'
-        WI-FI_TEST_PASSED     = 'true'
-        BT TEST_PASSED        = 'true'
-        FAILED_TESTS          = ''
+        SELF_TEST_PASSED = 'false'
+        TEMP_TEST_PASSED = 'true'
+        WIFI_TEST_PASSED = 'true'
+        BT_TEST_PASSED   = 'true'
+        FAILED_TESTS     = ''
     }
 
     options {
@@ -73,7 +73,7 @@ pipeline {
         /* =========================================================
            SELF TEST (HARD GATE)
         ========================================================= */
-        stage('Self-Test (HARD GATE)') {
+        stage('System Self-Test (HARD GATE)') {
             steps {
                 script {
                     bat '''
@@ -87,12 +87,12 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env. SELF_TEST_PASSED  = 'false'
-                        error('Self-Test failed')
+                        env.SELF_TEST_PASSED = 'false'
+                        error('System Self-Test FAILED (hard gate)')
                     }
 
-                    env. SELF_TEST_PASSED D = 'true'
-                    echo 'Self-Test Passed '
+                    env.SELF_TEST_PASSED = 'true'
+                    echo 'System Self-Test PASSED'
                 }
             }
         }
@@ -114,12 +114,12 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env. TEMP_TEST_PASSED = 'false'
+                        env.TEMP_TEST_PASSED = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', DS18B20' : 'DS18B20'
                         echo 'Temperature test FAILED'
+                    } else {
+                        echo 'Temperature test PASSED'
                     }
-
-                    echo 'Temperature test PASSED'
                 }
             }
         }
@@ -141,12 +141,12 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.WI-FI_TEST_PASSED = 'false'
+                        env.WIFI_TEST_PASSED = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', Wi-Fi' : 'Wi-Fi'
                         echo 'Wi-Fi test FAILED'
+                    } else {
+                        echo 'Wi-Fi test PASSED'
                     }
-
-                    echo 'Wi-Fi test PASSED'
                 }
             }
         }
@@ -168,42 +168,37 @@ pipeline {
                     )
 
                     if (failed == 0) {
-                        env.BT TEST_PASSED  = 'false'
+                        env.BT_TEST_PASSED = 'false'
                         env.FAILED_TESTS += env.FAILED_TESTS ? ', Bluetooth' : 'Bluetooth'
                         echo 'Bluetooth test FAILED'
+                    } else {
+                        echo 'Bluetooth test PASSED'
                     }
-
-                    echo 'Bluetooth test PASSED'
                 }
             }
         }
 
         /* =========================================================
-           FINAL VERDICT (EXPLICIT AUTHORITY)
+           FINAL VERDICT
         ========================================================= */
         stage('Final CI Verdict') {
             steps {
                 script {
-                    echo "SELF_TEST_PASSED      = ${env.SELF_TEST_PASSED}"
-                    echo "TEMP_TEST_PASSED      = ${env.TEMP_TEST_PASSED}"
-                    echo "WI-FI_TEST_PASSED     = ${env.WI-FI_TEST_PASSED}" 
-                    echo "BT TEST_PASSE         = ${env.BT TEST_PASSE}" 
-                    echo "FAILED_TESTS          = ${env.FAILED_TESTS ?: 'None'}"
+                    echo "SELF_TEST_PASSED = ${env.SELF_TEST_PASSED}"
+                    echo "TEMP_TEST_PASSED = ${env.TEMP_TEST_PASSED}"
+                    echo "WIFI_TEST_PASSED = ${env.WIFI_TEST_PASSED}"
+                    echo "BT_TEST_PASSED   = ${env.BT_TEST_PASSED}"
+                    echo "FAILED_TESTS     = ${env.FAILED_TESTS ?: 'None'}"
 
                     if (env.SELF_TEST_PASSED != 'true') {
-                        error('Final verdict: Self-Test failed')
-                    }
-                    
-                    if (env.TEMP_TEST_PASSED != 'true') {
-                        error('Final verdict: Temp-Test failed')
-                    }
-                    
-                    if (env.env.WI-FI_TEST_PASSED != 'true') {
-                        error('Final verdict: WI-FI-Test failed')
+                        error('Final verdict: System Self-Test failed')
                     }
 
-                    if (env.env.BT TEST_PASSE != 'true') {
-                        error("Final verdict: BT-Tests failed: ${env.FAILED_TESTS}")
+                    if (env.TEMP_TEST_PASSED != 'true'
+                        || env.WIFI_TEST_PASSED != 'true'
+                        || env.BT_TEST_PASSED   != 'true') {
+
+                        error("Final verdict: Test failures detected: ${env.FAILED_TESTS}")
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
