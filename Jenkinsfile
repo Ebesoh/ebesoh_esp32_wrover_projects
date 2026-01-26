@@ -73,7 +73,7 @@ pipeline {
         /* =========================================================
            SELF TEST (HARD GATE)
         ========================================================= */
-        stage('System Self-Test (HARD GATE)') {
+        stage('Self-Test (HARD GATE)') {
             steps {
                 script {
                     bat '''
