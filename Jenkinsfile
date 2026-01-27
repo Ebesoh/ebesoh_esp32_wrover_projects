@@ -17,36 +17,56 @@ pipeline {
             }
         }
 
-        stage('Upload Loopback Tests') {
+        stage('Upload Tests') {
             steps {
                 bat '''
-                for %%f in (gpio_test\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (gpio_test\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                )
                 '''
             }
         }
 
-        stage('Run Loopback Tests') {
+        stage('Run GPIO Loopback Tests') {
             steps {
                 script {
                     def code = bat(
-                    returnStatus:true,
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import sys, gpio_loopback_runner; sys.exit(gpio_loopback_runner.run_all_tests())"
-                        '''
+                        ''',
+                        returnStatus: true
                     )
 
-                    echo "Loopback test exit code: ${code}"
+                    echo "ESP32 exit code: ${code}"
 
                     if (code == 1) {
-                        error("Loopback test failed: GPIO 14 -> 19")
-                    } else if (code == 2) {
-                        error("Loopback test failed: GPIO 12 -> 18")
-                    } else if (code != 0) {
-                        error("Unknown failure code: ${code}")
+                        error("GPIO loopback FAILED: GPIO 14 → 19")
                     }
+
+                    if (code == 2) {
+                        error("GPIO loopback FAILED: GPIO 12 → 18")
+                    }
+
+                    if (code != 0) {
+                        error("GPIO loopback FAILED with unknown code: ${code}")
+                    }
+
+                    echo "✓ All GPIO loopback tests passed"
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ GPIO LOOPBACK TESTS PASSED"
+        }
+        failure {
+            echo "❌ GPIO LOOPBACK TESTS FAILED"
+            echo "Check wiring:"
+            echo " - GPIO 14 → GPIO 19"
+            echo " - GPIO 12 → GPIO 18"
         }
     }
 }
