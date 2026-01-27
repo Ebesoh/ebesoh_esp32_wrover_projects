@@ -69,7 +69,7 @@ pipeline {
 
                     // Print all detected faults and fail once
                     if (!faults.isEmpty()) {
-                        echo "Detected GPIO faults:"
+                        echo " Detected GPIO faults:"
                         faults.each { fault ->
                             echo " - ${fault}"
                         }
