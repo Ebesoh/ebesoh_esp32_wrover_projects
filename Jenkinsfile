@@ -42,7 +42,12 @@ pipeline {
 
                     echo "=== ESP32 OUTPUT ==="
                     echo output
+                    echo "=== RAW OUTPUT======"
+                    output.eachLine { line ->
+                        echo ">>${line}<<"
+                      }
                     echo "===================="
+                    
 
                     // Collect all detected faults
                     def faults = []
