@@ -48,7 +48,7 @@ pipeline {
                     def faults = []
 
                     output.eachLine { line ->
-                        if (line.startsWith("FAIL ")) {
+                        if (line.startsWith("F")) {
                             faults << line.substring(2)
                         }
                     }
