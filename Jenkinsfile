@@ -45,12 +45,12 @@ pipeline {
                     // Collect all detected faults
                     def faults = []
 
-                    if (output.contains("GPIO 14 -> 19")) {
-                        faults << "GPIO 14 -> 19"
+                    if (output.contains("GPIO 14 - 19")) {
+                        faults << "GPIO 14 - 19"
                     }
 
-                    if (output.contains("GPIO 12 -> 18")) {
-                        faults << "GPIO 12 -> 18"
+                    if (output.contains("GPIO 12 - 18")) {
+                        faults << "GPIO 12 - 18"
                     }
 
                     // Print all detected faults
