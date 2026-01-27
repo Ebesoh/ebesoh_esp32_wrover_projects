@@ -10,7 +10,7 @@ def run_all_tests():
         
 
     if not tests.loopback_test(12, 18):
-       failures.append("GPIO 12 -> 18 ")
+       failures.append("GPIO 12 -> 18")
 
     if failures:
         print("CI_RESULT: FAILED")
