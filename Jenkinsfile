@@ -61,7 +61,7 @@ pipeline {
                     for (String line : lines) {
                         def clean = line.trim()
                         if (clean.startsWith("-")) {
-                            faults << clean.substring(2)
+                            faults << clean.substring(1).trim()
                         }
                     }
 
