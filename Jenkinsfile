@@ -11,6 +11,7 @@ pipeline {
         stage('Install Tools') {
             steps {
                 bat '''
+                @echo off
                 echo Installing tools...
                 python -m pip install --upgrade pip
                 python -m pip install mpremote
@@ -21,6 +22,7 @@ pipeline {
         stage('Upload Loopback Tests') {
             steps {
                 bat '''
+                @echo off
                 echo Uploading test files to ESP32...
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -34,6 +36,7 @@ pipeline {
                 script {
                     def output = bat(
                         script: '''
+                        @echo off
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         ''',
@@ -69,7 +72,7 @@ pipeline {
 
                     // Print all detected faults and fail once
                     if (!faults.isEmpty()) {
-                        echo " Detected GPIO faults:"
+                        echo "Detected GPIO faults:"
                         faults.each { fault ->
                             echo " - ${fault}"
                         }
@@ -78,7 +81,7 @@ pipeline {
 
                     // Final pass condition
                     if (output.contains("CI_RESULT: PASS")) {
-                        echo "✓ All GPIO loopback tests PASSED"
+                        echo "All GPIO loopback tests PASSED"
                     } else {
                         error("Unexpected output from ESP32:\n${output}")
                     }
@@ -89,14 +92,14 @@ pipeline {
 
     post {
         success {
-            echo "✅ PIPELINE SUCCESS: GPIO loopback tests passed"
+            echo "PIPELINE SUCCESS: GPIO loopback tests passed"
         }
 
         failure {
-            echo "❌ PIPELINE FAILURE: GPIO loopback tests failed"
+            echo "PIPELINE FAILURE: GPIO loopback tests failed"
             echo "Check wiring:"
-            echo " - GPIO 14 → GPIO 19"
-            echo " - GPIO 12 → GPIO 18"
+            echo " - GPIO 14 -> GPIO 19"
+            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
