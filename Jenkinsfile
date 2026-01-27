@@ -31,7 +31,7 @@ pipeline {
                     def code = bat(
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                        "import sys, gpio_loopback_runner; sys.exit(gpio_loopback_runner.run_all_tests())"
                         ''',
                         returnStatus:true 
                     )
