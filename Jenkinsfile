@@ -33,7 +33,7 @@ pipeline {
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         ''',
-                        returnStatus: true
+                        //returnStatus:true 
                     )
 
                     echo "ESP32 exit code: ${code}"
