@@ -1,0 +1,19 @@
+import sys
+import gpio_loopback_tests as tests
+
+
+def run_all_tests():
+    if not tests.loopback_test(14, 19):
+        print("CI_RESULT: FAIL (GPIO 14 -> 19)")
+        return 1
+
+    if not tests.loopback_test(12, 18):
+        print("CI_RESULT: FAIL (GPIO 12 -> 18)")
+        return 2
+
+    print("CI_RESULT: PASS")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(run_all_tests())
