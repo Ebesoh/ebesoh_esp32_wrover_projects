@@ -33,7 +33,7 @@ pipeline {
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import sys, gpio_loopback_runner; sys.exit(gpio_loopback_runner.run_all_tests())"
                         ''',
-                        returnStatus:true 
+                        //returnStatus:true 
                     )
 
                     echo "Loopback test exit code: ${code}"
