@@ -42,7 +42,7 @@ pipeline {
 
                     echo "=== ESP32 OUTPUT ==="
                     echo output
-                    
+
                     // Collect all detected faults
                     def faults = []
 
@@ -56,16 +56,15 @@ pipeline {
                     }
 
                     // Generic fault-line parsing
-                    output.eachLine { line ->
-                        def lines = output.split('\n')
-                        for (String line: lines){
-                            def clean = line.trim()
-                            if (clean.startsWith("-")) {
+                    def lines = output.split('\n')
+                    for (String line : lines) {
+                        def clean = line.trim()
+                        if (clean.startsWith("-")) {
                             faults << clean.substring(2)
                         }
                     }
 
-                    // Remove duplicates (important)
+                    // Remove duplicates
                     faults = faults.unique()
 
                     // Print all detected faults and fail once
