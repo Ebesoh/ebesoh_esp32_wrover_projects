@@ -41,12 +41,11 @@ pipeline {
                     ).trim()
 
                     echo "=== ESP32 OUTPUT ==="
-                    echo output
-                    echo "===================="
 
                     // Collect all detected faults
                     def faults = []
-
+                    echo "Detected faults = ${faults}"
+                    
                     if (output.contains("GPIO 14 -> 19")) {
                         faults << "GPIO 14 -> 19"
                     }
