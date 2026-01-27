@@ -45,8 +45,6 @@ pipeline {
 
                     echo "=== ESP32 OUTPUT ===="
                     echo output
-                    echo "output:${output}"
-
                     def faults = []
 
                     if (output.contains("GPIO 14 - 19")) {
