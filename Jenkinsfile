@@ -56,8 +56,7 @@ pipeline {
                     // Print all detected faults
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO loopback faults:"
-                        //faults.each { fault ->
-                            echo " - ${fault}"
+                            echo " ${fault}"
                         }
 
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
