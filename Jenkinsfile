@@ -44,33 +44,28 @@ pipeline {
                     echo output
                     echo "===================="
 
-                    // Collect all detected failures
-                    def failures = []
+                    // Collect all detected faults
+                    def faults = []
 
-                    if (output.contains("CI_RESULT: FAIL")) {
-
-                        if (output.contains("GPIO 14 -> 19")) {
-                            failures << "GPIO 14 -> 19"
-                        }
-
-                        if (output.contains("GPIO 12 -> 18")) {
-                            failures << "GPIO 12 -> 18"
-                        }
-
-                        if (failures.isEmpty()) {
-                            failures << "Unknown failure"
-                        }
+                    if (output.contains("GPIO 14 -> 19")) {
+                        faults << "GPIO 14 -> 19"
                     }
 
-                    // Final decision (single authority)
-                    if (!failures.isEmpty()) {
-                        echo "Detected loopback failures:"
-                        failures.each { f ->
-                            echo "- ${f}"
-                        }
-                        error("GPIO loopback tests FAILED: ${failures.join(', ')}")
+                    if (output.contains("GPIO 12 -> 18")) {
+                        faults << "GPIO 12 -> 18"
                     }
 
+                    // Print all detected faults
+                    if (!faults.isEmpty()) {
+                        echo "Detected GPIO loopback faults:"
+                        faults.each { fault ->
+                            echo " - ${fault}"
+                        }
+
+                        error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
+                    }
+
+                    // Final pass condition
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "✓ All GPIO loopback tests PASSED"
                     } else {
