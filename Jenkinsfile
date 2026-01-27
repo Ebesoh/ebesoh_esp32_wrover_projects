@@ -19,7 +19,7 @@ pipeline {
             }
         }
 
-        stage(' Upload Loopback Tests') {
+        stage('Upload Loopback Tests') {
             steps {
                 bat '''
                 @echo off
@@ -46,10 +46,8 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
-                    // Collect all detected faults
                     def faults = []
 
-                    // Explicit substring checks (legacy-safe)
                     if (output.contains("GPIO 14 - 19")) {
                         faults << "GPIO 14 - 19"
                     }
@@ -58,7 +56,6 @@ pipeline {
                         faults << "GPIO 12 - 18"
                     }
 
-                    // Generic fault-line parsing
                     def lines = output.split('\n')
                     for (String line : lines) {
                         def clean = line.trim()
@@ -67,10 +64,8 @@ pipeline {
                         }
                     }
 
-                    // Remove duplicates
                     faults = faults.unique()
 
-                    // Print all detected faults and fail once
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
                         faults.each { fault ->
@@ -79,7 +74,6 @@ pipeline {
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    // Final pass condition
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
                     } else {
