@@ -17,7 +17,7 @@ pipeline {
             }
         }
 
-        stage('Upload Tests') {
+        stage('Upload Loopback Tests') {
             steps {
                 bat '''
                 for %%f in (gpio_test\\*.py) do (
@@ -27,46 +27,41 @@ pipeline {
             }
         }
 
-        stage('Run GPIO Loopback Tests') {
+        stage('Run Loopback Tests') {
             steps {
                 script {
-                    def code = bat(
+                    def output = bat(
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import sys, gpio_loopback_runner; sys.exit(gpio_loopback_runner.run_all_tests())"
+                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         ''',
-                        returnStatus: true
-                    )
+                        returnStdout: true
+                    ).trim()
 
-                    echo "ESP32 exit code: ${code}"
+                    echo "ESP32 output:"
+                    echo output
 
-                    if (code == 1) {
-                        error("GPIO loopback FAILED: GPIO 14 → 19")
+                    if (output.contains("CI_RESULT: PASS")) {
+                        echo "✓ All GPIO loopback tests passed"
                     }
+                    else if (output.contains("CI_RESULT: FAIL")) {
 
-                    if (code == 2) {
-                        error("GPIO loopback FAILED: GPIO 12 → 18")
+                        if (output.contains("GPIO 14 -> 19")) {
+                            error("Loopback test failed: GPIO 14 -> 19")
+                        }
+
+                        if (output.contains("GPIO 12 -> 18")) {
+                            error("Loopback test failed: GPIO 12 -> 18")
+                        }
+
+                        error("Loopback test failed (unknown reason)")
                     }
-
-                    if (code != 0) {
-                        error("GPIO loopback FAILED with unknown code: ${code}")
+                    else {
+                        error("Unexpected output from ESP32:\n${output}")
                     }
-
-                    echo "✓ All GPIO loopback tests passed"
                 }
             }
         }
     }
-
-    post {
-        success {
-            echo "✅ GPIO LOOPBACK TESTS PASSED"
-        }
-        failure {
-            echo "❌ GPIO LOOPBACK TESTS FAILED"
-            echo "Check wiring:"
-            echo " - GPIO 14 → GPIO 19"
-            echo " - GPIO 12 → GPIO 18"
-        }
-    }
 }
+
