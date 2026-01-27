@@ -58,8 +58,9 @@ pipeline {
 
                     // Generic fault-line parsing
                     output.eachLine { line ->
-                        if (line.startsWith("- ")) {
-                            faults << line.substring(2)
+                        def clean = line.trim()
+                        if (clean.startsWith("- ")) {
+                            faults << clean.substring(2)
                         }
                     }
 
