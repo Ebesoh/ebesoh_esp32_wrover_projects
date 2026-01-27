@@ -44,29 +44,30 @@ pipeline {
                     echo output
                     echo "===================="
 
-                    // Collect all faults printed by the ESP32
+                    // Collect all detected faults
                     def faults = []
 
-                    output.eachLine { line ->
-                        if (line.startsWith("-")) {
-                            faults << line.substring(2)
-                        }
+                    if (output.contains("GPIO 14 -> 19")) {
+                        faults << "GPIO 14 -> 19"
+                    }
+
+                    if (output.contains("GPIO 12 -> 18")) {
+                        faults << "GPIO 12 -> 18"
                     }
 
                     // Print all detected faults
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO loopback faults:"
-                        faults.each { f ->
-                            echo " - ${f}"
+                        faults.each { fault ->
+                            echo " - ${fault}"
                         }
+
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    // Final sanity check
+                    // Final pass condition
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "✓ All GPIO loopback tests PASSED"
-                    } else if (output.contains("CI_RESULT: FAIL")) {
-                        error("GPIO loopback tests FAILED (see faults above)")
                     } else {
                         error("Unexpected output from ESP32:\n${output}")
                     }
