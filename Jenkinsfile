@@ -36,7 +36,7 @@ pipeline {
                         returnStatus:true 
                     )
 
-                    echo "ESP32 exit code: ${code}"
+                    echo "Loopback test exit code: ${code}"
 
                     if (code == 1) {
                         error("Loopback test failed: GPIO 14 -> 19")
