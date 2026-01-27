@@ -44,7 +44,6 @@ pipeline {
 
                     // Collect all detected faults
                     def faults = []
-                    echo "Detected faults = ${faults}"
                     
                     if (output.contains("GPIO 14 -> 19")) {
                         faults << "GPIO 14 -> 19"
@@ -57,7 +56,7 @@ pipeline {
                     // Print all detected faults
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO loopback faults:"
-                        faults.each { fault ->
+                        //faults.each { fault ->
                             echo " - ${fault}"
                         }
 
