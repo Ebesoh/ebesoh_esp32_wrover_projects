@@ -53,19 +53,17 @@ pipeline {
                         }
                     }
 
-                    // Print all detected faults
+                    // Decide once, at the end
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO loopback faults:"
-                            echo " - ${faults}"
+                        faults.each { f ->
+                            echo " - ${f}"
                         }
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    // Final sanity check
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "✓ All GPIO loopback tests PASSED"
-                    } else if (output.contains("CI_RESULT: FAIL")) {
-                        error("GPIO loopback tests FAILED (see faults above)")
                     } else {
                         error("Unexpected output from ESP32:\n${output}")
                     }
@@ -86,4 +84,4 @@ pipeline {
             echo " - GPIO 12 → GPIO 18"
         }
     }
-
+}
