@@ -20,8 +20,7 @@ pipeline {
         stage('Upload Loopback Tests') {
             steps {
                 bat '''
-                python -m mpremote connect %ESP_PORT% fs cp gpio_loopback_tests.py :
-                python -m mpremote connect %ESP_PORT% fs cp gpio_loopback_runner.py :
+                for %%f in (gpio_test\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 '''
             }
         }
