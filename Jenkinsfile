@@ -29,11 +29,12 @@ pipeline {
             steps {
                 script {
                     def code = bat(
+                    returnStatus:true
                         script: '''
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import sys, gpio_loopback_runner; sys.exit(gpio_loopback_runner.run_all_tests())"
-                        ''',
-                        returnStatus:
+                        ''', 
+                        echo "Loopback test exit code: ${code}"
                     )
 
                     echo "Loopback test exit code: ${code}"
