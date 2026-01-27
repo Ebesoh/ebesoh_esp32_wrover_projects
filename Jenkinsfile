@@ -86,4 +86,4 @@ pipeline {
             echo " - GPIO 12 → GPIO 18"
         }
     }
-}
+
