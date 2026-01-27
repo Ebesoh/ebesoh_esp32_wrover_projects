@@ -41,10 +41,13 @@ pipeline {
                     ).trim()
 
                     echo "=== ESP32 OUTPUT ==="
+                    echo output
+                    echo "===================="
 
                     // Collect all detected faults
                     def faults = []
 
+                    // Explicit substring checks (legacy-safe)
                     if (output.contains("GPIO 14 - 19")) {
                         faults << "GPIO 14 - 19"
                     }
@@ -53,13 +56,22 @@ pipeline {
                         faults << "GPIO 12 - 18"
                     }
 
-                    // Print all detected faults
+                    // Generic fault-line parsing
+                    output.eachLine { line ->
+                        if (line.startsWith("- ")) {
+                            faults << line.substring(2)
+                        }
+                    }
+
+                    // Remove duplicates (important)
+                    faults = faults.unique()
+
+                    // Print all detected faults and fail once
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
                         faults.each { fault ->
                             echo " - ${fault}"
                         }
-
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
