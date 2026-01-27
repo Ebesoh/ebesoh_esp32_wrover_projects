@@ -42,13 +42,7 @@ pipeline {
 
                     echo "=== ESP32 OUTPUT ==="
                     echo output
-                    echo "=== RAW OUTPUT======"
-                    output.eachLine { line ->
-                        echo ">>${line}<<"
-                      }
-                    echo "===================="
                     
-
                     // Collect all detected faults
                     def faults = []
 
@@ -64,7 +58,7 @@ pipeline {
                     // Generic fault-line parsing
                     output.eachLine { line ->
                         def clean = line.trim()
-                        if (clean.startsWith("- ")) {
+                        if (clean.startsWith("-")) {
                             faults << clean.substring(2)
                         }
                     }
