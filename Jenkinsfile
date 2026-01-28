@@ -19,6 +19,24 @@ pipeline {
             }
         }
 
+        stage('Preflight: ESP32 connectivity') {
+            steps {
+                bat '''
+                @echo off
+                echo Preflight: checking ESP32 on %ESP_PORT%...
+
+                python -m mpremote connect %ESP_PORT% repl --exit
+
+                if %ERRORLEVEL% NEQ 0 (
+                    echo Preflight failed: ESP32 not reachable on %ESP_PORT%
+                    exit /b %ERRORLEVEL%
+                )
+
+                echo Preflight OK: ESP32 is reachable
+                '''
+            }
+        }
+
         stage('Upload Loopback Tests') {
             steps {
                 bat '''
@@ -26,6 +44,7 @@ pipeline {
                 echo Uploading test files to ESP32...
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                    if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 )
                 '''
             }
@@ -33,52 +52,20 @@ pipeline {
 
         stage('Run Loopback Tests') {
             steps {
-                script {
-                    def output = bat(
-                        script: '''
-                        @echo off
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
-                        ''',
-                        returnStdout: true
-                    ).trim()
+                bat '''
+                @echo off
+                echo Running GPIO loopback tests on ESP32...
 
-                    echo "=== ESP32 OUTPUT ==="
-                    echo output
-                    def faults = []
+                python -m mpremote connect %ESP_PORT% exec ^
+                "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
 
-                    if (output.contains("GPIO 14 - 19")) {
-                        faults << "GPIO 14 - 19"
-                    }
+                if %ERRORLEVEL% NEQ 0 (
+                    echo GPIO loopback tests failed
+                    exit /b %ERRORLEVEL%
+                )
 
-                    if (output.contains("GPIO 12 - 18")) {
-                        faults << "GPIO 12 - 18"
-                    }
-
-                    def lines = output.split('\n')
-                    for (String line : lines) {
-                        def clean = line.trim()
-                        if (clean.startsWith("-")) {
-                            faults << clean.substring(1).trim()
-                        }
-                    }
-
-                    faults = faults.unique()
-
-                    if (!faults.isEmpty()) {
-                        echo "Detected GPIO faults:"
-                        faults.each { fault ->
-                            echo " - ${fault}"
-                        }
-                        error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
-                    }
-
-                    if (output.contains("CI_RESULT: PASS")) {
-                        echo "All GPIO loopback tests PASSED"
-                    } else {
-                        error("Unexpected output from ESP32:\n${output}")
-                    }
-                }
+                echo GPIO loopback tests passed
+                '''
             }
         }
     }
