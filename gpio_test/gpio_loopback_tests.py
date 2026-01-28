@@ -14,18 +14,6 @@
 #   Output GPIO         Input GPIO
 #     GPIO 14             GPIO 19
 #     GPIO 12             GPIO 18
-#Board: ESP32-WROVER
-#GPIOs used: GPIO 16, 17, 18
-#(Safe, commonly available. Adjust if needed.)
-#Each test:
-#  Sets GPIO HIGH
-#  Reads it back
-#  Decides PASS / FAIL
-
-#  Sets GPIO LOW
-#  Reads it back
-#  Decides PASS / FAIL
-
 from machine import Pin
 import time
 
