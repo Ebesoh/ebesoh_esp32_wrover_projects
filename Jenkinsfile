@@ -43,7 +43,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    echo "=== ESP32 OUTPUT ===="
+                    echo "=== ESP32 OUTPUT ==="
                     echo output
                     def faults = []
 
