@@ -50,7 +50,7 @@ pipeline {
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         ''',
                         returnStdout: true
-                    ).trim()
+                    )
 
                     echo "ESP32 returned value: ${output}"
 
