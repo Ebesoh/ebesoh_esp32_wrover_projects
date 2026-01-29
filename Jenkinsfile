@@ -100,7 +100,7 @@ pipeline {
                     if (output == "1") {
                         error("GPIO loopback tests FAILED (output = 1)")
                     } else if (output == "0") {
-                        echo "✓ GPIO loopback tests PASSED (output = 0)")
+                        echo "✓ GPIO loopback tests PASSED (output = 0)"
                     } else {
                         error("Unexpected output from ESP32: '${output}'")
                     }
