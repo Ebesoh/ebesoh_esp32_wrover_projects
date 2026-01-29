@@ -52,7 +52,7 @@ pipeline {
                     //echo output
                     echo "ESP32 returned value: ${output}"
 
-                    // Decision based directly on output value
+                    // Decision based directly on output value by batch
                     if (output == "1") {
                         error("GPIO loopback tests FAILED (output = 1)")
                     } else if (output == "0") {
