@@ -54,8 +54,6 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    writeFile file: 'esp_output.txt', text: output
-
                     def failedGpios = []
 
                     if (output.contains("GPIO 14 - 19")) {
@@ -75,40 +73,32 @@ pipeline {
                     failedGpios = failedGpios.unique()
                     def status = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS") ? "PASS" : "FAIL"
 
-                    // ---- SIMPLE HTML REPORT ----
-                    bat """
-                    @echo off
-                    if not exist %REPORT_DIR% mkdir %REPORT_DIR%
+                    // -------- HTML REPORT (Groovy, not BAT) --------
+                    def failedListHtml = failedGpios.isEmpty()
+                        ? "<li>None</li>"
+                        : failedGpios.collect { "<li>${it}</li>" }.join("\n")
 
-                    echo ^<html^> > %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<body^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<h1^>GPIO Loopback Test Report^</h1^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<p^>Result: <b>${status}</b>^</p^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<h2^>Failed GPIOs^</h2^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<ul^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    """
+                    def reportHtml = """
+<html>
+<body>
+<h1>GPIO Loopback Test Report</h1>
+<p>Result: <b>${status}</b></p>
 
-                    if (failedGpios.isEmpty()) {
-                        bat "echo <li>None</li> >> %REPORT_DIR%\\%REPORT_FILE%"
-                    } else {
-                        failedGpios.each { g ->
-                            bat "echo <li>${g}</li> >> %REPORT_DIR%\\%REPORT_FILE%"
-                        }
-                    }
+<h2>Failed GPIOs</h2>
+<ul>
+${failedListHtml}
+</ul>
 
-                    bat """
-                    echo ^</ul^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<h2^>Raw ESP32 Output^</h2^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^<pre^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    """
+<h2>Raw ESP32 Output</h2>
+<pre>
+${output}
+</pre>
+</body>
+</html>
+"""
 
-                    bat "type esp_output.txt >> %REPORT_DIR%\\%REPORT_FILE%"
-
-                    bat """
-                    echo ^</pre^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^</body^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    echo ^</html^> >> %REPORT_DIR%\\%REPORT_FILE%
-                    """
+                    bat "if not exist ${REPORT_DIR} mkdir ${REPORT_DIR}"
+                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: reportHtml
 
                     if (!failedGpios.isEmpty()) {
                         echo "Failed GPIOs:"
