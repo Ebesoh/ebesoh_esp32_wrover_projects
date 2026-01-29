@@ -47,8 +47,14 @@ pipeline {
                         script: '''
                           @echo off
                           echo Running GPIO loopback tests...
-                          python -m mpremote connect %ESP_PORT% reset exec ^
+                          
+                          REM Break out of any running code
+                          python -m mpremote connect %ESP_PORT% reset  repl < nul
+                          
+                          REM Now execute tests
+                          python -m mpremote connect %ESP_PORT% exec ^
                           "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                          
                           if %ERRORLEVEL% neq 0 echo mpremote failed during test execution
                           exit /b %ERRORLEVEL%
                           ''',
