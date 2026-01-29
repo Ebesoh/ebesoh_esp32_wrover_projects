@@ -10,7 +10,7 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
-        skipDefaultCheckout()   // IMPORTANT: prevent checkout before auto-clean
+        skipDefaultCheckout()   // IMPORTANT: prevent checkout before auto-clean yes
     }
 
     environment {
