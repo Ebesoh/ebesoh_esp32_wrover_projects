@@ -8,7 +8,6 @@ pipeline {
 
     environment {
         ESP_PORT = 'COM5'
-        PYTHONUNBUFFERED = '1'
         REPORT_DIR = 'reports'
         REPORT_FILE = 'gpio_loopback_report.html'
     }
@@ -17,105 +16,63 @@ pipeline {
 
         stage('Install Tools') {
             steps {
-                bat '''
-                @echo off
-                setlocal EnableDelayedExpansion
-
-                echo Installing tools...
-                python -m pip install --upgrade pip
-                python -m pip install mpremote
-
-                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
-                '''
+                bat 'python -m pip install --upgrade pip mpremote'
             }
         }
 
-        stage('Preflight: ESP32 connectivity') {
+        stage('Preflight') {
             steps {
-                bat '''
-                @echo off
-                setlocal EnableDelayedExpansion
-
-                echo Preflight: checking ESP32 on %ESP_PORT%...
-
-                python -m mpremote connect port=%ESP_PORT% exec "pass"
-                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
-
-                echo Preflight OK
-                '''
+                bat 'python -m mpremote connect port=%ESP_PORT% exec "pass"'
             }
         }
 
-        stage('Upload Loopback Tests') {
+        stage('Upload Tests') {
             steps {
                 bat '''
                 @echo off
-                setlocal EnableDelayedExpansion
-
-                echo Uploading loopback test files...
-
                 for %%f in (gpio_test\\*.py) do (
-                    echo Uploading %%f
                     python -m mpremote connect port=%ESP_PORT% fs cp "%%f" :
-                    if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
+                    if ERRORLEVEL 1 exit /b 1
                 )
                 '''
             }
         }
 
-        stage('Run Loopback Tests') {
+        stage('Run Tests') {
             steps {
-                bat '''
-                @echo off
-                setlocal EnableDelayedExpansion
+                script {
 
-                echo Running GPIO loopback tests...
+                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
+                    <html><body>
+                    <h1>GPIO Loopback Tests</h1>
+                    <p>Build: ${env.BUILD_NUMBER}</p>
+                    <p>Result: FAIL</p>
+                    </body></html>
+                    """
 
-                if not exist %REPORT_DIR% mkdir %REPORT_DIR%
+                    def output = bat(
+                        returnStdout: true,
+                        script: '''
+                        @echo off
+                        python -m mpremote connect port=%ESP_PORT% exec ^
+                        "import gpio_loopback_runner; print(gpio_loopback_runner.run_all_tests())"
+                        '''
+                    ).trim()
 
-                REM Default FAIL report
-                (
-                    echo ^<html^>
-                    echo ^<body^>
-                    echo ^<h1^>GPIO Loopback Tests^</h1^>
-                    echo ^<p^>Build: %BUILD_NUMBER%^</p^>
-                    echo ^<p^>Result: FAIL^</p^>
-                    echo ^</body^>
-                    echo ^</html^>
-                ) > %REPORT_DIR%\\%REPORT_FILE%
+                    echo "Test result code: ${output}"
 
-                REM Fail fast if runner is missing
-                python -m mpremote connect port=%ESP_PORT% exec ^
-                "import gpio_loopback_runner"
-                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
+                    if (output != '1') {
+                        error('GPIO loopback tests failed')
+                    }
 
-                python -m mpremote connect port=%ESP_PORT% exec ^
-                "gpio_loopback_runner.run_all_tests()"
-                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
-
-                REM PASS report
-                (
-                    echo ^<html^>
-                    echo ^<body^>
-                    echo ^<h1^>GPIO Loopback Tests^</h1^>
-                    echo ^<p^>Build: %BUILD_NUMBER%^</p^>
-                    echo ^<p^>Result: PASS^</p^>
-                    echo ^</body^>
-                    echo ^</html^>
-                ) > %REPORT_DIR%\\%REPORT_FILE%
-
-                echo.
-                echo Current working directory (Jenkins workspace):
-                echo %CD%
-
-                echo.
-                echo Full HTML report path:
-                echo %CD%\\%REPORT_DIR%\\%REPORT_FILE%
-
-                echo.
-                echo Report directory contents:
-                dir %REPORT_DIR%
-                '''
+                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
+                    <html><body>
+                    <h1>GPIO Loopback Tests</h1>
+                    <p>Build: ${env.BUILD_NUMBER}</p>
+                    <p>Result: PASS</p>
+                    </body></html>
+                    """
+                }
             }
         }
     }
@@ -123,26 +80,11 @@ pipeline {
     post {
         always {
             publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: "${REPORT_DIR}",
-                reportFiles: "${REPORT_FILE}",
-                reportName: "ESP32 GPIO Loopback Report"
+                reportDir: REPORT_DIR,
+                reportFiles: REPORT_FILE,
+                reportName: 'ESP32 GPIO Loopback Report'
             ])
-
-            archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}",
-                             fingerprint: true,
-                             allowEmptyArchive: false
-        }
-
-        success {
-            echo "PIPELINE SUCCESS"
-        }
-
-        failure {
-            echo "PIPELINE FAILURE"
-            // GPIO failures are printed by gpio_loopback_runner
+            archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}"
         }
     }
 }
