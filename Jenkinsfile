@@ -31,6 +31,7 @@ pipeline {
                 @echo off
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                    if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 )
                 '''
             }
@@ -40,13 +41,16 @@ pipeline {
             steps {
                 script {
 
-                    bat 'if not exist %REPORT_DIR% mkdir %REPORT_DIR%'
-
+                    // Run mpremote and capture output + exit code
                     def output = bat(
                         script: '''
                         @echo off
+                        if not exist %REPORT_DIR% mkdir %REPORT_DIR%
+
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+
+                        echo __MPREMOTE_RC__=%ERRORLEVEL%
                         ''',
                         returnStdout: true
                     ).trim()
@@ -54,14 +58,20 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
-                    // Explicit test list (source of truth)
+                    // Extract mpremote exit code
+                    def rcMatcher = (output =~ /__MPREMOTE_RC__=(\\d+)/)
+                    if (!rcMatcher.find()) {
+                        error("Could not determine mpremote exit code")
+                    }
+                    int mpremoteRc = rcMatcher.group(1).toInteger()
+
+                    // Known tests (source of truth)
                     def tests = [
                         "GPIO 14 - 19",
                         "GPIO 12 - 18"
                     ]
 
                     def failedTests = []
-
                     tests.each { t ->
                         if (output.contains(t)) {
                             failedTests << t
@@ -89,9 +99,10 @@ pipeline {
                     writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: html.toString()
 
                     echo "HTML report generated at:"
-                    echo "${pwd()}/${REPORT_DIR}/${REPORT_FILE}"
+                    echo "${pwd()}\\${REPORT_DIR}\\${REPORT_FILE}"
 
-                    if (!failedTests.isEmpty()) {
+                    // Fail CI if mpremote failed or tests failed
+                    if (mpremoteRc != 0 || !failedTests.isEmpty()) {
                         error("GPIO loopback tests FAILED: ${failedTests.join(', ')}")
                     }
 
