@@ -19,6 +19,7 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Installing tools...
                 python -m pip install --upgrade pip
                 python -m pip install mpremote
                 '''
@@ -29,8 +30,16 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Preflight: checking ESP32 on %ESP_PORT%...
+
                 python -m mpremote connect %ESP_PORT% exec "pass"
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+                if %ERRORLEVEL% NEQ 0 (
+                    echo Preflight failed: ESP32 not reachable on %ESP_PORT%
+                    exit /b %ERRORLEVEL%
+                )
+
+                echo Preflight OK: ESP32 is reachable
                 '''
             }
         }
@@ -39,10 +48,14 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Uploading loopback test files...
+
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                     if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 )
+
+                echo Upload complete
                 '''
             }
         }
@@ -51,6 +64,8 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Running GPIO loopback tests...
+
                 mkdir %REPORT_DIR% 2>nul
 
                 python -m mpremote connect %ESP_PORT% exec ^
@@ -60,6 +75,18 @@ pipeline {
                     echo GPIO loopback tests failed
                     exit /b %ERRORLEVEL%
                 )
+
+                echo GPIO loopback tests passed
+
+                echo.
+                echo HTML report location:
+                echo %WORKSPACE%\\%REPORT_DIR%\\%REPORT_FILE%
+
+                if exist "%WORKSPACE%\\%REPORT_DIR%\\%REPORT_FILE%" (
+                    echo HTML report found
+                ) else (
+                    echo WARNING: HTML report not found
+                )
                 '''
             }
         }
@@ -67,7 +94,6 @@ pipeline {
 
     post {
         always {
-            // Publish for viewing
             publishHTML([
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
@@ -77,7 +103,6 @@ pipeline {
                 reportName: "ESP32 GPIO Loopback Report"
             ])
 
-            // Archive for traceability
             archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}",
                              fingerprint: true,
                              allowEmptyArchive: true
@@ -89,6 +114,9 @@ pipeline {
 
         failure {
             echo "PIPELINE FAILURE: GPIO loopback tests failed"
+            echo "Check wiring:"
+            echo " - GPIO 14 -> GPIO 19"
+            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
