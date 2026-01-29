@@ -66,7 +66,20 @@ pipeline {
                 @echo off
                 echo Running GPIO loopback tests...
 
-                mkdir %REPORT_DIR% 2>nul
+                if not exist %REPORT_DIR% mkdir %REPORT_DIR%
+
+                REM Create default FAIL report
+                (
+                    echo ^<html^>
+                    echo ^<head^>^<title^>GPIO Loopback Report^</title^>^</head^>
+                    echo ^<body^>
+                    echo ^<h1^>GPIO Loopback Tests^</h1^>
+                    echo ^<p^>Build: %BUILD_NUMBER%^</p^>
+                    echo ^<p^>Result: ^<b style="color:red"^>FAIL^</b^>^</p^>
+                    echo ^<p^>Timestamp: %DATE% %TIME%^</p^>
+                    echo ^</body^>
+                    echo ^</html^>
+                ) > %REPORT_DIR%\\%REPORT_FILE%
 
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
@@ -76,17 +89,24 @@ pipeline {
                     exit /b %ERRORLEVEL%
                 )
 
+                REM Overwrite with PASS report
+                (
+                    echo ^<html^>
+                    echo ^<head^>^<title^>GPIO Loopback Report^</title^>^</head^>
+                    echo ^<body^>
+                    echo ^<h1^>GPIO Loopback Tests^</h1^>
+                    echo ^<p^>Build: %BUILD_NUMBER%^</p^>
+                    echo ^<p^>Result: ^<b style="color:green"^>PASS^</b^>^</p^>
+                    echo ^<p^>Timestamp: %DATE% %TIME%^</p^>
+                    echo ^</body^>
+                    echo ^</html^>
+                ) > %REPORT_DIR%\\%REPORT_FILE%
+
                 echo GPIO loopback tests passed
 
                 echo.
                 echo HTML report location:
                 echo %WORKSPACE%\\%REPORT_DIR%\\%REPORT_FILE%
-
-                if exist "%WORKSPACE%\\%REPORT_DIR%\\%REPORT_FILE%" (
-                    echo HTML report found
-                ) else (
-                    echo WARNING: HTML report not found
-                )
                 '''
             }
         }
@@ -95,7 +115,7 @@ pipeline {
     post {
         always {
             publishHTML([
-                allowMissing: true,
+                allowMissing: false,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
                 reportDir: "${REPORT_DIR}",
@@ -105,7 +125,7 @@ pipeline {
 
             archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}",
                              fingerprint: true,
-                             allowEmptyArchive: true
+                             allowEmptyArchive: false
         }
 
         success {
