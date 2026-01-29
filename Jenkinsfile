@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        ESP_PORT = 'COM5 '
+        ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
         REPORT_DIR = 'reports'
         REPORT_FILE = 'gpio_loopback_report.html'
@@ -19,9 +19,13 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                setlocal EnableDelayedExpansion
+
                 echo Installing tools...
                 python -m pip install --upgrade pip
                 python -m pip install mpremote
+
+                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
                 '''
             }
         }
@@ -30,10 +34,12 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                setlocal EnableDelayedExpansion
+
                 echo Preflight: checking ESP32 on %ESP_PORT%...
 
-                python -m mpremote connect %ESP_PORT% exec "pass"
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                python -m mpremote connect port=%ESP_PORT% exec "pass"
+                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
 
                 echo Preflight OK
                 '''
@@ -44,11 +50,14 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                setlocal EnableDelayedExpansion
+
                 echo Uploading loopback test files...
 
                 for %%f in (gpio_test\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                    if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                    echo Uploading %%f
+                    python -m mpremote connect port=%ESP_PORT% fs cp "%%f" :
+                    if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
                 )
                 '''
             }
@@ -58,6 +67,8 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                setlocal EnableDelayedExpansion
+
                 echo Running GPIO loopback tests...
 
                 if not exist %REPORT_DIR% mkdir %REPORT_DIR%
@@ -73,10 +84,14 @@ pipeline {
                     echo ^</html^>
                 ) > %REPORT_DIR%\\%REPORT_FILE%
 
-                python -m mpremote connect %ESP_PORT% exec ^
-                "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                REM Fail fast if runner is missing
+                python -m mpremote connect port=%ESP_PORT% exec ^
+                "import gpio_loopback_runner"
+                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
 
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                python -m mpremote connect port=%ESP_PORT% exec ^
+                "gpio_loopback_runner.run_all_tests()"
+                if !ERRORLEVEL! NEQ 0 exit /b !ERRORLEVEL!
 
                 REM PASS report
                 (
