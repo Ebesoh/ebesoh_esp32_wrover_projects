@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        ESP_PORT = 'COM5'
+        ESP_PORT = 'COM5 '
         PYTHONUNBUFFERED = '1'
     }
 
