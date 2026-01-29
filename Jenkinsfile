@@ -51,7 +51,7 @@ pipeline {
                         ''',
                         returnStdout: true
                     )
-
+                    echo output
                     echo "ESP32 returned value: ${output}"
 
                     if (output == "1") {
