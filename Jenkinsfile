@@ -33,13 +33,9 @@ pipeline {
                 echo Preflight: checking ESP32 on %ESP_PORT%...
 
                 python -m mpremote connect %ESP_PORT% exec "pass"
+                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
-                if %ERRORLEVEL% NEQ 0 (
-                    echo Preflight failed: ESP32 not reachable on %ESP_PORT%
-                    exit /b %ERRORLEVEL%
-                )
-
-                echo Preflight OK: ESP32 is reachable
+                echo Preflight OK
                 '''
             }
         }
@@ -71,12 +67,10 @@ pipeline {
                 REM Create default FAIL report
                 (
                     echo ^<html^>
-                    echo ^<head^>^<title^>GPIO Loopback Report^</title^>^</head^>
                     echo ^<body^>
                     echo ^<h1^>GPIO Loopback Tests^</h1^>
                     echo ^<p^>Build: %BUILD_NUMBER%^</p^>
-                    echo ^<p^>Result: ^<b style="color:red"^>FAIL^</b^>^</p^>
-                    echo ^<p^>Timestamp: %DATE% %TIME%^</p^>
+                    echo ^<p^>Result: FAIL^</p^>
                     echo ^</body^>
                     echo ^</html^>
                 ) > %REPORT_DIR%\\%REPORT_FILE%
@@ -84,29 +78,30 @@ pipeline {
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
 
-                if %ERRORLEVEL% NEQ 0 (
-                    echo GPIO loopback tests failed
-                    exit /b %ERRORLEVEL%
-                )
+                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
                 REM Overwrite with PASS report
                 (
                     echo ^<html^>
-                    echo ^<head^>^<title^>GPIO Loopback Report^</title^>^</head^>
                     echo ^<body^>
                     echo ^<h1^>GPIO Loopback Tests^</h1^>
                     echo ^<p^>Build: %BUILD_NUMBER%^</p^>
-                    echo ^<p^>Result: ^<b style="color:green"^>PASS^</b^>^</p^>
-                    echo ^<p^>Timestamp: %DATE% %TIME%^</p^>
+                    echo ^<p^>Result: PASS^</p^>
                     echo ^</body^>
                     echo ^</html^>
                 ) > %REPORT_DIR%\\%REPORT_FILE%
 
-                echo GPIO loopback tests passed
+                echo.
+                echo Jenkins workspace:
+                echo %WORKSPACE%
 
                 echo.
-                echo HTML report location:
-                echo %WORKSPACE%\\%REPORT_DIR%\\%REPORT_FILE%
+                echo Report directory:
+                echo %WORKSPACE%\\%REPORT_DIR%
+
+                echo.
+                echo Report directory contents:
+                dir %REPORT_DIR%
                 '''
             }
         }
@@ -129,14 +124,12 @@ pipeline {
         }
 
         success {
-            echo "PIPELINE SUCCESS: GPIO loopback tests passed"
+            echo "PIPELINE SUCCESS"
         }
 
         failure {
-            echo "PIPELINE FAILURE: GPIO loopback tests failed"
-            echo "Check wiring:"
-            echo " - GPIO 14 -> GPIO 19"
-            echo " - GPIO 12 -> GPIO 18"
+            echo "PIPELINE FAILURE"
+            // GPIO failures are printed by gpio_loopback_runner
         }
     }
 }
