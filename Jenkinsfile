@@ -40,7 +40,7 @@ pipeline {
             }
         }
 
-        stage('Run Loopback Tests') {
+        stage('Run Loopback Tests ') {
             steps {
                 script {
                     def output = bat(
