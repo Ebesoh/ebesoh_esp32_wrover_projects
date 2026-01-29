@@ -42,6 +42,7 @@ pipeline {
             steps {
                 script {
 
+                    // Default FAIL report
                     writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                     <html><body>
                     <h1>GPIO Loopback Tests</h1>
@@ -59,19 +60,34 @@ pipeline {
                         '''
                     ).trim()
 
-                    echo "Test result code: ${output}"
+                    echo "Raw result code: ${output}"
 
-                    if (output != '1') {
-                        error('GPIO loopback tests failed')
+                    switch (output) {
+                        case '1':
+                            writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
+                            <html><body>
+                            <h1>GPIO Loopback Tests</h1>
+                            <p>Build: ${env.BUILD_NUMBER}</p>
+                            <p>Result: PASS</p>
+                            </body></html>
+                            """
+                            break
+
+                        case '0':
+                            error('GPIO test failure detected')
+                            break
+
+                        case '-1':
+                            error('Test setup error (import/config/wiring)')
+                            break
+
+                        case '-2':
+                            error('ESP32 device error or disconnect')
+                            break
+
+                        default:
+                            error("Unknown test result code: ${output}")
                     }
-
-                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
-                    <html><body>
-                    <h1>GPIO Loopback Tests</h1>
-                    <p>Build: ${env.BUILD_NUMBER}</p>
-                    <p>Result: PASS</p>
-                    </body></html>
-                    """
                 }
             }
         }
