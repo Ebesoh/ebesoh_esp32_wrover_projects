@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()
-    }
-
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
@@ -13,8 +9,6 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        REPORT_DIR = 'html-report'
-        REPORT_FILE = 'gpio-loopback-report.html'
     }
 
     stages {
@@ -45,6 +39,7 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
+                    // Run tests and capture numeric output (0 or 1)
                     def output = bat(
                         script: '''
                         @echo off
@@ -54,78 +49,29 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    def failedGpios = []
+                    echo "ESP32 returned value: ${output}"
 
-                    if (output.contains("GPIO 14 - 19")) {
-                        failedGpios << "GPIO 14 -> GPIO 19"
+                    // Decision based directly on output value
+                    if (output == "1") {
+                        error("GPIO loopback tests FAILED (output = 1)")
+                    } else if (output == "0") {
+                        echo "✓ GPIO loopback tests PASSED (output = 0)"
+                    } else {
+                        error("Unexpected output from ESP32: '${output}'")
                     }
-                    if (output.contains("GPIO 12 - 18")) {
-                        failedGpios << "GPIO 12 -> GPIO 18"
-                    }
-
-                    output.split('\n').each { line ->
-                        def clean = line.trim()
-                        if (clean.startsWith("- ")) {
-                            failedGpios << clean.substring(2)
-                        }
-                    }
-
-                    failedGpios = failedGpios.unique()
-                    def status = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS") ? "PASS" : "FAIL"
-
-                    // -------- HTML REPORT (Groovy, not BAT) --------
-                    def failedListHtml = failedGpios.isEmpty()
-                        ? "<li>None</li>"
-                        : failedGpios.collect { "<li>${it}</li>" }.join("\n")
-
-                    def reportHtml = """
-<html>
-<body>
-<h1>GPIO Loopback Test Report</h1>
-<p>Result: <b>${status}</b></p>
-
-<h2>Failed GPIOs</h2>
-<ul>
-${failedListHtml}
-</ul>
-
-<h2>Raw ESP32 Output</h2>
-<pre>
-${output}
-</pre>
-</body>
-</html>
-"""
-
-                    bat "if not exist ${REPORT_DIR} mkdir ${REPORT_DIR}"
-                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: reportHtml
-
-                    if (!failedGpios.isEmpty()) {
-                        echo "Failed GPIOs:"
-                        failedGpios.each { echo " - ${it}" }
-                        error("GPIO loopback tests FAILED (${failedGpios.size()} failure(s))")
-                    }
-
-                    if (!output.contains("CI_RESULT: PASS")) {
-                        error("Unexpected output from ESP32")
-                    }
-
-                    echo "All GPIO loopback tests PASSED"
                 }
             }
         }
     }
 
     post {
-        always {
-            publishHTML([
-                reportName: 'GPIO Loopback Test Report',
-                reportDir: "${REPORT_DIR}",
-                reportFiles: "${REPORT_FILE}",
-                keepAll: true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: false
-            ])
+        success {
+            echo "✅ PIPELINE SUCCESS"
+        }
+
+        failure {
+            echo "❌ PIPELINE FAILURE"
+            echo "Check ESP32 output above"
         }
     }
 }
