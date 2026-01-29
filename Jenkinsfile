@@ -28,18 +28,23 @@ pipeline {
         stage('Auto-clean (low disk space)') {
             steps {
                 script {
-                    def freeGb = powershell(
+                    def decision = powershell(
                         script: '''
                         $drive = Get-PSDrive -Name C
-                        [math]::Round($drive.Free / 1GB, 2)
+                        $freeGb = [math]::Round($drive.Free / 1GB, 2)
+
+                        Write-Host "Free disk space on C: $freeGb GB"
+
+                        if ($freeGb -lt 10) {
+                            Write-Output "CLEAN"
+                        } else {
+                            Write-Output "OK"
+                        }
                         ''',
                         returnStdout: true
                     ).trim()
 
-                    echo "Free disk space on C: ${freeGb} GB"
-
-                    // Jenkins sandbox-safe numeric comparison
-                    if (Double.parseDouble(freeGb) < 10) {
+                    if (decision == "CLEAN") {
                         echo "⚠ Low disk space detected (<10 GB). Cleaning workspace..."
                         cleanWs()
                     } else {
@@ -81,42 +86,4 @@ pipeline {
                         echo Running GPIO loopback tests...
 
                         REM Ensure clean REPL state
-                        python -m mpremote connect %ESP_PORT% reset repl < nul > nul 2>&1
-
-                        REM Execute tests and capture output
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()" > result.txt 2>&1
-
-                        REM Extract last line only (expected 0 or 1)
-                        for /f "usebackq delims=" %%l in (`type result.txt`) do set LAST=%%l
-                        echo %LAST%
-
-                        exit /b 0
-                        ''',
-                        returnStdout: true
-                    ).trim()
-
-                    echo "ESP32 returned value: ${output}"
-
-                    if (output == "1") {
-                        error("GPIO loopback tests FAILED (output = 1)")
-                    } else if (output == "0") {
-                        echo "✓ GPIO loopback tests PASSED (output = 0)"
-                    } else {
-                        error("Unexpected output from ESP32: '${output}'")
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ PIPELINE SUCCESS"
-        }
-        failure {
-            echo "❌ PIPELINE FAILURE"
-            echo "Check ESP32 output above"
-        }
-    }
-}
+                        python -m mpremot
