@@ -45,10 +45,13 @@ pipeline {
                 script {
                     def output = bat(
                         script: '''
-                        @echo off
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
-                        ''',
+                          @echo off
+                          echo Running GPIO loopback tests...
+                          python -m mpremote connect %ESP_PORT% reset exec ^
+                          "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                          if %ERRORLEVEL% neq 0 echo mpremote failed during test execution
+                          exit /b %ERRORLEVEL%
+                          ''',
                         returnStdout: true
                     )
                     echo output
