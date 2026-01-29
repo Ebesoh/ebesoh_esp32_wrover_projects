@@ -17,7 +17,7 @@ pipeline {
 
     stages {
 
-        stage('Auto-clean (low disk space)ok') {
+        stage('Auto-clean (low disk space)s') {
             steps {
                 script {
                     def freeGb = powershell(
