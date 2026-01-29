@@ -57,7 +57,7 @@ pipeline {
                 "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
 
                 if %ERRORLEVEL% NEQ 0 (
-                    echo Tests failed
+                    echo GPIO loopback tests failed
                     exit /b %ERRORLEVEL%
                 )
                 '''
@@ -67,6 +67,7 @@ pipeline {
 
     post {
         always {
+            // Publish for viewing
             publishHTML([
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
@@ -75,6 +76,11 @@ pipeline {
                 reportFiles: "${REPORT_FILE}",
                 reportName: "ESP32 GPIO Loopback Report"
             ])
+
+            // Archive for traceability
+            archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}",
+                             fingerprint: true,
+                             allowEmptyArchive: true
         }
 
         success {
