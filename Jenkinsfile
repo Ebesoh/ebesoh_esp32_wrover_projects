@@ -17,6 +17,29 @@ pipeline {
 
     stages {
 
+        stage('Auto-clean (low disk space)') {
+            steps {
+                script {
+                    def freeGb = powershell(
+                        script: '''
+                        $drive = Get-PSDrive -Name C
+                        [math]::Round($drive.Free / 1GB, 2)
+                        ''',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Free disk space on C: ${freeGb} GB"
+
+                    if (freeGb.toBigDecimal() < 10) {
+                        echo "⚠ Low disk space detected (<10 GB). Cleaning workspace..."
+                        cleanWs()
+                    } else {
+                        echo "Disk space OK. No cleanup needed."
+                    }
+                }
+            }
+        }
+
         stage('Install Tools') {
             steps {
                 bat '''
@@ -40,7 +63,7 @@ pipeline {
             }
         }
 
-        stage('Run Loopback Testss') {
+        stage('Run Loopback Tests') {
             steps {
                 script {
                     def output = bat(
@@ -48,10 +71,10 @@ pipeline {
                         @echo off
                         echo Running GPIO loopback tests...
 
-                        REM Ensure clean REPL state (suppress noise)
+                        REM Ensure clean REPL state
                         python -m mpremote connect %ESP_PORT% reset repl < nul > nul 2>&1
 
-                        REM Execute tests, capture all output
+                        REM Execute tests and capture output
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()" > result.txt 2>&1
 
