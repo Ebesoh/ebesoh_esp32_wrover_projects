@@ -13,8 +13,6 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        REPORT_DIR = 'html-report'
-        REPORT_FILE = 'gpio-loopback-report.html'
     }
 
     stages {
@@ -54,10 +52,9 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    writeFile file: 'esp_output.txt', text: output
-
                     def failedGpios = []
 
+                    // Known failure patterns
                     if (output.contains("GPIO 14 - 19")) {
                         failedGpios << "GPIO 14 -> GPIO 19"
                     }
@@ -65,6 +62,7 @@ pipeline {
                         failedGpios << "GPIO 12 -> GPIO 18"
                     }
 
+                    // Generic failure lines prefixed with "- "
                     output.split('\n').each { line ->
                         def clean = line.trim()
                         if (clean.startsWith("- ")) {
@@ -74,45 +72,7 @@ pipeline {
 
                     failedGpios = failedGpios.unique()
 
-                    def passed = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS")
-                    def status = passed ? "PASS" : "FAIL"
-
-                    def failedHtml = failedGpios.isEmpty()
-                        ? "<li>None</li>"
-                        : failedGpios.collect { "<li>${it}</li>" }.join("\n")
-
-                    // Generate HTML report
-                    bat """
-                    @echo off
-                    if not exist %REPORT_DIR% mkdir %REPORT_DIR%
-                    (
-                        echo ^<!DOCTYPE html^>
-                        echo ^<html^>
-                        echo ^<head^>
-                        echo ^<title^>GPIO Loopback Test Report^</title^>
-                        echo ^<style^>
-                        echo body { font-family: Arial; padding: 20px; }
-                        echo .pass { color: green; font-weight: bold; }
-                        echo .fail { color: red; font-weight: bold; }
-                        echo pre { background: #f4f4f4; padding: 10px; }
-                        echo ^</style^>
-                        echo ^</head^>
-                        echo ^<body^>
-                        echo ^<h1^>GPIO Loopback Test Report^</h1^>
-                        echo ^<p^>Result: ^<span class="${status.toLowerCase()}"^>${status}^</span^>^</p^>
-                        echo ^<h2^>Failed GPIOs^</h2^>
-                        echo ^<ul^>
-                        echo ${failedHtml}
-                        echo ^</ul^>
-                        echo ^<h2^>Raw ESP32 Output^</h2^>
-                        echo ^<pre^>
-                        type esp_output.txt
-                        echo ^</pre^>
-                        echo ^</body^>
-                        echo ^</html^>
-                    ) > %REPORT_DIR%\\%REPORT_FILE%
-                    """
-
+                    // Echo ONLY failed GPIOs
                     if (!failedGpios.isEmpty()) {
                         echo "Failed GPIOs:"
                         failedGpios.each { gpio ->
@@ -132,17 +92,6 @@ pipeline {
     }
 
     post {
-        always {
-            publishHTML([
-                reportName: 'GPIO Loopback Test Report',
-                reportDir: "${REPORT_DIR}",
-                reportFiles: "${REPORT_FILE}",
-                keepAll: true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: false
-            ])
-        }
-
         success {
             echo "PIPELINE SUCCESS: GPIO loopback tests passed"
         }
