@@ -51,7 +51,7 @@ pipeline {
                         faults << "GPIO 14 - 19"
                     }
 
-                    if (output.contains("GPIO 12 - 18")) {
+                    if (output.contains(" GPIO 12 - 18")) {
                         faults << "GPIO 12 - 18"
                     }
 
