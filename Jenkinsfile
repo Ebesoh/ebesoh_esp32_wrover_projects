@@ -10,6 +10,7 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
+        skipDefaultCheckout()   // IMPORTANT: prevent checkout before auto-clean
     }
 
     environment {
@@ -51,6 +52,12 @@ pipeline {
                         echo "Disk space OK. No cleanup needed."
                     }
                 }
+            }
+        }
+
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
             }
         }
 
