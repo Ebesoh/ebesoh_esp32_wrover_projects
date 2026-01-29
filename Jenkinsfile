@@ -1,5 +1,8 @@
 pipeline {
     agent any
+
+    triggers {
+        githubPush()
     }
 
     options {
@@ -49,31 +52,33 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    def faults = []
+                    def failedGpios = []
 
+                    // Known failure patterns
                     if (output.contains("GPIO 14 - 19")) {
-                        faults << "GPIO 14 -> GPIO 19"
+                        failedGpios << "GPIO 14 -> GPIO 19"
                     }
-
                     if (output.contains("GPIO 12 - 18")) {
-                        faults << "GPIO 12 -> GPIO 18"
+                        failedGpios << "GPIO 12 -> GPIO 18"
                     }
 
+                    // Generic failure lines prefixed with "- "
                     output.split('\n').each { line ->
                         def clean = line.trim()
                         if (clean.startsWith("- ")) {
-                            faults << clean.substring(2)
+                            failedGpios << clean.substring(2)
                         }
                     }
 
-                    faults = faults.unique()
+                    failedGpios = failedGpios.unique()
 
-                    if (!faults.isEmpty()) {
+                    // Echo ONLY failed GPIOs
+                    if (!failedGpios.isEmpty()) {
                         echo "Failed GPIOs:"
-                        faults.each { fault ->
-                            echo " - ${fault}"
+                        failedGpios.each { gpio ->
+                            echo " - ${gpio}"
                         }
-                        error("GPIO loopback tests FAILED (${faults.size()} failure(s))")
+                        error("GPIO loopback tests FAILED (${failedGpios.size()} failure(s))")
                     }
 
                     if (!output.contains("CI_RESULT: PASS")) {
