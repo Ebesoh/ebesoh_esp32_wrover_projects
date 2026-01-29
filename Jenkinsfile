@@ -73,34 +73,21 @@ pipeline {
                     }
 
                     failedGpios = failedGpios.unique()
-                    def passed = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS")
-                    def status = passed ? "PASS" : "FAIL"
+                    def status = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS") ? "PASS" : "FAIL"
 
-                    // --- HTML HEADER ---
+                    // ---- SIMPLE HTML REPORT ----
                     bat """
                     @echo off
                     if not exist %REPORT_DIR% mkdir %REPORT_DIR%
-                    (
-                      echo ^<!DOCTYPE html^>
-                      echo ^<html^>
-                      echo ^<head^>
-                      echo ^<title^>GPIO Loopback Test Report^</title^>
-                      echo ^<style^>
-                      echo body { font-family: Arial; padding: 20px; }
-                      echo .pass { color: green; font-weight: bold; }
-                      echo .fail { color: red; font-weight: bold; }
-                      echo pre { background: #f4f4f4; padding: 10px; }
-                      echo ^</style^>
-                      echo ^</head^>
-                      echo ^<body^>
-                      echo ^<h1^>GPIO Loopback Test Report^</h1^>
-                      echo ^<p^>Result: ^<span class="${status.toLowerCase()}"^>${status}^</span^>^</p^>
-                      echo ^<h2^>Failed GPIOs^</h2^>
-                      echo ^<ul^>
-                    ) > %REPORT_DIR%\\%REPORT_FILE%
+
+                    echo ^<html^> > %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<body^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<h1^>GPIO Loopback Test Report^</h1^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<p^>Result: <b>${status}</b>^</p^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<h2^>Failed GPIOs^</h2^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<ul^> >> %REPORT_DIR%\\%REPORT_FILE%
                     """
 
-                    // --- FAILED GPIO LIST ---
                     if (failedGpios.isEmpty()) {
                         bat "echo <li>None</li> >> %REPORT_DIR%\\%REPORT_FILE%"
                     } else {
@@ -109,27 +96,20 @@ pipeline {
                         }
                     }
 
-                    // --- RAW OUTPUT ---
                     bat """
-                    (
-                      echo ^</ul^>
-                      echo ^<h2^>Raw ESP32 Output^</h2^>
-                      echo ^<pre^>
-                    ) >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^</ul^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<h2^>Raw ESP32 Output^</h2^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^<pre^> >> %REPORT_DIR%\\%REPORT_FILE%
                     """
 
                     bat "type esp_output.txt >> %REPORT_DIR%\\%REPORT_FILE%"
 
-                    // --- HTML FOOTER ---
                     bat """
-                    (
-                      echo ^</pre^>
-                      echo ^</body^>
-                      echo ^</html^>
-                    ) >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^</pre^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^</body^> >> %REPORT_DIR%\\%REPORT_FILE%
+                    echo ^</html^> >> %REPORT_DIR%\\%REPORT_FILE%
                     """
 
-                    // --- FAIL BUILD IF NEEDED ---
                     if (!failedGpios.isEmpty()) {
                         echo "Failed GPIOs:"
                         failedGpios.each { echo " - ${it}" }
@@ -156,17 +136,6 @@ pipeline {
                 alwaysLinkToLastBuild: true,
                 allowMissing: false
             ])
-        }
-
-        success {
-            echo "PIPELINE SUCCESS: GPIO loopback tests passed"
-        }
-
-        failure {
-            echo "PIPELINE FAILURE: GPIO loopback tests failed"
-            echo "Check wiring:"
-            echo " - GPIO 14 -> GPIO 19"
-            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
