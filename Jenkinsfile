@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        timestamps()
+        disableConcurrentBuilds(abortPrevious: true)
+    }
+
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
