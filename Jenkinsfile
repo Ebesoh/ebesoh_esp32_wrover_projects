@@ -73,51 +73,66 @@ pipeline {
                     }
 
                     failedGpios = failedGpios.unique()
-
                     def passed = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS")
                     def status = passed ? "PASS" : "FAIL"
 
-                    def failedHtml = failedGpios.isEmpty()
-                        ? "<li>None</li>"
-                        : failedGpios.collect { "<li>${it}</li>" }.join("\n")
-
-                    // Generate HTML report
+                    // --- HTML HEADER ---
                     bat """
                     @echo off
                     if not exist %REPORT_DIR% mkdir %REPORT_DIR%
                     (
-                        echo ^<!DOCTYPE html^>
-                        echo ^<html^>
-                        echo ^<head^>
-                        echo ^<title^>GPIO Loopback Test Report^</title^>
-                        echo ^<style^>
-                        echo body { font-family: Arial; padding: 20px; }
-                        echo .pass { color: green; font-weight: bold; }
-                        echo .fail { color: red; font-weight: bold; }
-                        echo pre { background: #f4f4f4; padding: 10px; }
-                        echo ^</style^>
-                        echo ^</head^>
-                        echo ^<body^>
-                        echo ^<h1^>GPIO Loopback Test Report^</h1^>
-                        echo ^<p^>Result: ^<span class="${status.toLowerCase()}"^>${status}^</span^>^</p^>
-                        echo ^<h2^>Failed GPIOs^</h2^>
-                        echo ^<ul^>
-                        echo ${failedHtml}
-                        echo ^</ul^>
-                        echo ^<h2^>Raw ESP32 Output^</h2^>
-                        echo ^<pre^>
-                        type esp_output.txt
-                        echo ^</pre^>
-                        echo ^</body^>
-                        echo ^</html^>
+                      echo ^<!DOCTYPE html^>
+                      echo ^<html^>
+                      echo ^<head^>
+                      echo ^<title^>GPIO Loopback Test Report^</title^>
+                      echo ^<style^>
+                      echo body { font-family: Arial; padding: 20px; }
+                      echo .pass { color: green; font-weight: bold; }
+                      echo .fail { color: red; font-weight: bold; }
+                      echo pre { background: #f4f4f4; padding: 10px; }
+                      echo ^</style^>
+                      echo ^</head^>
+                      echo ^<body^>
+                      echo ^<h1^>GPIO Loopback Test Report^</h1^>
+                      echo ^<p^>Result: ^<span class="${status.toLowerCase()}"^>${status}^</span^>^</p^>
+                      echo ^<h2^>Failed GPIOs^</h2^>
+                      echo ^<ul^>
                     ) > %REPORT_DIR%\\%REPORT_FILE%
                     """
 
+                    // --- FAILED GPIO LIST ---
+                    if (failedGpios.isEmpty()) {
+                        bat "echo <li>None</li> >> %REPORT_DIR%\\%REPORT_FILE%"
+                    } else {
+                        failedGpios.each { g ->
+                            bat "echo <li>${g}</li> >> %REPORT_DIR%\\%REPORT_FILE%"
+                        }
+                    }
+
+                    // --- RAW OUTPUT ---
+                    bat """
+                    (
+                      echo ^</ul^>
+                      echo ^<h2^>Raw ESP32 Output^</h2^>
+                      echo ^<pre^>
+                    ) >> %REPORT_DIR%\\%REPORT_FILE%
+                    """
+
+                    bat "type esp_output.txt >> %REPORT_DIR%\\%REPORT_FILE%"
+
+                    // --- HTML FOOTER ---
+                    bat """
+                    (
+                      echo ^</pre^>
+                      echo ^</body^>
+                      echo ^</html^>
+                    ) >> %REPORT_DIR%\\%REPORT_FILE%
+                    """
+
+                    // --- FAIL BUILD IF NEEDED ---
                     if (!failedGpios.isEmpty()) {
                         echo "Failed GPIOs:"
-                        failedGpios.each { gpio ->
-                            echo " - ${gpio}"
-                        }
+                        failedGpios.each { echo " - ${it}" }
                         error("GPIO loopback tests FAILED (${failedGpios.size()} failure(s))")
                     }
 
