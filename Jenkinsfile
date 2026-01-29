@@ -38,7 +38,8 @@ pipeline {
 
                     echo "Free disk space on C: ${freeGb} GB"
 
-                    if (freeGb.toBigDecimal() < 10) {
+                    // Jenkins sandbox-safe numeric comparison
+                    if (Double.parseDouble(freeGb) < 10) {
                         echo "⚠ Low disk space detected (<10 GB). Cleaning workspace..."
                         cleanWs()
                     } else {
