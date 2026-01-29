@@ -9,15 +9,16 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
+        REPORT_DIR = 'reports'
+        REPORT_FILE = 'gpio_loopback_report.html'
     }
 
     stages {
 
-        stage(' Install Tools') {
+        stage('Install Tools') {
             steps {
                 bat '''
                 @echo off
-                echo Installing tools...
                 python -m pip install --upgrade pip
                 python -m pip install mpremote
                 '''
@@ -28,16 +29,8 @@ pipeline {
             steps {
                 bat '''
                 @echo off
-                echo Preflight: checking ESP32 on %ESP_PORT%...
-
                 python -m mpremote connect %ESP_PORT% exec "pass"
-
-                if %ERRORLEVEL% NEQ 0 (
-                    echo Preflight failed: ESP32 not reachable on %ESP_PORT%
-                    exit /b %ERRORLEVEL%
-                )
-
-                echo Preflight OK: ESP32 is reachable
+                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 '''
             }
         }
@@ -46,7 +39,6 @@ pipeline {
             steps {
                 bat '''
                 @echo off
-                echo Uploading test files to ESP32...
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                     if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
@@ -59,32 +51,38 @@ pipeline {
             steps {
                 bat '''
                 @echo off
-                echo Running GPIO loopback tests on ESP32...
+                mkdir %REPORT_DIR% 2>nul
 
                 python -m mpremote connect %ESP_PORT% exec ^
                 "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
 
                 if %ERRORLEVEL% NEQ 0 (
-                    echo GPIO loopback tests failed
+                    echo Tests failed
                     exit /b %ERRORLEVEL%
                 )
-
-                echo GPIO loopback tests passed
                 '''
             }
         }
     }
 
     post {
+        always {
+            publishHTML([
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: "${REPORT_DIR}",
+                reportFiles: "${REPORT_FILE}",
+                reportName: "ESP32 GPIO Loopback Report"
+            ])
+        }
+
         success {
             echo "PIPELINE SUCCESS: GPIO loopback tests passed"
         }
 
         failure {
             echo "PIPELINE FAILURE: GPIO loopback tests failed"
-            echo "Check wiring:"
-            echo " - GPIO 14 -> GPIO 19"
-            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
