@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'esp32'
+    }
 
     triggers {
         githubPush()
@@ -8,37 +10,85 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
+        skipDefaultCheckout()
     }
 
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        REPORT_DIR = 'html-report'
-        REPORT_FILE = 'gpio-loopback-report.html'
     }
 
     stages {
 
+        stage('Build') {
+            steps {
+                echo "Running on ESP32 node"
+            }
+        }
+
+        stage('Auto-clean (low disk space)') {
+            steps {
+                script {
+                    def decision = powershell(
+                        script: '''
+$drive = Get-PSDrive -Name C
+$freeGb = [math]::Round($drive.Free / 1GB, 2)
+
+Write-Host "Free disk space on C: $freeGb GB"
+
+if ($freeGb -lt 10) {
+    Write-Output "CLEAN"
+} else {
+    Write-Output "OK"
+}
+''',
+                        returnStdout: true
+                    ).trim()
+
+                    if (decision == "CLEAN") {
+                        echo "⚠ Low disk space detected (<10 GB). Cleaning workspace contents..."
+
+                        powershell '''
+Write-Host "Cleaning workspace contents (Windows-safe)..."
+
+if (Test-Path "$env:WORKSPACE") {
+    Get-ChildItem -Path "$env:WORKSPACE" -Force |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+}
+'''
+                    } else {
+                        echo "Disk space OK. No cleanup needed."
+                    }
+                }
+            }
+        }
+
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Install Tools') {
             steps {
                 bat '''
-                @echo off
-                echo Installing tools...
-                python -m pip install --upgrade pip
-                python -m pip install mpremote
-                '''
+@echo off
+echo Installing tools...
+python -m pip install --upgrade pip
+python -m pip install mpremote
+'''
             }
         }
 
         stage('Upload Loopback Tests') {
             steps {
                 bat '''
-                @echo off
-                echo Uploading test files to ESP32...
-                for %%f in (gpio_test\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                )
-                '''
+@echo off
+echo Uploading test files to ESP32...
+for %%f in (gpio_test\\*.py) do (
+    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+)
+'''
             }
         }
 
@@ -47,85 +97,46 @@ pipeline {
                 script {
                     def output = bat(
                         script: '''
-                        @echo off
-                        python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
-                        ''',
+@echo off
+echo Running GPIO loopback tests...
+
+REM Ensure clean REPL state
+python -m mpremote connect %ESP_PORT% reset repl < nul > nul 2>&1
+
+REM Execute tests and capture output
+python -m mpremote connect %ESP_PORT% exec ^
+"import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()" > result.txt 2>&1
+
+REM Extract last line only (expected 0 or 1)
+for /f "usebackq delims=" %%l in (`type result.txt`) do set LAST=%%l
+echo %LAST%
+
+exit /b 0
+''',
                         returnStdout: true
                     ).trim()
 
-                    def failedGpios = []
+                    echo "ESP32 returned value: ${output}"
 
-                    if (output.contains("GPIO 14 - 19")) {
-                        failedGpios << "GPIO 14 -> GPIO 19"
+                    if (output == "1") {
+                        error("GPIO loopback tests FAILED (output = 1)")
+                    } else if (output == "0") {
+                        echo "✓ GPIO loopback tests PASSED (output = 0)"
+                    } else {
+                        error("Unexpected output from ESP32: '${output}'")
                     }
-                    if (output.contains("GPIO 12 - 18")) {
-                        failedGpios << "GPIO 12 -> GPIO 18"
-                    }
-
-                    output.split('\n').each { line ->
-                        def clean = line.trim()
-                        if (clean.startsWith("- ")) {
-                            failedGpios << clean.substring(2)
-                        }
-                    }
-
-                    failedGpios = failedGpios.unique()
-                    def status = failedGpios.isEmpty() && output.contains("CI_RESULT: PASS") ? "PASS" : "FAIL"
-
-                    // -------- HTML REPORT (Groovy, not BAT) --------
-                    def failedListHtml = failedGpios.isEmpty()
-                        ? "<li>None</li>"
-                        : failedGpios.collect { "<li>${it}</li>" }.join("\n")
-
-                    def reportHtml = """
-<html>
-<body>
-<h1>GPIO Loopback Test Report</h1>
-<p>Result: <b>${status}</b></p>
-
-<h2>Failed GPIOs</h2>
-<ul>
-${failedListHtml}
-</ul>
-
-<h2>Raw ESP32 Output</h2>
-<pre>
-${output}
-</pre>
-</body>
-</html>
-"""
-
-                    bat "if not exist ${REPORT_DIR} mkdir ${REPORT_DIR}"
-                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: reportHtml
-
-                    if (!failedGpios.isEmpty()) {
-                        echo "Failed GPIOs:"
-                        failedGpios.each { echo " - ${it}" }
-                        error("GPIO loopback tests FAILED (${failedGpios.size()} failure(s))")
-                    }
-
-                    if (!output.contains("CI_RESULT: PASS")) {
-                        error("Unexpected output from ESP32")
-                    }
-
-                    echo "All GPIO loopback tests PASSED"
                 }
             }
         }
     }
 
     post {
-        always {
-            publishHTML([
-                reportName: 'GPIO Loopback Test Report',
-                reportDir: "${REPORT_DIR}",
-                reportFiles: "${REPORT_FILE}",
-                keepAll: true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: false
-            ])
+        success {
+            echo "✅ PIPELINE SUCCESS"
+        }
+        failure {
+            echo "❌ PIPELINE FAILURE"
+            echo "Check ESP32 output above"
         }
     }
 }
