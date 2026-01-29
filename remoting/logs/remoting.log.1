@@ -1,0 +1,348 @@
+Jan 29, 2026 6:51:37 PM hudson.remoting.Launcher createEngine
+INFO: Setting up agent: esp32-agent-01
+Jan 29, 2026 6:51:37 PM hudson.remoting.Engine startEngine
+INFO: Using Remoting version: 3355.v388858a_47b_33
+Jan 29, 2026 6:51:37 PM org.jenkinsci.remoting.engine.WorkDirManager initializeWorkDir
+INFO: Using C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\remoting as a remoting work directory
+Jan 29, 2026 6:51:37 PM hudson.remoting.Launcher$CuiListener status
+INFO: WebSocket connection open
+Jan 29, 2026 6:51:37 PM hudson.remoting.Launcher$CuiListener status
+INFO: Connected
+Jan 29, 2026 6:51:40 PM hudson.remoting.JarCacheSupport$DownloadRunnable run
+WARNING: Failed to resolve a jar af4299e4d44012deec6a96bc4a7defc7
+java.io.IOException: Failed to write to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\remoting\jarCache\AF\4299E4D44012DEEC6A96BC4A7DEFC7.jar
+	at hudson.remoting.FileSystemJarCache.retrieve(FileSystemJarCache.java:147)
+	at hudson.remoting.JarCacheSupport$DownloadRunnable.run(JarCacheSupport.java:104)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Pipe is already closed
+	at hudson.remoting.PipeWindow.checkDeath(PipeWindow.java:119)
+	at hudson.remoting.PipeWindow$Real.get(PipeWindow.java:225)
+	at hudson.remoting.ProxyOutputStream.write(ProxyOutputStream.java:129)
+	at hudson.remoting.RemoteOutputStream.write(RemoteOutputStream.java:113)
+	at hudson.remoting.Util.copy(Util.java:52)
+	at hudson.remoting.JarLoaderImpl.writeJarTo(JarLoaderImpl.java:65)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.perform(RemoteInvocationHandler.java:986)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.call(RemoteInvocationHandler.java:961)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.call(RemoteInvocationHandler.java:907)
+	at hudson.remoting.UserRequest.perform(UserRequest.java:225)
+	at hudson.remoting.UserRequest.perform(UserRequest.java:50)
+	at hudson.remoting.Request$2.run(Request.java:391)
+	at hudson.remoting.InterceptingExecutorService.lambda$wrap$0(InterceptingExecutorService.java:81)
+	at org.jenkinsci.remoting.CallableDecorator.call(CallableDecorator.java:18)
+	at hudson.remoting.CallableDecoratorList.lambda$applyDecorator$0(CallableDecoratorList.java:21)
+	at jenkins.util.ContextResettingExecutorService$2.call(ContextResettingExecutorService.java:46)
+	at jenkins.security.ImpersonatingExecutorService$2.call(ImpersonatingExecutorService.java:80)
+	... 4 more
+	Suppressed: hudson.remoting.Channel$CallSiteStackTrace: Remote call to esp32-agent-01
+		at hudson.remoting.Channel.attachCallSiteStackTrace(Channel.java:1916)
+		at hudson.remoting.UserRequest$ExceptionResponse.retrieve(UserRequest.java:384)
+		at hudson.remoting.Channel.call(Channel.java:1108)
+		at hudson.remoting.RemoteInvocationHandler.invoke(RemoteInvocationHandler.java:306)
+		at jdk.proxy2/jdk.proxy2.$Proxy5.writeJarTo(Unknown Source)
+		at hudson.remoting.FileSystemJarCache.retrieve(FileSystemJarCache.java:114)
+		at hudson.remoting.JarCacheSupport$DownloadRunnable.run(JarCacheSupport.java:104)
+		at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+		... 4 more
+Caused by: hudson.remoting.ProxyException: java.io.IOException: There is not enough space on the disk
+	at java.base/java.io.FileOutputStream.writeBytes(Native Method)
+	at java.base/java.io.FileOutputStream.write(FileOutputStream.java:332)
+	at hudson.remoting.ProxyOutputStream$Chunk.lambda$execute$0(ProxyOutputStream.java:267)
+	at hudson.remoting.PipeWriter$1.run(PipeWriter.java:161)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at hudson.remoting.SingleLaneExecutorService$1.run(SingleLaneExecutorService.java:139)
+	at hudson.remoting.InterceptingExecutorService.lambda$wrap$0(InterceptingExecutorService.java:81)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at hudson.remoting.Engine$1.lambda$newThread$0(Engine.java:312)
+	... 1 more
+
+Jan 29, 2026 6:59:41 PM hudson.remoting.JarCacheSupport$DownloadRunnable run
+WARNING: Failed to resolve a jar 3a2e94b25c8d2d7c41b94d7d91be57c8
+java.io.IOException: Failed to write to C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\remoting\jarCache\3A\2E94B25C8D2D7C41B94D7D91BE57C8.jar
+	at hudson.remoting.FileSystemJarCache.retrieve(FileSystemJarCache.java:147)
+	at hudson.remoting.JarCacheSupport$DownloadRunnable.run(JarCacheSupport.java:104)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Pipe is already closed
+	at hudson.remoting.PipeWindow.checkDeath(PipeWindow.java:119)
+	at hudson.remoting.PipeWindow$Real.get(PipeWindow.java:225)
+	at hudson.remoting.ProxyOutputStream.write(ProxyOutputStream.java:129)
+	at hudson.remoting.RemoteOutputStream.write(RemoteOutputStream.java:113)
+	at hudson.remoting.Util.copy(Util.java:52)
+	at hudson.remoting.JarLoaderImpl.writeJarTo(JarLoaderImpl.java:65)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.perform(RemoteInvocationHandler.java:986)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.call(RemoteInvocationHandler.java:961)
+	at hudson.remoting.RemoteInvocationHandler$RPCRequest.call(RemoteInvocationHandler.java:907)
+	at hudson.remoting.UserRequest.perform(UserRequest.java:225)
+	at hudson.remoting.UserRequest.perform(UserRequest.java:50)
+	at hudson.remoting.Request$2.run(Request.java:391)
+	at hudson.remoting.InterceptingExecutorService.lambda$wrap$0(InterceptingExecutorService.java:81)
+	at org.jenkinsci.remoting.CallableDecorator.call(CallableDecorator.java:18)
+	at hudson.remoting.CallableDecoratorList.lambda$applyDecorator$0(CallableDecoratorList.java:21)
+	at jenkins.util.ContextResettingExecutorService$2.call(ContextResettingExecutorService.java:46)
+	at jenkins.security.ImpersonatingExecutorService$2.call(ImpersonatingExecutorService.java:80)
+	... 4 more
+	Suppressed: hudson.remoting.Channel$CallSiteStackTrace: Remote call to esp32-agent-01
+		at hudson.remoting.Channel.attachCallSiteStackTrace(Channel.java:1916)
+		at hudson.remoting.UserRequest$ExceptionResponse.retrieve(UserRequest.java:384)
+		at hudson.remoting.Channel.call(Channel.java:1108)
+		at hudson.remoting.RemoteInvocationHandler.invoke(RemoteInvocationHandler.java:306)
+		at jdk.proxy2/jdk.proxy2.$Proxy5.writeJarTo(Unknown Source)
+		at hudson.remoting.FileSystemJarCache.retrieve(FileSystemJarCache.java:114)
+		at hudson.remoting.JarCacheSupport$DownloadRunnable.run(JarCacheSupport.java:104)
+		at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+		... 4 more
+Caused by: hudson.remoting.ProxyException: java.io.IOException: There is not enough space on the disk
+	at java.base/java.io.FileOutputStream.writeBytes(Native Method)
+	at java.base/java.io.FileOutputStream.write(FileOutputStream.java:332)
+	at hudson.remoting.ProxyOutputStream$Chunk.lambda$execute$0(ProxyOutputStream.java:267)
+	at hudson.remoting.PipeWriter$1.run(PipeWriter.java:161)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at hudson.remoting.SingleLaneExecutorService$1.run(SingleLaneExecutorService.java:139)
+	at hudson.remoting.InterceptingExecutorService.lambda$wrap$0(InterceptingExecutorService.java:81)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at hudson.remoting.Engine$1.lambda$newThread$0(Engine.java:312)
+	... 1 more
+
+Jan 29, 2026 7:53:41 PM io.jenkins.remoting.shaded.org.glassfish.tyrus.container.jdk.client.ClientFilter processError
+SEVERE: Connection error has occurred
+java.io.IOException: The specified network name is no longer available
+	at java.base/sun.nio.ch.Iocp.translateErrorToIOException(Iocp.java:299)
+	at java.base/sun.nio.ch.Iocp$EventHandlerTask.run(Iocp.java:389)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at java.base/jdk.internal.misc.InnocuousThread.run(InnocuousThread.java:148)
+
+Jan 29, 2026 7:53:41 PM hudson.remoting.Launcher$CuiListener status
+INFO: Read side closed
+Jan 29, 2026 7:53:41 PM hudson.remoting.Launcher$CuiListener status
+INFO: Terminated
+Jan 29, 2026 7:53:41 PM hudson.remoting.Launcher$CuiListener status
+INFO: Performing onReconnect operation.
+Jan 29, 2026 7:53:41 PM hudson.remoting.Launcher$CuiListener status
+INFO: onReconnect operation completed.
+Jan 29, 2026 7:53:41 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:53:42 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 1 second before retry
+Jan 29, 2026 7:53:43 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:53:43 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 3 seconds before retry
+Jan 29, 2026 7:53:46 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:53:46 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 7 seconds before retry
+Jan 29, 2026 7:53:53 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:53:53 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 10 seconds before retry
+Jan 29, 2026 7:54:03 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:54:03 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 10 seconds before retry
+Jan 29, 2026 7:54:13 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:54:13 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 10 seconds before retry
+Jan 29, 2026 7:54:23 PM hudson.remoting.Launcher$CuiListener status
+INFO: http://localhost:8080/login is not ready
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:166)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:516)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:604)
+	at java.base/sun.net.www.http.HttpClient.<init>(HttpClient.java:276)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:380)
+	at java.base/sun.net.www.http.HttpClient.New(HttpClient.java:393)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:1030)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:963)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:899)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:872)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1377)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1302)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:493)
+	at hudson.remoting.Engine.pingSuccessful(Engine.java:891)
+	at hudson.remoting.Engine.lambda$runWebSocket$2(Engine.java:821)
+	at hudson.remoting.Engine.succeedsWithRetries(Engine.java:868)
+	at hudson.remoting.Engine.runWebSocket(Engine.java:821)
+	at hudson.remoting.Engine.run(Engine.java:560)
+
+Jan 29, 2026 7:54:23 PM hudson.remoting.Launcher$CuiListener status
+INFO: Waiting 10 seconds before retry

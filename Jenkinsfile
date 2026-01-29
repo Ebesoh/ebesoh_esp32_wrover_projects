@@ -1,8 +1,6 @@
 pipeline {
-    agent {
-        label 'esp32'
-    }
-
+    agent any
+    
     triggers {
         githubPush()
     }
@@ -19,12 +17,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Build') {
-            steps {
-                echo "Running on ESP32 node"
-            }
-        }
 
         stage('Auto-clean (low disk space)') {
             steps {
