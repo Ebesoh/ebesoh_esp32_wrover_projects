@@ -42,6 +42,11 @@ pipeline {
             steps {
                 script {
 
+                    // Ensure report directory exists
+                    if (!fileExists(REPORT_DIR)) {
+                        new File(REPORT_DIR).mkdirs()
+                    }
+
                     // Default FAIL report
                     writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                     <html><body>
@@ -60,7 +65,7 @@ pipeline {
                         '''
                     ).trim()
 
-                    echo "Raw result code: ${output}"
+                    echo "Test result code: ${output}"
 
                     switch (output) {
                         case '1':
@@ -74,15 +79,15 @@ pipeline {
                             break
 
                         case '0':
-                            error('GPIO test failure detected')
+                            error('GPIO test failure')
                             break
 
                         case '-1':
-                            error('Test setup error (import/config/wiring)')
+                            error('Test setup error')
                             break
 
                         case '-2':
-                            error('ESP32 device error or disconnect')
+                            error('ESP32 device error')
                             break
 
                         default:
@@ -96,11 +101,23 @@ pipeline {
     post {
         always {
             publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
                 reportDir: REPORT_DIR,
                 reportFiles: REPORT_FILE,
                 reportName: 'ESP32 GPIO Loopback Report'
             ])
+
             archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}"
+        }
+
+        success {
+            echo 'PIPELINE SUCCESS'
+        }
+
+        failure {
+            echo 'PIPELINE FAILURE'
         }
     }
 }
