@@ -1,13 +1,17 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
     }
 
     environment {
-        ESP_PORT = 'COM5 '
+        ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
     }
 
@@ -48,24 +52,19 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    echo "=== ESP32 OUTPUT ===="
-                    echo output
-                    echo "output:${output}"
-
                     def faults = []
 
                     if (output.contains("GPIO 14 - 19")) {
-                        faults << "GPIO 14 - 19"
+                        faults << "GPIO 14 -> GPIO 19"
                     }
 
                     if (output.contains("GPIO 12 - 18")) {
-                        faults << "GPIO 12 - 18"
+                        faults << "GPIO 12 -> GPIO 18"
                     }
 
-                    def lines = output.split('\n')
-                    for (String line : lines) {
+                    output.split('\n').each { line ->
                         def clean = line.trim()
-                        if (clean.startsWith("-")) {
+                        if (clean.startsWith("- ")) {
                             faults << clean.substring(2)
                         }
                     }
@@ -73,18 +72,18 @@ pipeline {
                     faults = faults.unique()
 
                     if (!faults.isEmpty()) {
-                        echo "Detected GPIO faults:"
+                        echo "Failed GPIOs:"
                         faults.each { fault ->
                             echo " - ${fault}"
                         }
-                        error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
+                        error("GPIO loopback tests FAILED (${faults.size()} failure(s))")
                     }
 
-                    if (output.contains("CI_RESULT: PASS")) {
-                        echo "All GPIO loopback tests PASSED"
-                    } else {
-                        error("Unexpected output from ESP32:\n${output}")
+                    if (!output.contains("CI_RESULT: PASS")) {
+                        error("Unexpected output from ESP32")
                     }
+
+                    echo "All GPIO loopback tests PASSED"
                 }
             }
         }
