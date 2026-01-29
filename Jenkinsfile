@@ -13,7 +13,7 @@ pipeline {
 
     stages {
 
-        stage('Install Tools') {
+        stage('Install Toolss') {
             steps {
                 bat '''
                 @echo off
