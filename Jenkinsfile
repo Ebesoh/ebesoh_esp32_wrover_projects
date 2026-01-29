@@ -1,16 +1,9 @@
 pipeline {
     agent any
 
-    options {
-        timestamps() // Lägger till tidsstämplar på alla rader i konsolutdata
-        disableConcurrentBuilds(abortPrevious: true)
-    }
-
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        REPORT_DIR = 'reports'
-        REPORT_FILE = 'gpio_loopback_report.html'
     }
 
     stages {
@@ -19,6 +12,7 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Installing tools...
                 python -m pip install --upgrade pip
                 python -m pip install mpremote
                 '''
@@ -29,9 +23,9 @@ pipeline {
             steps {
                 bat '''
                 @echo off
+                echo Uploading test files to ESP32...
                 for %%f in (gpio_test\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                    if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 )
                 '''
             }
@@ -40,100 +34,65 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
-
-                    // Run mpremote and capture output + exit code
                     def output = bat(
                         script: '''
                         @echo off
-                        if not exist %REPORT_DIR% mkdir %REPORT_DIR%
-
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
-
-                        echo __MPREMOTE_RC__=%ERRORLEVEL%
                         ''',
                         returnStdout: true
                     ).trim()
 
                     echo "=== ESP32 OUTPUT ==="
                     echo output
+                    def faults = []
 
-                    // Extract mpremote exit code
-                    def rcMatcher = (output =~ /__MPREMOTE_RC__=(\\d+)/)
-                    if (!rcMatcher.find()) {
-                        error("Could not determine mpremote exit code")
+                    if (output.contains("GPIO 14 - 19")) {
+                        faults << "GPIO 14 - 19"
                     }
-                    int mpremoteRc = rcMatcher.group(1).toInteger()
 
-                    // Known tests (source of truth)
-                    def tests = [
-                        "GPIO 14 - 19",
-                        "GPIO 12 - 18"
-                    ]
+                    if (output.contains("GPIO 12 - 18")) {
+                        faults << "GPIO 12 - 18"
+                    }
 
-                    def failedTests = []
-                    tests.each { t ->
-                        if (output.contains(t)) {
-                            failedTests << t
+                    def lines = output.split('\n')
+                    for (String line : lines) {
+                        def clean = line.trim()
+                        if (clean.startsWith("-")) {
+                            faults << clean.substring(1).trim()
                         }
                     }
 
-                    // Generate HTML report
-                    def html = new StringBuilder()
-                    html << "<html><body>"
-                    html << "<h1>GPIO Loopback Test Report</h1>"
-                    html << "<p>Build: ${env.BUILD_NUMBER}</p>"
-                    html << "<table border='1' cellpadding='6'>"
-                    html << "<tr><th>Test Name</th><th>Status</th></tr>"
+                    faults = faults.unique()
 
-                    tests.each { t ->
-                        if (failedTests.contains(t)) {
-                            html << "<tr><td>${t}</td><td style='color:red'>FAIL</td></tr>"
-                        } else {
-                            html << "<tr><td>${t}</td><td style='color:green'>PASS</td></tr>"
+                    if (!faults.isEmpty()) {
+                        echo "Detected GPIO faults:"
+                        faults.each { fault ->
+                            echo " - ${fault}"
                         }
+                        error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    html << "</table></body></html>"
-
-                    writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: html.toString()
-
-                    echo "HTML report generated at:"
-                    echo "${pwd()}\\${REPORT_DIR}\\${REPORT_FILE}"
-
-                    // Fail CI if mpremote failed or tests failed
-                    if (mpremoteRc != 0 || !failedTests.isEmpty()) {
-                        error("GPIO loopback tests FAILED: ${failedTests.join(', ')}")
+                    if (output.contains("CI_RESULT: PASS")) {
+                        echo "All GPIO loopback tests PASSED"
+                    } else {
+                        error("Unexpected output from ESP32:\n${output}")
                     }
-
-                    echo "All GPIO loopback tests PASSED"
                 }
             }
         }
     }
 
     post {
-        always {
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: "${REPORT_DIR}",
-                reportFiles: "${REPORT_FILE}",
-                reportName: "ESP32 GPIO Loopback Report"
-            ])
-
-            archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}",
-                             fingerprint: true,
-                             allowEmptyArchive: false
-        }
-
         success {
-            echo "PIPELINE SUCCESS"
+            echo "PIPELINE SUCCESS: GPIO loopback tests passed"
         }
 
         failure {
-            echo "PIPELINE FAILURE"
+            echo "PIPELINE FAILURE: GPIO loopback tests failed"
+            echo "Check wiring:"
+            echo " - GPIO 14 -> GPIO 19"
+            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
