@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     options {
         timestamps()
         disableConcurrentBuilds(abortPrevious: true)
@@ -39,7 +43,6 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
-                    // Run tests and capture numeric output (0 or 1)
                     def output = bat(
                         script: '''
                         @echo off
@@ -47,12 +50,10 @@ pipeline {
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         ''',
                         returnStdout: true
-                    )
-                    
-                    //echo output
-                    echo "ESP32 returned value:${output}"
+                    ).trim()
 
-                    // Decision based directly on output value by batch
+                    echo "ESP32 returned value: ${output}"
+
                     if (output == "1") {
                         error("GPIO loopback tests FAILED (output = 1)")
                     } else if (output == "0") {
@@ -69,7 +70,6 @@ pipeline {
         success {
             echo "✅ PIPELINE SUCCESS"
         }
-
         failure {
             echo "❌ PIPELINE FAILURE"
             echo "Check ESP32 output above"
