@@ -50,8 +50,6 @@ pipeline {
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                     if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
                 )
-
-                echo Upload complete
                 '''
             }
         }
@@ -64,7 +62,7 @@ pipeline {
 
                 if not exist %REPORT_DIR% mkdir %REPORT_DIR%
 
-                REM Create default FAIL report
+                REM Default FAIL report
                 (
                     echo ^<html^>
                     echo ^<body^>
@@ -80,7 +78,7 @@ pipeline {
 
                 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
-                REM Overwrite with PASS report
+                REM PASS report
                 (
                     echo ^<html^>
                     echo ^<body^>
@@ -92,12 +90,12 @@ pipeline {
                 ) > %REPORT_DIR%\\%REPORT_FILE%
 
                 echo.
-                echo Jenkins workspace:
-                echo %WORKSPACE%
+                echo Current working directory (Jenkins workspace):
+                echo %CD%
 
                 echo.
-                echo Report directory:
-                echo %WORKSPACE%\\%REPORT_DIR%
+                echo Full HTML report path:
+                echo %CD%\\%REPORT_DIR%\\%REPORT_FILE%
 
                 echo.
                 echo Report directory contents:
