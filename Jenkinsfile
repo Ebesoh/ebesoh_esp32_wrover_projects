@@ -45,22 +45,25 @@ pipeline {
                 script {
                     def output = bat(
                         script: '''
-                          @echo off
-                          echo Running GPIO loopback tests...
-                          
-                          REM Break out of any running code
-                          python -m mpremote connect %ESP_PORT% reset  repl < nul
-                          
-                          REM Now execute tests
-                          python -m mpremote connect %ESP_PORT% exec ^
-                          "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
-                          
-                          if %ERRORLEVEL% neq 0 echo mpremote failed during test execution
-                          exit /b %ERRORLEVEL%
-                          ''',
+                        @echo off
+                        echo Running GPIO loopback tests...
+
+                        REM Ensure clean REPL state (suppress noise)
+                        python -m mpremote connect %ESP_PORT% reset repl < nul > nul 2>&1
+
+                        REM Execute tests, capture all output
+                        python -m mpremote connect %ESP_PORT% exec ^
+                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()" > result.txt 2>&1
+
+                        REM Extract last line only (expected 0 or 1)
+                        for /f "usebackq delims=" %%l in (`type result.txt`) do set LAST=%%l
+                        echo %LAST%
+
+                        exit /b 0
+                        ''',
                         returnStdout: true
-                    )
-                    echo output
+                    ).trim()
+
                     echo "ESP32 returned value: ${output}"
 
                     if (output == "1") {
