@@ -48,7 +48,8 @@ pipeline {
                         ''',
                         returnStdout: true
                     ).trim()
-
+                    
+                    echo output
                     echo "ESP32 returned value: ${output}"
 
                     // Decision based directly on output value
