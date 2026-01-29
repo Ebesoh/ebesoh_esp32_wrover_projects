@@ -5,6 +5,11 @@ pipeline {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
     }
+    
+    options {
+        timestamps()
+        disableConcurrentBuilds(abortPrevious: true)
+    }
 
     stages {
 
