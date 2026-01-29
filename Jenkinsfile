@@ -50,7 +50,7 @@ pipeline {
                     ).trim()
                     
                     //echo output
-                    echo "ESP32 returned value: ${output}"
+                    echo "ESP32 returned value : ${output}"
 
                     // Decision based directly on output value
                     if (output == "1") {
