@@ -11,6 +11,7 @@ pipeline {
         PYTHONUNBUFFERED = '1'
         REPORT_DIR = 'reports'
         REPORT_FILE = 'gpio_loopback_report.html'
+        FAILED_GPIOS = ''
     }
 
     stages {
@@ -105,11 +106,11 @@ pipeline {
                     def faults = []
 
                     if (output.contains("GPIO 14 - 19")) {
-                        faults << "GPIO 14 - 19"
+                        faults << "GPIO 14 -> GPIO 19"
                     }
 
                     if (output.contains("GPIO 12 - 18")) {
-                        faults << "GPIO 12 - 18"
+                        faults << "GPIO 12 -> GPIO 18"
                     }
 
                     def lines = output.split('\\n')
@@ -121,6 +122,9 @@ pipeline {
                     }
 
                     faults = faults.unique()
+
+                    /* Persist failed GPIOs for post section */
+                    env.FAILED_GPIOS = faults.join(',')
 
                     /* Rule 1: Any fault = FAIL */
                     if (!faults.isEmpty()) {
@@ -156,9 +160,15 @@ pipeline {
 
         failure {
             echo "PIPELINE FAILURE: GPIO loopback tests failed"
-            echo "Check wiring:"
-            echo " - GPIO 14 -> GPIO 19"
-            echo " - GPIO 12 -> GPIO 18"
+
+            if (env.FAILED_GPIOS?.trim()) {
+                echo "Failed GPIO loopback(s):"
+                env.FAILED_GPIOS.split(',').each { gpio ->
+                    echo " - ${gpio}"
+                }
+            } else {
+                echo "No specific GPIO fault reported (check ESP32 output)."
+            }
         }
     }
 }
