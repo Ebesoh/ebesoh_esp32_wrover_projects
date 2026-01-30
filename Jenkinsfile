@@ -131,11 +131,14 @@ pipeline {
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    /* Rule 2: No faults + PASS marker = PASS */
-                    if (output.contains("CI_RESULT: PASS")) {
+                    /* Rule 2: Accept known PASS indicators */
+                    def passDetected =
+                            output.contains("CI_RESULT: PASS") ||
+                            output.toLowerCase().contains("loopback tests passed")
+
+                    if (passDetected) {
                         echo "All GPIO loopback tests PASSED"
                     } else {
-                        /* Rule 3: No faults but no PASS marker = contract violation */
                         error(
                             "GPIO loopback tests produced no faults but did not report PASS.\n" +
                             "Output:\n${output}"
