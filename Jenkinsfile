@@ -86,6 +86,7 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
+                    // Run tests but always allow Jenkins to continue
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -99,32 +100,30 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
-                    // Collect GPIO loopback failures found in ESP32 output
+                    // Collect GPIO loopback failures
                     def faults = []
 
                     // Match GPIO pairs like "GPIO 12 - 18"
-                    def gpioPattern = ~/GPIO\s+\d+\s*-\s*\d+/
+                    def gpioPattern = ~/GPIO\s+(\d+)\s*-\s*(\d+)/
 
                     def matcher = (output =~ gpioPattern)
                     while (matcher.find()) {
-                        def gpioPair = matcher.group(0)
-                        gpioPair = gpioPair.replaceAll('\\s+', ' ').trim()
-                        gpioPair = gpioPair.replaceFirst(
-                            ~/GPIO\s+(\d+)\s*-\s*(\d+)/,
-                            'GPIO $1 -> GPIO $2'
-                        )
-                        faults << gpioPair
+                        def gpioA = matcher.group(1)
+                        def gpioB = matcher.group(2)
+                        faults << "GPIO ${gpioA} -> GPIO ${gpioB}"
                     }
 
                     faults = faults.unique()
                     env.FAILED_GPIOS = faults.join(',')
 
+                    // Fail on detected GPIO faults
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
                         faults.each { echo " - ${it}" }
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
+                    // Otherwise require PASS indicator
                     if (output.toLowerCase().contains("loopback tests passed") ||
                         output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
@@ -144,9 +143,12 @@ pipeline {
         failure {
             script {
                 echo "PIPELINE FAILURE: GPIO loopback tests failed"
+
                 if (env.FAILED_GPIOS?.trim()) {
                     echo "Failed GPIO loopback(s):"
-                    env.FAILED_GPIOS.split(',').each { echo " - ${it}" }
+                    env.FAILED_GPIOS.split(',').each {
+                        echo " - ${it}"
+                    }
                 } else {
                     echo "No specific GPIO fault reported (check ESP32 output)."
                 }
