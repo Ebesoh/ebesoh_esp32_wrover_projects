@@ -32,7 +32,7 @@ pipeline {
                 @echo off
                 echo Preflight: checking ESP32 on %ESP_PORT%...
 
-                python -m mpremote connect port=%ESP_PORT% exec "pass"
+                python -m mpremote connect %ESP_PORT% exec "pass"
                 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
                 echo Preflight OK
