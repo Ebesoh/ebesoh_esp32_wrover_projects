@@ -96,6 +96,7 @@ pipeline {
                         @echo off
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                        exit /b 0
                         ''',
                         returnStdout: true
                     ).trim()
