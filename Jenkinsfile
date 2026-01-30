@@ -20,34 +20,30 @@ pipeline {
             }
         }
 
-        stage('Preflight') {
-            steps {
-                bat 'python -m mpremote connect port=%ESP_PORT% exec "pass"'
+        stage('ESP32 Tests') {
+            options {
+                lock('esp32-com5')
             }
-        }
-
-        stage('Upload Tests') {
-            steps {
-                bat '''
-                @echo off
-                for %%f in (gpio_test\\*.py) do (
-                    python -m mpremote connect port=%ESP_PORT% fs cp "%%f" :
-                    if ERRORLEVEL 1 exit /b 1
-                )
-                '''
-            }
-        }
-
-        stage('Run Tests') {
             steps {
                 script {
 
-                    // Ensure report directory exists
+                    /* ---------- Preflight ---------- */
+                    bat 'python -m mpremote connect port=%ESP_PORT% exec "pass"'
+
+                    /* ---------- Upload Tests ---------- */
+                    bat '''
+                    @echo off
+                    for %%f in (gpio_test\\*.py) do (
+                        python -m mpremote connect port=%ESP_PORT% fs cp "%%f" :
+                        if ERRORLEVEL 1 exit /b 1
+                    )
+                    '''
+
+                    /* ---------- Prepare Report ---------- */
                     if (!fileExists(REPORT_DIR)) {
                         new File(REPORT_DIR).mkdirs()
                     }
 
-                    // Default FAIL report
                     writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                     <html><body>
                     <h1>GPIO Loopback Tests</h1>
@@ -56,6 +52,7 @@ pipeline {
                     </body></html>
                     """
 
+                    /* ---------- Run Tests ---------- */
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -80,16 +77,10 @@ pipeline {
 
                         case '0':
                             error('GPIO test failure')
-                            break
-
                         case '-1':
                             error('Test setup error')
-                            break
-
                         case '-2':
                             error('ESP32 device error')
-                            break
-
                         default:
                             error("Unknown test result code: ${output}")
                     }
