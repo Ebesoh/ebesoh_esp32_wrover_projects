@@ -92,12 +92,12 @@ pipeline {
         stage('Run Tests') {
             steps {
 
-                script {
-                    if (!fileExists(REPORT_DIR)) {
-                        new File(REPORT_DIR).mkdirs()
-                    }
+                /* ---------- Ensure report directory ---------- */
+                dir(REPORT_DIR) {
+                    echo "Report directory ready"
                 }
 
+                /* ---------- Default FAIL report ---------- */
                 writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                 <html><body>
                 <h1>GPIO Loopback Tests</h1>
@@ -115,7 +115,7 @@ pipeline {
                         "import gpio_loopback_runner; print(gpio_loopback_runner.run_all_tests())"
                         '''
                     ).trim()
-                    echo output
+
                     echo "Test result code: ${output}"
 
                     switch (output) {
