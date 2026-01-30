@@ -26,7 +26,7 @@ pipeline {
             }
         }
 
-        stage('Preflight') {
+        stage('Preflight: ESP32 connectivity') {
             steps {
                 bat '''
                 @echo off
@@ -55,7 +55,6 @@ pipeline {
         stage('Run Tests') {
             steps {
 
-                /* ---------- Prepare Report ---------- */
                 script {
                     if (!fileExists(REPORT_DIR)) {
                         new File(REPORT_DIR).mkdirs()
@@ -71,7 +70,6 @@ pipeline {
                 """
 
                 script {
-                    /* ---------- Run Tests ---------- */
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -93,7 +91,6 @@ pipeline {
                             </body></html>
                             """
                             break
-
                         case '0':
                             error('GPIO test failure')
                         case '-1':
@@ -131,3 +128,4 @@ pipeline {
         }
     }
 }
+
