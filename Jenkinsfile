@@ -17,7 +17,12 @@ pipeline {
 
         stage('Install Tools') {
             steps {
-                bat 'python -m pip install --upgrade pip mpremote'
+                bat '''
+                @echo off
+                echo Installing tools...
+                python -m pip install --upgrade pip
+                python -m pip install mpremote
+                '''
             }
         }
 
