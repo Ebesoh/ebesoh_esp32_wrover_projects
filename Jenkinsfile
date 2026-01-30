@@ -106,15 +106,15 @@ pipeline {
                     // Collect GPIO loopback failures found in ESP32 output
                     def faults = []
 
-                    // Look for lines mentioning a GPIO loopback failure, e.g.:
+                    // Look for GPIO pairs like:
                     // "GPIO loopback failed: GPIO 12 - 18"
                     // "- GPIO 14 - 19"
-                    def gpioPattern = /(GPIO\s+\d+\s*-\s*\d+)/
+                    def gpioPattern = ~/GPIO\s+\d+\s*-\s*\d+/
 
                     // Scan the full ESP32 output for GPIO pairs
                     def matcher = (output =~ gpioPattern)
                     while (matcher.find()) {
-                        def gpioPair = matcher.group(1)
+                        def gpioPair = matcher.group(0)
 
                         // Normalize spacing: "GPIO 12  -   18" -> "GPIO 12 - 18"
                         gpioPair = gpioPair.replaceAll('\\s+', ' ').trim()
@@ -122,7 +122,7 @@ pipeline {
                         // Optional refinement:
                         // Convert "GPIO 12 - 18" -> "GPIO 12 -> GPIO 18"
                         gpioPair = gpioPair.replaceFirst(
-                            /GPIO\s+(\d+)\s*-\s*(\d+)/,
+                            ~/GPIO\s+(\d+)\s*-\s*(\d+)/,
                             'GPIO $1 -> GPIO $2'
                         )
 
