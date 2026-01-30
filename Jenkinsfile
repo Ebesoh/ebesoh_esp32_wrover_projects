@@ -9,8 +9,6 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        REPORT_DIR = 'reports'
-        REPORT_FILE = 'gpio_loopback_report.html'
         FAILED_GPIOS = ''
     }
 
@@ -37,7 +35,6 @@ pipeline {
 
                     if (decision == "CLEAN") {
                         echo "⚠ Low disk space detected (<10 GB). Cleaning workspace contents..."
-
                         powershell '''
                           if (Test-Path "$env:WORKSPACE") {
                               Get-ChildItem -Path "$env:WORKSPACE" -Force |
@@ -67,10 +64,8 @@ pipeline {
                 bat '''
                 @echo off
                 echo Preflight: checking ESP32 on %ESP_PORT%...
-
                 python -m mpremote connect %ESP_PORT% exec "pass"
                 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-
                 echo Preflight OK
                 '''
             }
@@ -92,13 +87,13 @@ pipeline {
             steps {
                 script {
                     def output = bat(
+                        returnStdout: true,
                         script: '''
                         @echo off
                         python -m mpremote connect %ESP_PORT% exec ^
                         "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
                         exit /b 0
-                        ''',
-                        returnStdout: true
+                        '''
                     ).trim()
 
                     echo "=== ESP32 OUTPUT ==="
@@ -107,56 +102,34 @@ pipeline {
                     // Collect GPIO loopback failures found in ESP32 output
                     def faults = []
 
-                    // Look for GPIO pairs like:
-                    // "GPIO loopback failed: GPIO 12 - 18"
-                    // "- GPIO 14 - 19"
+                    // Match GPIO pairs like "GPIO 12 - 18"
                     def gpioPattern = ~/GPIO\s+\d+\s*-\s*\d+/
 
-                    // Scan the full ESP32 output for GPIO pairs
                     def matcher = (output =~ gpioPattern)
                     while (matcher.find()) {
                         def gpioPair = matcher.group(0)
-
-                        // Normalize spacing: "GPIO 12  -   18" -> "GPIO 12 - 18"
                         gpioPair = gpioPair.replaceAll('\\s+', ' ').trim()
-
-                        // Optional refinement:
-                        // Convert "GPIO 12 - 18" -> "GPIO 12 -> GPIO 18"
                         gpioPair = gpioPair.replaceFirst(
                             ~/GPIO\s+(\d+)\s*-\s*(\d+)/,
                             'GPIO $1 -> GPIO $2'
                         )
-
                         faults << gpioPair
                     }
 
-                    // Remove duplicates in case the same fault appears multiple times
                     faults = faults.unique()
-
-                    // Persist failed GPIOs so they can be reported in post { failure }
                     env.FAILED_GPIOS = faults.join(',')
 
-                    /* Rule 1: Any fault = FAIL */
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
-                        faults.each { fault ->
-                            echo " - ${fault}"
-                        }
+                        faults.each { echo " - ${it}" }
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    /* Rule 2: Accept known PASS indicators */
-                    def passDetected =
-                            output.contains("CI_RESULT: PASS") ||
-                            output.toLowerCase().contains("loopback tests passed")
-
-                    if (passDetected) {
+                    if (output.toLowerCase().contains("loopback tests passed") ||
+                        output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
                     } else {
-                        error(
-                            "GPIO loopback tests produced no faults but did not report PASS.\n" +
-                            "Output:\n${output}"
-                        )
+                        error("GPIO loopback tests failed with unexpected output")
                     }
                 }
             }
@@ -171,12 +144,9 @@ pipeline {
         failure {
             script {
                 echo "PIPELINE FAILURE: GPIO loopback tests failed"
-
                 if (env.FAILED_GPIOS?.trim()) {
                     echo "Failed GPIO loopback(s):"
-                    env.FAILED_GPIOS.split(',').each { gpio ->
-                        echo " - ${gpio}"
-                    }
+                    env.FAILED_GPIOS.split(',').each { echo " - ${it}" }
                 } else {
                     echo "No specific GPIO fault reported (check ESP32 output)."
                 }
