@@ -122,8 +122,6 @@ pipeline {
                     }
 
                     faults = faults.unique()
-
-                    /* Persist failed GPIOs for post section */
                     env.FAILED_GPIOS = faults.join(',')
 
                     /* Rule 1: Any fault = FAIL */
@@ -159,15 +157,17 @@ pipeline {
         }
 
         failure {
-            echo "PIPELINE FAILURE: GPIO loopback tests failed"
+            script {
+                echo "PIPELINE FAILURE: GPIO loopback tests failed"
 
-            if (env.FAILED_GPIOS?.trim()) {
-                echo "Failed GPIO loopback(s):"
-                env.FAILED_GPIOS.split(',').each { gpio ->
-                    echo " - ${gpio}"
+                if (env.FAILED_GPIOS?.trim()) {
+                    echo "Failed GPIO loopback(s):"
+                    env.FAILED_GPIOS.split(',').each { gpio ->
+                        echo " - ${gpio}"
+                    }
+                } else {
+                    echo "No specific GPIO fault reported (check ESP32 output)."
                 }
-            } else {
-                echo "No specific GPIO fault reported (check ESP32 output)."
             }
         }
     }
