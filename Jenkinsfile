@@ -87,58 +87,53 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Loopback Tests') {
             steps {
-
-                dir(REPORT_DIR) {
-                    echo "Report directory ready"
-                }
-
-                writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
-                <html><body>
-                <h1>GPIO Loopback Tests</h1>
-                <p>Build: ${env.BUILD_NUMBER}</p>
-                <p>Result: FAIL</p>
-                </body></html>
-                """
-
                 script {
                     def output = bat(
-                        returnStdout: true,
                         script: '''
                         @echo off
                         python -m mpremote connect %ESP_PORT% exec ^
-                        "import gpio_loopback_runner; print(gpio_loopback_runner.run_all_tests())"
-                        '''
+                        "import gpio_loopback_runner; gpio_loopback_runner.run_all_tests()"
+                        ''',
+                        returnStdout: true
                     ).trim()
 
-                    int result
-                    try {
-                        result = output.toInteger()
-                    } catch (Exception e) {
-                        error("Non-integer test output: '${output}'")
+                    echo "=== ESP32 OUTPUT ==="
+                    echo output
+
+                    def faults = []
+
+                    if (output.contains("GPIO 14 - 19")) {
+                        faults << "GPIO 14 - 19"
                     }
 
-                    echo "Test result code (int): ${result}"
+                    if (output.contains("GPIO 12 - 18")) {
+                        faults << "GPIO 12 - 18"
+                    }
 
-                    switch (result) {
-                        case 1:
-                            writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
-                            <html><body>
-                            <h1>GPIO Loopback Tests</h1>
-                            <p>Build: ${env.BUILD_NUMBER}</p>
-                            <p>Result: PASS</p>
-                            </body></html>
-                            """
-                            break
-                        case 0:
-                            error('GPIO test failure')
-                        case -1:
-                            error('Test setup error')
-                        case -2:
-                            error('ESP32 device error')
-                        default:
-                            error("Unknown test result code: ${result}")
+                    def lines = output.split('\\n')
+                    for (String line : lines) {
+                        def clean = line.trim()
+                        if (clean.startsWith("-")) {
+                            faults << clean.substring(1).trim()
+                        }
+                    }
+
+                    faults = faults.unique()
+
+                    if (!faults.isEmpty()) {
+                        echo "Detected GPIO faults:"
+                        faults.each { fault ->
+                            echo " - ${fault}"
+                        }
+                        error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
+                    }
+
+                    if (output.contains("CI_RESULT: PASS")) {
+                        echo "All GPIO loopback tests PASSED"
+                    } else {
+                        error("Unexpected output from ESP32:\n${output}")
                     }
                 }
             }
@@ -146,26 +141,15 @@ pipeline {
     }
 
     post {
-        always {
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: REPORT_DIR,
-                reportFiles: REPORT_FILE,
-                reportName: 'ESP32 GPIO Loopback Report'
-            ])
-
-            archiveArtifacts artifacts: "${REPORT_DIR}/${REPORT_FILE}"
-        }
-
         success {
-            echo 'PIPELINE SUCCESS'
+            echo "PIPELINE SUCCESS: GPIO loopback tests passed"
         }
 
         failure {
-            echo 'PIPELINE FAILURE'
+            echo "PIPELINE FAILURE: GPIO loopback tests failed"
+            echo "Check wiring:"
+            echo " - GPIO 14 -> GPIO 19"
+            echo " - GPIO 12 -> GPIO 18"
         }
     }
 }
-
