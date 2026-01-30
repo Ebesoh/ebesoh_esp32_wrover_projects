@@ -15,6 +15,43 @@ pipeline {
 
     stages {
 
+        stage('Auto-clean (low disk space)') {
+            steps {
+                script {
+                    def decision = powershell(
+                        script: '''
+                          $drive = Get-PSDrive -Name C
+                          $freeGb = [math]::Round($drive.Free / 1GB, 2)
+
+                          Write-Host "Free disk space on C: $freeGb GB"
+
+                          if ($freeGb -lt 10) {
+                              Write-Output "CLEAN"
+                          } else {
+                              Write-Output "OK"
+                          }
+                        ''',
+                        returnStdout: true
+                    ).trim()
+
+                    if (decision == "CLEAN") {
+                        echo "⚠ Low disk space detected (<10 GB). Cleaning workspace contents..."
+
+                        powershell '''
+                          Write-Host "Cleaning workspace contents (Windows-safe)..."
+
+                          if (Test-Path "$env:WORKSPACE") {
+                              Get-ChildItem -Path "$env:WORKSPACE" -Force |
+                              Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                          }
+                        '''
+                    } else {
+                        echo "Disk space OK. No cleanup needed."
+                    }
+                }
+            }
+        }
+
         stage('Install Tools') {
             steps {
                 bat '''
@@ -78,7 +115,7 @@ pipeline {
                         "import gpio_loopback_runner; print(gpio_loopback_runner.run_all_tests())"
                         '''
                     ).trim()
-
+                    echo output
                     echo "Test result code: ${output}"
 
                     switch (output) {
@@ -128,4 +165,3 @@ pipeline {
         }
     }
 }
-
