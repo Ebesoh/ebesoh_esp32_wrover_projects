@@ -122,6 +122,7 @@ pipeline {
 
                     faults = faults.unique()
 
+                    /* Rule 1: Any fault = FAIL */
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
                         faults.each { fault ->
@@ -130,11 +131,16 @@ pipeline {
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
+                    /* Rule 2: No faults + PASS marker = PASS */
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
-                    } 
-                     error("Unexpected output from ESP32:\n${output}")
-                    
+                    } else {
+                        /* Rule 3: No faults but no PASS marker = contract violation */
+                        error(
+                            "GPIO loopback tests produced no faults but did not report PASS.\n" +
+                            "Output:\n${output}"
+                        )
+                    }
                 }
             }
         }
