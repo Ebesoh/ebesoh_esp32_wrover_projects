@@ -9,7 +9,6 @@ pipeline {
     environment {
         ESP_PORT = 'COM5'
         PYTHONUNBUFFERED = '1'
-        FAILED_GPIOS = ''
     }
 
     stages {
@@ -86,7 +85,7 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
-                    // Run tests but always allow Jenkins to continue
+                    // Always allow Jenkins to continue so we can parse output
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -114,16 +113,16 @@ pipeline {
                     }
 
                     faults = faults.unique()
-                    env.FAILED_GPIOS = faults.join(',')
 
-                    // Fail on detected GPIO faults
+                    // Persist failures to workspace (survives error())
+                    writeFile file: 'failed_gpios.txt', text: faults.join('\n')
+
                     if (!faults.isEmpty()) {
                         echo "Detected GPIO faults:"
                         faults.each { echo " - ${it}" }
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    // Otherwise require PASS indicator
                     if (output.toLowerCase().contains("loopback tests passed") ||
                         output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
@@ -144,10 +143,15 @@ pipeline {
             script {
                 echo "PIPELINE FAILURE: GPIO loopback tests failed"
 
-                if (env.FAILED_GPIOS?.trim()) {
-                    echo "Failed GPIO loopback(s):"
-                    env.FAILED_GPIOS.split(',').each {
-                        echo " - ${it}"
+                if (fileExists('failed_gpios.txt')) {
+                    def failed = readFile('failed_gpios.txt').trim()
+                    if (failed) {
+                        echo "Failed GPIO loopback(s):"
+                        failed.split('\n').each {
+                            echo " - ${it}"
+                        }
+                    } else {
+                        echo "No specific GPIO fault reported (check ESP32 output)."
                     }
                 } else {
                     echo "No specific GPIO fault reported (check ESP32 output)."
