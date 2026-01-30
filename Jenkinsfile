@@ -85,7 +85,7 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
-                    // Always allow Jenkins to continue so we can parse output
+                    // Run tests but never let Jenkins abort before parsing output
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -99,16 +99,17 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
-                    // Collect GPIO loopback failures
+                    // Collect GPIO loopback failures (CPS-safe)
                     def faults = []
 
-                    // Match GPIO pairs like "GPIO 12 - 18"
-                    def gpioPattern = ~/GPIO\s+(\d+)\s*-\s*(\d+)/
+                    // Find all occurrences like "GPIO 12 - 18"
+                    def matches = (output =~ /GPIO\s+\d+\s*-\s*\d+/).findAll()
 
-                    def matcher = (output =~ gpioPattern)
-                    while (matcher.find()) {
-                        def gpioA = matcher.group(1)
-                        def gpioB = matcher.group(2)
+                    matches.each { m ->
+                        def cleaned = m.replaceAll('\\s+', ' ')
+                        def parts = cleaned.split('-')
+                        def gpioA = parts[0].replace('GPIO', '').trim()
+                        def gpioB = parts[1].trim()
                         faults << "GPIO ${gpioA} -> GPIO ${gpioB}"
                     }
 
