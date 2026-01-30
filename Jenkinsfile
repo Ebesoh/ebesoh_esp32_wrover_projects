@@ -103,25 +103,36 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
+                    // Collect GPIO loopback failures found in ESP32 output
                     def faults = []
 
-                    if (output.contains("GPIO 14 - 19")) {
-                        faults << "GPIO 14 -> GPIO 19"
+                    // Look for lines mentioning a GPIO loopback failure, e.g.:
+                    // "GPIO loopback failed: GPIO 12 - 18"
+                    // "- GPIO 14 - 19"
+                    def gpioPattern = /(GPIO\s+\d+\s*-\s*\d+)/
+
+                    // Scan the full ESP32 output for GPIO pairs
+                    def matcher = (output =~ gpioPattern)
+                    while (matcher.find()) {
+                        def gpioPair = matcher.group(1)
+
+                        // Normalize spacing: "GPIO 12  -   18" -> "GPIO 12 - 18"
+                        gpioPair = gpioPair.replaceAll('\\s+', ' ').trim()
+
+                        // Optional refinement:
+                        // Convert "GPIO 12 - 18" -> "GPIO 12 -> GPIO 18"
+                        gpioPair = gpioPair.replaceFirst(
+                            /GPIO\s+(\d+)\s*-\s*(\d+)/,
+                            'GPIO $1 -> GPIO $2'
+                        )
+
+                        faults << gpioPair
                     }
 
-                    if (output.contains("GPIO 12 - 18")) {
-                        faults << "GPIO 12 -> GPIO 18"
-                    }
-
-                    def lines = output.split('\\n')
-                    for (String line : lines) {
-                        def clean = line.trim()
-                        if (clean.startsWith("-")) {
-                            faults << clean.substring(1).trim()
-                        }
-                    }
-
+                    // Remove duplicates in case the same fault appears multiple times
                     faults = faults.unique()
+
+                    // Persist failed GPIOs so they can be reported in post { failure }
                     env.FAILED_GPIOS = faults.join(',')
 
                     /* Rule 1: Any fault = FAIL */
