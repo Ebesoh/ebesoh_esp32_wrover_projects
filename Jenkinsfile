@@ -18,16 +18,16 @@ pipeline {
                 script {
                     def decision = powershell(
                         script: '''
-                          $drive = Get-PSDrive -Name C
-                          $freeGb = [math]::Round($drive.Free / 1GB, 2)
+                        $drive = Get-PSDrive -Name C
+                        $freeGb = [math]::Round($drive.Free / 1GB, 2)
 
-                          Write-Host "Free disk space on C: $freeGb GB"
+                        Write-Host "Free disk space on C: $freeGb GB"
 
-                          if ($freeGb -lt 10) {
-                              Write-Output "CLEAN"
-                          } else {
-                              Write-Output "OK"
-                          }
+                        if ($freeGb -lt 10) {
+                            Write-Output "CLEAN"
+                        } else {
+                            Write-Output "OK"
+                        }
                         ''',
                         returnStdout: true
                     ).trim()
@@ -35,10 +35,10 @@ pipeline {
                     if (decision == "CLEAN") {
                         echo "⚠ Low disk space detected (<10 GB). Cleaning workspace contents..."
                         powershell '''
-                          if (Test-Path "$env:WORKSPACE") {
-                              Get-ChildItem -Path "$env:WORKSPACE" -Force |
-                              Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-                          }
+                        if (Test-Path "$env:WORKSPACE") {
+                            Get-ChildItem -Path "$env:WORKSPACE" -Force |
+                            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                        }
                         '''
                     } else {
                         echo "Disk space OK. No cleanup needed."
@@ -85,7 +85,7 @@ pipeline {
         stage('Run Loopback Tests') {
             steps {
                 script {
-                    // Run tests but never let Jenkins abort before parsing output
+                    // Run ESP32 tests but never abort before parsing output
                     def output = bat(
                         returnStdout: true,
                         script: '''
@@ -99,23 +99,31 @@ pipeline {
                     echo "=== ESP32 OUTPUT ==="
                     echo output
 
-                    // Collect GPIO loopback failures (CPS-safe)
+                    // ---- GPIO fault extraction (NO regex helpers, CPS-safe) ----
                     def faults = []
 
-                    // Find all occurrences like "GPIO 12 - 18"
-                    def matches = (output =~ /GPIO\s+\d+\s*-\s*\d+/).findAll()
+                    output.split('\n').each { line ->
+                        def l = line.trim()
 
-                    matches.each { m ->
-                        def cleaned = m.replaceAll('\\s+', ' ')
-                        def parts = cleaned.split('-')
-                        def gpioA = parts[0].replace('GPIO', '').trim()
-                        def gpioB = parts[1].trim()
-                        faults << "GPIO ${gpioA} -> GPIO ${gpioB}"
+                        // Expected form:
+                        // "GPIO loopback failed: GPIO 12 - 18"
+                        if (l.contains('GPIO') && l.contains('-')) {
+                            int idx = l.lastIndexOf('GPIO')
+                            if (idx >= 0) {
+                                def tail = l.substring(idx).trim()   // "GPIO 12 - 18"
+                                def parts = tail.replace('GPIO', '').split('-')
+                                if (parts.size() == 2) {
+                                    def a = parts[0].trim()
+                                    def b = parts[1].trim()
+                                    faults << "GPIO ${a} -> GPIO ${b}"
+                                }
+                            }
+                        }
                     }
 
                     faults = faults.unique()
 
-                    // Persist failures to workspace (survives error())
+                    // Persist failures so post{} can read them
                     writeFile file: 'failed_gpios.txt', text: faults.join('\n')
 
                     if (!faults.isEmpty()) {
@@ -124,8 +132,7 @@ pipeline {
                         error("GPIO loopback tests FAILED (${faults.size()} fault(s))")
                     }
 
-                    if (output.toLowerCase().contains("loopback tests passed") ||
-                        output.contains("CI_RESULT: PASS")) {
+                    if (output.toLowerCase().contains('passed')) {
                         echo "All GPIO loopback tests PASSED"
                     } else {
                         error("GPIO loopback tests failed with unexpected output")
