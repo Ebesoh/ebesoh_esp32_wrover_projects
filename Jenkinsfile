@@ -96,8 +96,7 @@ pipeline {
                         '''
                     ).trim()
 
-                    echo "=== ESP32 OUTPUT ==="
-                    //echo output
+                    echo "=== ESP32 OUTPUT ===
 
                     // ---- GPIO fault extraction (NO regex helpers, CPS-safe) ----
                     def faults = []
