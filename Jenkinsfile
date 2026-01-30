@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        ESP_PORT = 'COM5'
+        ESP_PORT = 'com5'
         REPORT_DIR = 'reports'
         REPORT_FILE = 'gpio_loopback_report.html'
     }
