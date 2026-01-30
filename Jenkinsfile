@@ -132,9 +132,8 @@ pipeline {
 
                     if (output.contains("CI_RESULT: PASS")) {
                         echo "All GPIO loopback tests PASSED"
-                    } else {
+                    } 
                         error("Unexpected output from ESP32:\n${output}")
-                    }
                 }
             }
         }
