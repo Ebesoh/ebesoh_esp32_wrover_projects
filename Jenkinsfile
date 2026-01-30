@@ -22,7 +22,7 @@ pipeline {
 
         stage('ESP32 Tests') {
             options {
-                lock('esp32-com5')
+                lock("esp32-${ESP_PORT}")
             }
             steps {
                 script {
