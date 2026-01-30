@@ -38,8 +38,6 @@ pipeline {
                         echo "⚠ Low disk space detected (<10 GB). Cleaning workspace contents..."
 
                         powershell '''
-                          Write-Host "Cleaning workspace contents (Windows-safe)..."
-
                           if (Test-Path "$env:WORKSPACE") {
                               Get-ChildItem -Path "$env:WORKSPACE" -Force |
                               Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
@@ -92,12 +90,10 @@ pipeline {
         stage('Run Tests') {
             steps {
 
-                /* ---------- Ensure report directory ---------- */
                 dir(REPORT_DIR) {
                     echo "Report directory ready"
                 }
 
-                /* ---------- Default FAIL report ---------- */
                 writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                 <html><body>
                 <h1>GPIO Loopback Tests</h1>
@@ -116,10 +112,17 @@ pipeline {
                         '''
                     ).trim()
 
-                    echo "Test result code: ${output}"
+                    int result
+                    try {
+                        result = output.toInteger()
+                    } catch (Exception e) {
+                        error("Non-integer test output: '${output}'")
+                    }
 
-                    switch (output) {
-                        case '1':
+                    echo "Test result code (int): ${result}"
+
+                    switch (result) {
+                        case 1:
                             writeFile file: "${REPORT_DIR}/${REPORT_FILE}", text: """
                             <html><body>
                             <h1>GPIO Loopback Tests</h1>
@@ -128,14 +131,14 @@ pipeline {
                             </body></html>
                             """
                             break
-                        case '0':
+                        case 0:
                             error('GPIO test failure')
-                        case '-1':
+                        case -1:
                             error('Test setup error')
-                        case '-2':
+                        case -2:
                             error('ESP32 device error')
                         default:
-                            error("Unknown test result code: ${output}")
+                            error("Unknown test result code: ${result}")
                     }
                 }
             }
@@ -165,3 +168,4 @@ pipeline {
         }
     }
 }
+
