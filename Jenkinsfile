@@ -319,3 +319,14 @@ pipeline {
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+        }
+        success {
+            echo 'Pipeline completed successfully'
+        }
+        failure {
+            echo 'Pipeline FAILED'
+        }
+    }
+}
