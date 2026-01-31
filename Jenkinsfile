@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-ESP32-WROVER HARDWARE CI PIPELINE — ARCHITECTURE OVERVIEW
+ESP32-WROVER HARDWARE CI PIPELINE — ARCHITECTURE OVERVIEW by Ebesoh Ebesoh 
 ===============================================================================
 
 PURPOSE
