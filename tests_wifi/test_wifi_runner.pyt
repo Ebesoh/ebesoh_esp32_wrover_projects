@@ -132,17 +132,17 @@ def run_all_wifi_tests():
     # ===== CI VERDICT =====
     if passed == total:
         print(" ALL TESTS PASSED")
-        print("CI_RESULT=0")
+        print("CI_RESULT: PASS")
         sys.exit(0)
 
     elif passed >= int(total * 0.7):
         print(" PARTIAL PASS — WiFi functional but issues detected")
-        print("CI_RESULT=1")
+        print("CI_RESULT: FAIL")
         sys.exit(1)
 
     else:
         print(" TEST FAILURE — WiFi not reliable")
-        print("CI_RESULT=1")
+        print("CI_RESULT: FAIL")
         sys.exit(1)
 
 

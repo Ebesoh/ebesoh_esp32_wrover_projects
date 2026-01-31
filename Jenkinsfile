@@ -5,7 +5,6 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-        
     }
 
     options {
@@ -30,7 +29,6 @@ pipeline {
                 }
             }
         }
-        
 
         /* =========================================================
            Auto-clean (Low disk space)
@@ -61,7 +59,6 @@ pipeline {
                 }
             }
         }
-        
 
         /* =========================================================
            Install Tools
@@ -82,7 +79,6 @@ pipeline {
                 '''
             }
         }
-        
 
         /* =========================================================
            Preflight: ESP32 connectivity
@@ -98,11 +94,10 @@ pipeline {
                 '''
             }
         }
-        
-        
-     /* =========================================================
+
+        /* =========================================================
            FLASH FIRMWARE
-        ========================================================= */
+           ========================================================= */
         stage('Flash ESP32 Firmware') {
             steps {
                 bat '''
@@ -112,7 +107,21 @@ pipeline {
                 powershell 'Start-Sleep -Seconds 15'
             }
         }
-        
+
+        /* =========================================================
+           WAIT FOR MICROPYTHON REPL
+           ========================================================= */
+        stage('Wait for REPL') {
+            steps {
+                bat '''
+                for /L %%i in (1,1,5) do (
+                    python -m mpremote connect %ESP_PORT% exec "print('READY')" && goto done
+                    timeout /t 3 > nul
+                )
+                :done
+                '''
+            }
+        }
 
         /* =========================================================
            Upload Test Files
@@ -123,22 +132,21 @@ pipeline {
                 for %%f in (test_temp\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
-                
+
                 for %%f in (tests_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
-                
-                 for %%f in (tests_bt\\*.py) do (
+
+                for %%f in (tests_bt\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
-                
+
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
                 '''
             }
         }
-        
 
         /* =========================================================
            SELF TEST (HARD GATE)
@@ -171,7 +179,6 @@ pipeline {
                 }
             }
         }
-        
 
         /* =========================================================
            DS18B20 TEMPERATURE SENSOR TEST
@@ -205,9 +212,9 @@ pipeline {
                 }
             }
         }
-          
+
         /* =========================================================
-              WI-FI TEST
+           WI-FI TEST
            ========================================================= */
         stage('WI-FI TEST') {
             steps {
@@ -226,7 +233,7 @@ pipeline {
                     echo "exitcode_wifi = ${exitcode_wifi}"
 
                     if (exitcode_wifi == 0) {
-                        env.TEMP_TEST_PASSED = 'false'
+                        env.WIFI_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'Wi-fi Test'
                         error 'Wi-fi Test FAILED'
                     } else if (exitcode_wifi == 1) {
@@ -238,10 +245,10 @@ pipeline {
                 }
             }
         }
-        
-    /* =========================================================
-              BLUETOOTH TEST
-     ========================================================= */
+
+        /* =========================================================
+           BLUETOOTH TEST
+           ========================================================= */
         stage('Bluetooth Test') {
             steps {
                 script {
@@ -259,7 +266,7 @@ pipeline {
                     echo "exitcode_BT = ${exitcode_bt}"
 
                     if (exitcode_bt == 0) {
-                         env.BT_TEST_PASSED = 'false'
+                        env.BT_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'BT Test'
                         error 'BT Test FAILED'
                     } else if (exitcode_bt == 1) {
@@ -271,7 +278,6 @@ pipeline {
                 }
             }
         }
-        
 
         /* =========================================================
            FINAL VERDICT
