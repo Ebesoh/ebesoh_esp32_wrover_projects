@@ -153,8 +153,9 @@ pipeline {
                 script {
                     bat '''
                      python -m mpremote connect %ESP_PORT% exec ^
-                    "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-                    '''
+                     "import test_runner_ds18b20; test_runner_ds18b20.main()" ^ 
+                     > temp.txt
+                     '''
 
                     def exitcode_temp = bat(
                         returnStatus: true,
@@ -165,12 +166,13 @@ pipeline {
 
                     if (exitcode_temp == 0) {
                         env.FAILED_TESTS = 'DS18B20 Temp-Sensor Test'
+                         env.TEMP_TEST_PASSED = 'false'
                         error 'DS18B20 Temp-Sensor Test: FAILED'
                     } else if (exitcode_temp == 1) {
-                        env.SELF_TEST_PASSED = 'true'
+                        env.TEMP_TEST_PASSED = 'true'
                         echo 'TEMP_TEST_PASSED: PASSED'
                     } else {
-                        error 'System Self-Test infrastructure error (log scan failed)'
+                        error 'Temp-Sensor Test infrastructure error (log scan failed)'
                     }
                 }
             }
