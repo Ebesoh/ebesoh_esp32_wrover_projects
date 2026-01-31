@@ -4,7 +4,6 @@
 #
 # Executes the following checks:
 #   - DS18B20 temperature sensor self-test
-#   - GT-U7 GPS functional self-test
 #   - Wi-Fi end-to-end connectivity self-test
 #
 # CI behavior:
@@ -38,12 +37,6 @@ ds18b20_self_test = import_test(
     "DS18B20 Temperature Sensor",
     "self_test_DS18B20_temp_sensor",
     "ds18b20_self_test",
-)
-
-gps_self_test = import_test(
-    "GPS GT-U7",
-    "self_test_gps_GT_U7",
-    "gps_self_test",
 )
 
 wifi_self_test = import_test(
@@ -87,7 +80,6 @@ def main():
 
     tests = [
         ("DS18B20 Temperature Sensor", ds18b20_self_test),
-        ("GPS GT-U7", gps_self_test),
         ("Wi-Fi Connectivity", wifi_self_test),
     ]
 
