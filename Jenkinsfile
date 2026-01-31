@@ -228,7 +228,7 @@ pipeline {
             steps {
                 bat '''
                  python -m mpremote connect %ESP_PORT% reset >nul 2>&1 || exit /b 0
-                timeout /t 3 >nul
+                 powershell -command "Start-Sleep -Seconds 3"
                 '''
             }
         }
