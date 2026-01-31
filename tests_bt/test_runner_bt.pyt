@@ -145,11 +145,11 @@ def run_all_tests():
         print("FAILED TESTS:")
         for name in failed_tests:
             print(f" - {name}")
-        print("CI_RESULT=1")
+        print("CI_RESULT: FAIL")
         sys.exit(1)
 
     print("\n CI VERDICT: BLUETOOTH TEST SUITE PASSED")
-    print("CI_RESULT=0")
+    print("CI_RESULT: PASS")
     sys.exit(0)
 
 
