@@ -1,37 +1,136 @@
+/*
+===============================================================================
+ESP32-WROVER HARDWARE CI PIPELINE — ARCHITECTURE OVERVIEW
+===============================================================================
+
+PURPOSE
+-------
+This Jenkins pipeline provides a deterministic, hardware-in-the-loop CI system
+for ESP32-WROVER boards running MicroPython. It flashes firmware, deploys test
+code, executes hardware validation suites, and produces a single authoritative
+CI verdict.
+
+The pipeline is designed to fail fast on critical issues, isolate test domains,
+and remain stable when executed repeatedly on the same physical device.
+
+-------------------------------------------------------------------------------
+
+HIGH-LEVEL FLOW
+---------------
+1. Host Preparation
+   - Initialize mutable CI state variables
+   - Auto-clean workspace if disk space is low
+   - Install required host-side tooling (Python, esptool, mpremote)
+
+2. Hardware Bring-Up
+   - Preflight connectivity check to ensure ESP32 is reachable
+   - Full flash erase + MicroPython firmware installation
+   - Wait until MicroPython REPL is responsive
+
+3. Test Deployment
+   - Upload all test modules to the ESP32 filesystem via mpremote
+
+4. Test Execution (Ordered, Isolated)
+   - System Self-Test (HARD GATE)
+   - DS18B20 temperature sensor validation
+   - Soft reset to clear Wi-Fi/network state
+   - Wi-Fi functional test suite
+   - Bluetooth (BLE) functional test suite
+
+5. Final CI Verdict
+   - Aggregate all results
+   - Produce a single pass/fail decision
+   - Archive logs for traceability
+
+-------------------------------------------------------------------------------
+
+DESIGN PRINCIPLES
+-----------------
+• HARD GATES
+  The system self-test is a non-negotiable gate. Failure immediately stops
+  the pipeline to avoid meaningless downstream results.
+
+• STATE ISOLATION
+  A soft reset is performed before Wi-Fi testing to avoid cross-contamination
+  from previous tests or driver state.
+
+• SINGLE SOURCE OF TRUTH
+  Each test suite emits a clear "CI_RESULT: PASS|FAIL" marker.
+  Jenkins evaluates results only by parsing this marker.
+
+• DETERMINISTIC ORDER
+  Tests run in a fixed, documented order. No parallelism is used to protect
+  shared hardware and ensure repeatability.
+
+• HARDWARE SAFETY
+  Concurrent pipeline executions are disabled to prevent multiple jobs from
+  accessing the same ESP32 simultaneously.
+
+-------------------------------------------------------------------------------
+
+RESULT HANDLING
+---------------
+- All test output is redirected to text files (*.txt)
+- Jenkins scans logs using `findstr` to detect failures
+- Artifacts are always archived for post-mortem analysis
+- Final verdict is explicit and authoritative
+
+-------------------------------------------------------------------------------
+
+INTENDED USE
+------------
+- Local Jenkins agents with direct USB access to ESP32 hardware
+- Continuous validation of firmware + hardware integration
+- Regression testing after firmware, driver, or test changes
+
+This pipeline is intentionally verbose, explicit, and conservative.
+Clarity, traceability, and hardware safety are prioritized over speed.
+
+===============================================================================
+*/
+
 pipeline {
     agent any
 
+    /* ---------------------------------------------------------
+       Global environment variables used across all stages
+       --------------------------------------------------------- */
     environment {
-        ESP_PORT = 'COM5'
-        FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
-        PYTHONUNBUFFERED = '1'
+        ESP_PORT = 'COM5'   // Serial port where ESP32 is connected
+        FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin' // MicroPython firmware
+        PYTHONUNBUFFERED = '1' // Ensure real-time Python output in logs
     }
 
+    /* ---------------------------------------------------------
+       Pipeline-wide options
+       --------------------------------------------------------- */
     options {
-        timestamps()
-        disableConcurrentBuilds(abortPrevious: true)
+        timestamps() // Prefix all logs with timestamps
+        disableConcurrentBuilds(abortPrevious: true) // Prevent parallel runs on same hardware
     }
 
     stages {
 
         /* =========================================================
-           Init Variables (mutable CI state)
+           Initialize mutable CI state variables
+           These are updated as tests execute
            ========================================================= */
         stage('Init Variables') {
             steps {
                 script {
-                    env.SELF_TEST_PASSED = 'false'
-                    env.WIFI_TEST_PASSED = 'unknown'
-                    env.TEMP_TEST_PASSED = 'unknown'
-                    env.BT_TEST_PASSED   = 'unknown'
-                    env.FAILED_TESTS = ''
+                    env.SELF_TEST_PASSED = 'false'   // Hard gate default
+                    env.WIFI_TEST_PASSED = 'unknown' // Set after Wi-Fi tests
+                    env.TEMP_TEST_PASSED = 'unknown' // Set after DS18B20 tests
+                    env.BT_TEST_PASSED   = 'unknown' // Set after Bluetooth tests
+                    env.FAILED_TESTS = ''            // Human-readable failure list
                     echo 'CI variables initialized'
                 }
             }
         }
 
         /* =========================================================
-           Auto-clean (Low disk space)
+           Automatically clean workspace if disk space is low
+           Prevents Jenkins failures due to disk exhaustion
            ========================================================= */
         stage('Auto-clean (low disk space)') {
             steps {
@@ -61,11 +160,14 @@ pipeline {
         }
 
         /* =========================================================
-           Install Tools
+           Install required host-side tools
+           - Python
+           - esptool (flashing)
+           - mpremote (MicroPython control)
            ========================================================= */
         stage('Install Tools') {
             steps {
-                checkout scm
+                checkout scm // Fetch repository contents
 
                 bat '''
                 where python
@@ -81,7 +183,8 @@ pipeline {
         }
 
         /* =========================================================
-           Preflight: ESP32 connectivity
+           Preflight check to confirm ESP32 is reachable
+           Fails early if hardware is missing or busy
            ========================================================= */
         stage('Preflight: ESP32 connectivity') {
             steps {
@@ -96,7 +199,8 @@ pipeline {
         }
 
         /* =========================================================
-           FLASH FIRMWARE
+           Flash MicroPython firmware onto ESP32
+           Includes erase + fresh firmware write
            ========================================================= */
         stage('Flash ESP32 Firmware') {
             steps {
@@ -104,12 +208,13 @@ pipeline {
                 python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
                 python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
                 '''
-                powershell 'Start-Sleep -Seconds 15'
+                powershell 'Start-Sleep -Seconds 15' // Allow reboot + flash settle
             }
         }
 
         /* =========================================================
-           WAIT FOR MICROPYTHON REPL (UPDATED)
+           Wait until MicroPython REPL responds
+           Retries a few times before failing
            ========================================================= */
         stage('Wait for REPL') {
             steps {
@@ -133,7 +238,7 @@ pipeline {
         }
 
         /* =========================================================
-           Upload Test Files
+           Upload all test scripts to ESP32 filesystem
            ========================================================= */
         stage('Upload Test Files') {
             steps {
@@ -158,7 +263,8 @@ pipeline {
         }
 
         /* =========================================================
-           SELF TEST (HARD GATE)
+           SYSTEM SELF-TEST (HARD GATE)
+           Pipeline stops immediately on failure
            ========================================================= */
         stage('Self-Test (HARD GATE)') {
             steps {
@@ -190,7 +296,7 @@ pipeline {
         }
 
         /* =========================================================
-           DS18B20 TEMPERATURE SENSOR TEST
+           DS18B20 TEMPERATURE SENSOR VALIDATION
            ========================================================= */
         stage('DS18B20 Temp-Sensor Test') {
             steps {
@@ -221,10 +327,12 @@ pipeline {
                 }
             }
         }
-     /* =========================================================
-           Soft Reset before WI-FI TEST
-         ========================================================= */
-       stage('Reset before Wi-Fi') {
+
+        /* =========================================================
+           Soft reset before Wi-Fi tests
+           Clears driver state and network stack
+           ========================================================= */
+        stage('Reset before Wi-Fi') {
             steps {
                 bat '''
                  python -m mpremote connect %ESP_PORT% reset >nul 2>&1 || exit /b 0
@@ -234,7 +342,7 @@ pipeline {
         }
 
         /* =========================================================
-           WI-FI TEST
+           WI-FI TEST SUITE
            ========================================================= */
         stage('WI-FI TEST') {
             steps {
@@ -267,7 +375,7 @@ pipeline {
         }
 
         /* =========================================================
-           BLUETOOTH TEST
+           BLUETOOTH (BLE) TEST SUITE
            ========================================================= */
         stage('Bluetooth Test') {
             steps {
@@ -300,7 +408,8 @@ pipeline {
         }
 
         /* =========================================================
-           FINAL VERDICT
+           FINAL CI VERDICT
+           Single authoritative pass/fail decision
            ========================================================= */
         stage('Final CI Verdict') {
             steps {
@@ -329,9 +438,12 @@ pipeline {
         }
     }
 
+    /* ---------------------------------------------------------
+       Post-run actions (always executed)
+       --------------------------------------------------------- */
     post {
         always {
-            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
+            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true // Preserve logs
         }
         success {
             echo 'Pipeline completed successfully'
