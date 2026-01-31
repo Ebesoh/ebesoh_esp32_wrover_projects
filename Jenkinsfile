@@ -6,8 +6,6 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        // Constants only — no mutable state here
-     
         WIFI_TEST_PASSED = 'true'
         BT_TEST_PASSED   = 'true'
     }
@@ -19,9 +17,9 @@ pipeline {
 
     stages {
 
-    /* =========================================================
+        /* =========================================================
            Init Variables (mutable CI state)
-       ========================================================= */
+           ========================================================= */
         stage('Init Variables') {
             steps {
                 script {
@@ -33,9 +31,9 @@ pipeline {
             }
         }
 
-   /* =========================================================
+        /* =========================================================
            Auto-clean (Low disk space)
-      ========================================================= */
+           ========================================================= */
         stage('Auto-clean (low disk space)') {
             steps {
                 script {
@@ -45,7 +43,6 @@ pipeline {
                         $freeGb = [math]::Round($drive.Free / 1GB, 2)
 
                         Write-Host "Free disk space on C: $freeGb GB"
-
                         if ($freeGb -lt 10) { "CLEAN" } else { "OK" }
                         ''',
                         returnStdout: true
@@ -59,16 +56,14 @@ pipeline {
                             Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
                         }
                         '''
-                    } else {
-                        echo "Disk space OK. No cleanup needed."
                     }
                 }
             }
         }
 
-   /* =========================================================
+        /* =========================================================
            Install Tools
-      ========================================================= */
+           ========================================================= */
         stage('Install Tools') {
             steps {
                 checkout scm
@@ -86,9 +81,9 @@ pipeline {
             }
         }
 
-  /* =========================================================
+        /* =========================================================
            Preflight: ESP32 connectivity
-     ========================================================= */
+           ========================================================= */
         stage('Preflight: ESP32 connectivity') {
             steps {
                 bat '''
@@ -101,21 +96,25 @@ pipeline {
             }
         }
 
- /* =========================================================
+        /* =========================================================
            Upload Test Files
-    ========================================================= */
+           ========================================================= */
         stage('Upload Test Files') {
             steps {
                 bat '''
-                for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (python -m mpremote connect %ESP_PORT% fs cp "%%f" :)
+                for %%f in (test_temp\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                )
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                )
                 '''
             }
         }
 
- /* =========================================================
+        /* =========================================================
            SELF TEST (HARD GATE)
-    ========================================================= */
+           ========================================================= */
         stage('Self-Test (HARD GATE)') {
             steps {
                 script {
@@ -139,23 +138,23 @@ pipeline {
                         env.SELF_TEST_PASSED = 'true'
                         echo 'System Self-Test: PASSED'
                     } else {
-                        error 'System Self-Test infrastructure error (log scan failed)'
+                        error 'System Self-Test infrastructure error'
                     }
                 }
             }
         }
-        
-  /* =========================================================
-           TEMPERATURE SENSOR TEST
-    ========================================================= */
+
+        /* =========================================================
+           DS18B20 TEMP SENSOR TEST
+           ========================================================= */
         stage('DS18B20 Temp-Sensor Test') {
             steps {
                 script {
                     bat '''
-                     python -m mpremote connect %ESP_PORT% exec ^
-                     "import test_runner_ds18b20; test_runner_ds18b20.main()" ^ 
-                     > temp.txt
-                     '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_ds18b20; test_runner_ds18b20.main()" ^
+                    > temp.txt
+                    '''
 
                     def exitcode_temp = bat(
                         returnStatus: true,
@@ -165,23 +164,22 @@ pipeline {
                     echo "exitcode_temp = ${exitcode_temp}"
 
                     if (exitcode_temp == 0) {
+                        env.TEMP_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'DS18B20 Temp-Sensor Test'
-                         env.TEMP_TEST_PASSED = 'false'
-                        error 'DS18B20 Temp-Sensor Test: FAILED'
+                        error 'DS18B20 Temp-Sensor Test FAILED'
                     } else if (exitcode_temp == 1) {
                         env.TEMP_TEST_PASSED = 'true'
-                        echo 'TEMP_TEST_PASSED: PASSED'
+                        echo 'DS18B20 Temp-Sensor Test: PASSED'
                     } else {
-                        error 'Temp-Sensor Test infrastructure error (log scan failed)'
+                        error 'DS18B20 Test infrastructure error'
                     }
                 }
             }
         }
 
-
- /* =========================================================
+        /* =========================================================
            FINAL VERDICT
-    ========================================================= */
+           ========================================================= */
         stage('Final CI Verdict') {
             steps {
                 script {
