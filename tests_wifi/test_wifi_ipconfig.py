@@ -9,7 +9,7 @@ def test_static_ip_configuration():
     print("="*50)
     
     # Static IP configuration (adjust for your network)
-    STATIC_IP = '192.168.9.100'
+    STATIC_IP = '192.168.1.100'
     SUBNET_MASK = '255.255.255.0'
     GATEWAY = '192.168.1.1'
     DNS_SERVER = '8.8.8.8'
