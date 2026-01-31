@@ -12,11 +12,11 @@ Test Method:
 
 Pass Criteria:
     - All reads succeed
-    - Jitter does not exceed the configured threshold
+    - Jitter <= MAX_JITTER
 
 Fail Criteria:
     - Sensor not detected
-    - Read returns None or invalid value
+    - Read returns None or out-of-range value
     - Excessive temperature jitter (unstable readings)
 
 CI Behavior:
@@ -24,49 +24,92 @@ CI Behavior:
 """
 
 from machine import Pin
-import onewire, ds18x20
-import time, sys
+import onewire
+import ds18x20
+import time
+import sys
+
+# ---------------- CONFIG ----------------
 
 DATA_PIN = 4
+
 SAMPLES = 10
-MAX_JITTER = 1.5  # °C
+CONVERT_DELAY_S = 0.75
+
+TEMP_MIN_C = -40.0
+TEMP_MAX_C = 125.0
+MAX_JITTER_C = 1.5
+
+# ----------------------------------------
+
 
 def ds18b20_stability_test():
-    reasons = []
     temps = []
 
-    ow = onewire.OneWire(Pin(DATA_PIN))
-    ds = ds18x20.DS18X20(ow)
-    roms = ds.scan()
+    try:
+        ow = onewire.OneWire(Pin(DATA_PIN))
+        ds = ds18x20.DS18X20(ow)
+    except Exception as e:
+        return "FAIL", [f"1-Wire initialization failed: {e}"]
 
+    roms = ds.scan()
     if not roms:
-        return "FAIL", ["No DS18B20 detected"]
+        return "FAIL", ["No DS18B20 detected on 1-Wire bus"]
 
     sensor = roms[0]
+    print("✓ Sensor detected")
 
     for i in range(SAMPLES):
-        ds.convert_temp()
-        time.sleep(1)
-        t = ds.read_temp(sensor)
+        try:
+            ds.convert_temp()
+            time.sleep(CONVERT_DELAY_S)
+            temp_c = ds.read_temp(sensor)
+        except Exception as e:
+            return "FAIL", [f"Exception during read at sample {i + 1}: {e}"]
 
-        if t is None:
-            return "FAIL", ["Temperature read returned None"]
+        if temp_c is None:
+            return "FAIL", [f"Temperature read returned None at sample {i + 1}"]
 
-        temps.append(t)
-        print("Sample {}: {:.2f} °C".format(i + 1, t))
+        if temp_c < TEMP_MIN_C or temp_c > TEMP_MAX_C:
+            return (
+                "FAIL",
+                [f"Out-of-range temperature at sample {i + 1}: {temp_c:.2f} °C"],
+            )
 
-    jitter = max(temps) - min(temps)
+        temps.append(temp_c)
+        print(f"Sample {i + 1}/{SAMPLES}: {temp_c:.2f} °C")
 
-    if jitter > MAX_JITTER:
-        return "FAIL", ["Temperature jitter too high ({:.2f} °C)".format(jitter)]
+    jitter_c = max(temps) - min(temps)
 
-    return "PASS", ["Temperature stable"], temps
+    if jitter_c > MAX_JITTER_C:
+        return (
+            "FAIL",
+            [
+                f"Temperature jitter too high: {jitter_c:.2f} °C",
+                f"Allowed maximum: {MAX_JITTER_C:.2f} °C",
+            ],
+        )
 
+    return (
+        "PASS",
+        [
+            f"Temperature stable across {SAMPLES} samples",
+            f"Jitter: {jitter_c:.2f} °C",
+        ],
+    )
+
+
+# ---------------- ENTRY ----------------
 
 if __name__ == "__main__":
-    verdict, reasons, _ = ds18b20_stability_test()
-    print("VERDICT:", verdict)
+    verdict, reasons = ds18b20_stability_test()
+
+    print("=" * 60)
+    print("DS18B20 STABILITY VERDICT:", verdict)
     for r in reasons:
         print("-", r)
     print("CI_RESULT:", verdict)
+    print("=" * 60)
+
     sys.exit(0 if verdict == "PASS" else 1)
+

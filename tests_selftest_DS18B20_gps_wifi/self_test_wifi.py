@@ -1,105 +1,118 @@
-#--------------------------------------------
-#  This is not superficial. It checks:
-
-#     ✅ Wi-Fi radio starts
-
-#     ✅ Authentication works
-
-#     ✅ IP address assigned
-
-#     ✅ RSSI above minimum threshold
-
-#     ✅ DNS resolution works
-
-#     ✅ TCP/IP stack works
-
-#     ✅ Outbound network traffic works
-
-#      Verdict: If this says PASS, Wi-Fi is genuinely functional.
+# --------------------------------------------
+# This is a real Wi-Fi self-test. It verifies:
+#
+#   ✓ Wi-Fi radio initializes successfully
+#   ✓ Authentication and association complete
+#   ✓ DHCP assigns a valid IP address
+#   ✓ RSSI meets the minimum signal threshold
+#   ✓ DNS resolution is functional
+#   ✓ TCP/IP stack is operational
+#   ✓ Outbound network traffic is confirmed
+#
+# Verdict:
+#   A PASS means Wi-Fi is genuinely usable, not just "connected".
 
 import network
 import time
 import socket
 
+# ---------------- CONFIG ----------------
+
 SSID = "Familj_Ebesoh_2.4"
 PASSWORD = "AmandaAlicia1991"
 
-CONNECT_TIMEOUT = 15      # seconds
-TCP_TIMEOUT = 5           # seconds
-RSSI_MIN = -85            # dBm
+CONNECT_TIMEOUT_S = 15
+TCP_TIMEOUT_S = 5
+RSSI_MIN_DBM = -85
+
+TEST_HOST = "example.com"
+TEST_PORT = 80
+
+# --------------------------------------
 
 
 def wifi_self_test():
-    verdict = "PASS"
+    print("Starting Wi-Fi self-test")
+
     reasons = []
 
     wlan = network.WLAN(network.STA_IF)
 
-    # Reset Wi-Fi state
+    # ---------- Reset Wi-Fi state ----------
     wlan.active(False)
     time.sleep(1)
     wlan.active(True)
     time.sleep(1)
 
-    print("Starting Wi-Fi self-test...")
+    # ---------- Step 1: Connect ----------
     wlan.connect(SSID, PASSWORD)
 
-    # -------- Step 1: Connect --------
     start = time.time()
     while not wlan.isconnected():
-        if time.time() - start > CONNECT_TIMEOUT:
-            verdict = "FAIL"
-            reasons.append("Wi-Fi connection timeout")
-            break
+        if time.time() - start > CONNECT_TIMEOUT_S:
+            return "FAIL", ["Wi-Fi connection timeout"]
         time.sleep(0.5)
 
-    if not wlan.isconnected():
-        return verdict, reasons
-
-    ip = wlan.ifconfig()[0]
+    ip, _, _, _ = wlan.ifconfig()
     rssi = wlan.status("rssi")
 
-    print("Wi-Fi connected")
-    print("IP:", ip)
+    print("✓ Wi-Fi connected")
+    print("IP address:", ip)
     print("RSSI:", rssi, "dBm")
 
-    # -------- Step 2: RSSI check --------
-    if rssi is None or rssi < RSSI_MIN:
-        verdict = "FAIL"
-        reasons.append("Weak RSSI ({})".format(rssi))
+    # ---------- Step 2: RSSI sanity ----------
+    if rssi is None:
+        reasons.append("RSSI not reported")
+    elif rssi < RSSI_MIN_DBM:
+        reasons.append(f"RSSI below threshold ({rssi} dBm)")
 
-    # -------- Step 3: TCP stack test --------
+    # ---------- Step 3: DNS resolution ----------
     try:
-        addr = socket.getaddrinfo("example.com", 80)[0][-1]
+        addr_info = socket.getaddrinfo(TEST_HOST, TEST_PORT)
+        addr = addr_info[0][-1]
+        print("✓ DNS resolution OK")
+    except Exception as e:
+        return "FAIL", [f"DNS resolution failed: {e}"]
+
+    # ---------- Step 4: TCP/IP stack ----------
+    s = None
+    try:
         s = socket.socket()
-        s.settimeout(TCP_TIMEOUT)
+        s.settimeout(TCP_TIMEOUT_S)
         s.connect(addr)
         s.send(b"HEAD / HTTP/1.0\r\nHost: example.com\r\n\r\n")
-        s.close()
-        print("TCP stack OK")
+        print("✓ TCP/IP stack OK")
     except Exception as e:
-        verdict = "FAIL"
-        reasons.append("TCP test failed")
+        return "FAIL", [f"TCP connection failed: {e}"]
+    finally:
+        if s:
+            try:
+                s.close()
+            except Exception:
+                pass
 
-    return verdict, reasons
+    # ---------- Verdict ----------
+    if reasons:
+        return "FAIL", reasons
+
+    return "PASS", ["All Wi-Fi checks passed"]
 
 
-# -----------------------------
-# RUN SELF TEST
-# -----------------------------
+# ---------------- ENTRY ----------------
 
-verdict, reasons = wifi_self_test()
+if __name__ == "__main__":
+    verdict, reasons = wifi_self_test()
 
-print("==============================")
-print("WIFI SELF-TEST VERDICT:", verdict)
+    print("=" * 60)
+    print("WIFI SELF-TEST VERDICT:", verdict)
 
-if reasons:
     for r in reasons:
         print("-", r)
-else:
-    print("All checks passed")
 
-print("==============================")
+    print("CI_RESULT:", verdict)
+    print("=" * 60)
+
+
 
            
 

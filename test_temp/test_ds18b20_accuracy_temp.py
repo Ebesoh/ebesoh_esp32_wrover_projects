@@ -5,60 +5,87 @@ Purpose:
     Validate DS18B20 temperature accuracy against a known reference value.
 
 Test Method:
+    - Detect DS18B20 sensor on 1-Wire bus
     - Perform a single temperature conversion
-    - Compare measured value against a reference temperature
+    - Compare measured value against an external reference temperature
     - Calculate absolute error
 
 Pass Criteria:
-    - Absolute error within defined tolerance
+    - Absolute error <= MAX_ERROR
 
 Fail Criteria:
     - Sensor not detected
     - Invalid temperature reading
-    - Error exceeds allowed tolerance
+    - Absolute error exceeds MAX_ERROR
 
 Note:
-    Reference temperature must be measured externally
-    (calibrated thermometer, climate chamber, etc.).
+    Reference temperature must be measured externally using
+    a calibrated thermometer, climate chamber, or equivalent.
 """
 
 from machine import Pin
-import onewire, ds18x20
-import time, sys
+import onewire
+import ds18x20
+import time
+import sys
 
+# Configuration
 DATA_PIN = 4
-REFERENCE_TEMP = 21.0  # °C
-MAX_ERROR = 2.0        # °C
+REFERENCE_TEMP_C = 21.0   # °C (external reference)
+MAX_ERROR_C = 2.0        # °C allowed deviation
+CONVERSION_DELAY_S = 0.75
+
 
 def ds18b20_accuracy_test():
     ow = onewire.OneWire(Pin(DATA_PIN))
     ds = ds18x20.DS18X20(ow)
-    roms = ds.scan()
 
+    roms = ds.scan()
     if not roms:
-        return "FAIL", ["No DS18B20 detected"]
+        return "FAIL", ["No DS18B20 detected on 1-Wire bus"]
 
     sensor = roms[0]
 
-    ds.convert_temp()
-    time.sleep(1)
-    temp = ds.read_temp(sensor)
+    try:
+        ds.convert_temp()
+        time.sleep(CONVERSION_DELAY_S)
+        temp_c = ds.read_temp(sensor)
+    except Exception as e:
+        return "FAIL", [f"Exception during temperature read: {e}"]
 
-    if temp is None:
-        return "FAIL", ["Invalid temperature read"]
+    if temp_c is None:
+        return "FAIL", ["Invalid temperature reading (None)"]
 
-    error = abs(temp - REFERENCE_TEMP)
+    error_c = abs(temp_c - REFERENCE_TEMP_C)
 
-    if error > MAX_ERROR:
-        return "FAIL", ["Temperature error {:.2f} °C exceeds tolerance".format(error)]
+    if error_c > MAX_ERROR_C:
+        return (
+            "FAIL",
+            [
+                f"Measured: {temp_c:.2f} °C",
+                f"Reference: {REFERENCE_TEMP_C:.2f} °C",
+                f"Error: {error_c:.2f} °C exceeds tolerance ({MAX_ERROR_C:.2f} °C)",
+            ],
+        )
 
-    return "PASS", ["Accuracy within tolerance"]
+    return (
+        "PASS",
+        [
+            f"Measured: {temp_c:.2f} °C",
+            f"Reference: {REFERENCE_TEMP_C:.2f} °C",
+            f"Error: {error_c:.2f} °C within tolerance",
+        ],
+    )
 
 
 if __name__ == "__main__":
-    verdict, reasons = ds18b20_accuracy_test()
+    verdict, details = ds18b20_accuracy_test()
+
     print("VERDICT:", verdict)
-    for r in reasons:
-        print("-", r)
+    for line in details:
+        print("-", line)
+
+    # CI-friendly result flag
     print("CI_RESULT:", verdict)
     sys.exit(0 if verdict == "PASS" else 1)
+

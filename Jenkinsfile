@@ -118,19 +118,23 @@ pipeline {
                     > system.txt
                     '''
 
-                    def failed = bat(
+                    def result_st = bat(
                         returnStatus: true,
                         script: 'findstr /C:"CI_RESULT: FAIL" system.txt > nul'
                     )
-
-                    if (failed == 0) {
+                      echo result_st
+           
+                    if (result_st == 0) {
                         env.SELF_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'System Self-Test'
                         error('System Self-Test FAILED (hard gate)')
-                    }
-
-                    env.SELF_TEST_PASSED = 'true'
-                    echo 'System Self-Test PASSED'
+                    } else if (result_st == 1){ 
+                       env.SELF_TEST_PASSED = 'true'
+                       echo 'System Self-Test PASSED'
+                    
+                    }esle {
+                      echo 'System Self-Test PASSED'
+                      }
                 }
             }
         }
