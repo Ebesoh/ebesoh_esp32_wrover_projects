@@ -109,16 +109,25 @@ pipeline {
         }
 
         /* =========================================================
-           WAIT FOR MICROPYTHON REPL
+           WAIT FOR MICROPYTHON REPL (UPDATED)
            ========================================================= */
         stage('Wait for REPL') {
             steps {
                 bat '''
+                @echo off
+                set READY=0
+
                 for /L %%i in (1,1,5) do (
-                    python -m mpremote connect %ESP_PORT% exec "print('READY')" && goto done
-                    timeout /t 3 > nul
+                    python -m mpremote connect %ESP_PORT% exec "print('READY')" >nul 2>&1 && (
+                        echo MicroPython READY
+                        set READY=1
+                        goto done
+                    )
+                    timeout /t 3 >nul
                 )
+
                 :done
+                if "%READY%"=="0" exit /b 1
                 '''
             }
         }
@@ -310,14 +319,3 @@ pipeline {
     }
 
     post {
-        always {
-            archiveArtifacts artifacts: '*.txt', allowEmptyArchive: true
-        }
-        success {
-            echo 'Pipeline completed successfully'
-        }
-        failure {
-            echo 'Pipeline FAILED'
-        }
-    }
-}
