@@ -6,11 +6,10 @@ pipeline {
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
 
-        SELF_TEST_PASSED = 'unknown'
+        // Constants only — no mutable state here
         TEMP_TEST_PASSED = 'true'
         WIFI_TEST_PASSED = 'true'
         BT_TEST_PASSED   = 'true'
-        FAILED_TESTS     = ''
     }
 
     options {
@@ -21,7 +20,20 @@ pipeline {
     stages {
 
         /* =========================================================
-                    Auto-clean (Low disk space)
+           Init Variables (mutable CI state)
+           ========================================================= */
+        stage('Init Variables') {
+            steps {
+                script {
+                    env.SELF_TEST_PASSED = 'false'   // pessimistic default
+                    env.FAILED_TESTS = ''
+                    echo 'CI variables initialized'
+                }
+            }
+        }
+
+        /* =========================================================
+           Auto-clean (Low disk space)
            ========================================================= */
         stage('Auto-clean (low disk space)') {
             steps {
@@ -33,11 +45,7 @@ pipeline {
 
                         Write-Host "Free disk space on C: $freeGb GB"
 
-                        if ($freeGb -lt 10) {
-                            Write-Output "CLEAN"
-                        } else {
-                            Write-Output "OK"
-                        }
+                        if ($freeGb -lt 10) { "CLEAN" } else { "OK" }
                         ''',
                         returnStdout: true
                     ).trim()
@@ -49,7 +57,6 @@ pipeline {
                             Get-ChildItem -Path "$env:WORKSPACE" -Force |
                             Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
                         }
-                        Write-Host "Workspace cleaned due to low disk space"
                         '''
                     } else {
                         echo "Disk space OK. No cleanup needed."
@@ -59,7 +66,7 @@ pipeline {
         }
 
         /* =========================================================
-                    Install Tools
+           Install Tools
            ========================================================= */
         stage('Install Tools') {
             steps {
@@ -79,7 +86,7 @@ pipeline {
         }
 
         /* =========================================================
-                    Preflight: ESP32 connectivity
+           Preflight: ESP32 connectivity
            ========================================================= */
         stage('Preflight: ESP32 connectivity') {
             steps {
@@ -87,14 +94,14 @@ pipeline {
                 @echo off
                 echo Preflight: checking ESP32 on %ESP_PORT%...
                 python -m mpremote connect %ESP_PORT% exec "print('ESP detected')"
-                if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+                if errorlevel 1 exit /b 1
                 echo Preflight OK
                 '''
             }
         }
 
         /* =========================================================
-                UPLOAD TEST FILES
+           Upload Test Files
            ========================================================= */
         stage('Upload Test Files') {
             steps {
@@ -122,21 +129,20 @@ pipeline {
                         returnStatus: true,
                         script: 'findstr /C:"CI_RESULT: FAIL" system.txt > nul'
                     )
-                    
-                     echo "result_st = ${result_st}"
-           
+
+                    echo "result_st = ${result_st}"
+
                     if (result_st == 0) {
-                        env.SELF_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'System Self-Test'
-                        error('System Self-Test FAILED (hard gate)')
-                    } 
-                    
-                    if (result_st > 1){ 
-                       error('System Self infrastructure error(log scan failed)')
+                        error 'System Self-Test FAILED (hard gate)'
                     }
-                    
-                     env.SELF_TEST_PASSED = 'true'
-                     echo 'System Self-Test PASSED'
+
+                    if (result_st > 1) {
+                        error 'System Self-Test infrastructure error (log scan failed)'
+                    }
+
+                    env.SELF_TEST_PASSED = 'true'
+                    echo 'System Self-Test PASSED'
                 }
             }
         }
@@ -154,7 +160,7 @@ pipeline {
                     echo "FAILED_TESTS     = ${env.FAILED_TESTS ?: 'None'}"
 
                     if (env.SELF_TEST_PASSED != 'true') {
-                        error('Final verdict: System Self-Test failed')
+                        error 'Final verdict: System Self-Test failed'
                     }
 
                     if (
@@ -162,11 +168,10 @@ pipeline {
                         env.WIFI_TEST_PASSED != 'true' ||
                         env.BT_TEST_PASSED   != 'true'
                     ) {
-                        error("Final verdict: Test failures detected: ${env.FAILED_TESTS}")
+                        error "Final verdict: Test failures detected: ${env.FAILED_TESTS}"
                     }
 
                     echo 'FINAL VERDICT: ALL TESTS PASSED'
-                    echo 'Congratulations for successful run!!'
                 }
             }
         }
@@ -184,3 +189,4 @@ pipeline {
         }
     }
 }
+
