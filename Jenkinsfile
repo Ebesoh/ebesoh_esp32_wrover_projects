@@ -7,7 +7,7 @@ pipeline {
         PYTHONUNBUFFERED = '1'
 
         // Constants only — no mutable state here
-        TEMP_TEST_PASSED = 'true'
+     
         WIFI_TEST_PASSED = 'true'
         BT_TEST_PASSED   = 'true'
     }
@@ -19,22 +19,23 @@ pipeline {
 
     stages {
 
-        /* =========================================================
+    /* =========================================================
            Init Variables (mutable CI state)
-           ========================================================= */
+       ========================================================= */
         stage('Init Variables') {
             steps {
                 script {
                     env.SELF_TEST_PASSED = 'false'
+                    env.TEMP_TEST_PASSED = 'unknown'
                     env.FAILED_TESTS = ''
                     echo 'CI variables initialized'
                 }
             }
         }
 
-        /* =========================================================
+   /* =========================================================
            Auto-clean (Low disk space)
-           ========================================================= */
+      ========================================================= */
         stage('Auto-clean (low disk space)') {
             steps {
                 script {
@@ -51,7 +52,7 @@ pipeline {
                     ).trim()
 
                     if (decision == "CLEAN") {
-                        echo "⚠ Low disk space detected (<10 GB). Cleaning workspace..."
+                        echo "Low disk space detected (<10 GB). Cleaning workspace..."
                         powershell '''
                         if (Test-Path "$env:WORKSPACE") {
                             Get-ChildItem -Path "$env:WORKSPACE" -Force |
@@ -65,9 +66,9 @@ pipeline {
             }
         }
 
-        /* =========================================================
+   /* =========================================================
            Install Tools
-           ========================================================= */
+      ========================================================= */
         stage('Install Tools') {
             steps {
                 checkout scm
@@ -85,9 +86,9 @@ pipeline {
             }
         }
 
-        /* =========================================================
+  /* =========================================================
            Preflight: ESP32 connectivity
-           ========================================================= */
+     ========================================================= */
         stage('Preflight: ESP32 connectivity') {
             steps {
                 bat '''
@@ -100,22 +101,21 @@ pipeline {
             }
         }
 
-        /* =========================================================
+ /* =========================================================
            Upload Test Files
-           ========================================================= */
+    ========================================================= */
         stage('Upload Test Files') {
             steps {
                 bat '''
-                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
-                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                )
+                for %%f in (test_temp\\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (python -m mpremote connect %ESP_PORT% fs cp "%%f" :)
                 '''
             }
         }
 
-        /* =========================================================
+ /* =========================================================
            SELF TEST (HARD GATE)
-           ========================================================= */
+    ========================================================= */
         stage('Self-Test (HARD GATE)') {
             steps {
                 script {
@@ -125,19 +125,50 @@ pipeline {
                     > selftest.txt
                     '''
 
-                    def result_st = bat(
+                    def exitcode_st = bat(
                         returnStatus: true,
                         script: 'findstr /C:"CI_RESULT: FAIL" selftest.txt > nul'
                     )
 
-                    echo "result_st = ${result_st}"
+                    echo "exitcode_st = ${exitcode_st}"
 
-                    if (result_st == 0) {
+                    if (exitcode_st == 0) {
                         env.FAILED_TESTS = 'System Self-Test'
                         error 'System Self-Test FAILED (hard gate)'
-                    } else if (result_st == 1) {
+                    } else if (exitcode_st == 1) {
                         env.SELF_TEST_PASSED = 'true'
-                        echo 'System Self-Test PASSED'
+                        echo 'System Self-Test: PASSED'
+                    } else {
+                        error 'System Self-Test infrastructure error (log scan failed)'
+                    }
+                }
+            }
+        }
+        
+  /* =========================================================
+           TEMPERATURE SENSOR TEST
+    ========================================================= */
+        stage('DS18B20 Temp-Sensor Test') {
+            steps {
+                script {
+                    bat '''
+                     python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+                    '''
+
+                    def exitcode_temp = bat(
+                        returnStatus: true,
+                        script: 'findstr /C:"CI_RESULT: FAIL" temp.txt > nul'
+                    )
+
+                    echo "exitcode_temp = ${exitcode_temp}"
+
+                    if (exitcode_temp == 0) {
+                        env.FAILED_TESTS = 'DS18B20 Temp-Sensor Test'
+                        error 'DS18B20 Temp-Sensor Test: FAILED'
+                    } else if (exitcode_temp == 1) {
+                        env.SELF_TEST_PASSED = 'true'
+                        echo 'TEMP_TEST_PASSED: PASSED'
                     } else {
                         error 'System Self-Test infrastructure error (log scan failed)'
                     }
@@ -145,9 +176,10 @@ pipeline {
             }
         }
 
-        /* =========================================================
+
+ /* =========================================================
            FINAL VERDICT
-           ========================================================= */
+    ========================================================= */
         stage('Final CI Verdict') {
             steps {
                 script {
