@@ -122,12 +122,12 @@ pipeline {
                     bat '''
                     python -m mpremote connect %ESP_PORT% exec ^
                     "import test_runner_system; test_runner_system.main()" ^
-                    > system.txt
+                    > selftest.txt
                     '''
 
                     def result_st = bat(
                         returnStatus: true,
-                        script: 'findstr /C:"CI_RESULT: FAIL" system.txt > nul'
+                        script: 'findstr /C:"CI_RESULT: FAIL" selftest.txt > nul'
                     )
 
                     echo "result_st = ${result_st}"
