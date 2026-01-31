@@ -221,6 +221,17 @@ pipeline {
                 }
             }
         }
+     /* =========================================================
+           Soft Reset before WI-FI TEST
+         ========================================================= */
+       stage('Reset before Wi-Fi') {
+            steps {
+                bat '''
+                python -m mpremote connect %ESP_PORT% reset
+                timeout /t 3 >nul
+                '''
+            }
+        }
 
         /* =========================================================
            WI-FI TEST

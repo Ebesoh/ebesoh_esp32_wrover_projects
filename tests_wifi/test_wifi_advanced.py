@@ -42,16 +42,16 @@ def test_concurrent_mode():
             
             # Cleanup
             wlan_ap.active(False)
-            print("\n✓ AP deactivated")
+            print("\n AP deactivated")
             
-            print("\n✅ TEST 19 PASSED: Concurrent mode works")
+            print("\nTEST 19 PASSED: Concurrent mode works")
             return True
         else:
-            print("✗ Failed to activate concurrent mode")
+            print(" Failed to activate concurrent mode")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 19 FAILED: {e}")
+        print(f"\n TEST 19 FAILED: {e}")
         return False
 
 def test_wifi_events():
@@ -100,13 +100,13 @@ def test_wifi_events():
         
         # Remove event handler
         wlan.config(event_handler=None)
-        print("\n✓ Event handler removed")
+        print("\n Event handler removed")
         
-        print("\n✅ TEST 20 PASSED: Event handling works")
+        print("\n TEST 20 PASSED: Event handling works")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 20 FAILED: {e}")
+        print(f"\n TEST 20 FAILED: {e}")
         return False
 
 def test_reconnect_after_sleep():
@@ -122,7 +122,7 @@ def test_reconnect_after_sleep():
     TEST_PASSWORD = "YOUR_TEST_PASSWORD"  # Set this
     
     if TEST_SSID == "YOUR_TEST_SSID":
-        print("⚠️  Set TEST_SSID and TEST_PASSWORD to run this test")
+        print("Set TEST_SSID and TEST_PASSWORD to run this test")
         return False
     
     try:

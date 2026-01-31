@@ -55,7 +55,7 @@ def run_all_wifi_tests():
 
     except ImportError as e:
         print(f"ERROR: Import failed: {e}")
-        print("CI_RESULT=1")
+        print("CI_RESULT: FAIL")
         sys.exit(1)
 
     test_functions = [
