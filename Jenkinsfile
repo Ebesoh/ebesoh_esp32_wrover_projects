@@ -25,7 +25,7 @@ pipeline {
         stage('Init Variables') {
             steps {
                 script {
-                    env.SELF_TEST_PASSED = 'false'   // pessimistic default
+                    env.SELF_TEST_PASSED = 'false'
                     env.FAILED_TESTS = ''
                     echo 'CI variables initialized'
                 }
@@ -135,12 +135,12 @@ pipeline {
                     if (result_st == 0) {
                         env.FAILED_TESTS = 'System Self-Test'
                         error 'System Self-Test FAILED (hard gate)'
-                    }else if (result_st == 1) {
+                    } else if (result_st == 1) {
                         env.SELF_TEST_PASSED = 'true'
                         echo 'System Self-Test PASSED'
-                    }else{
-                          error 'System Self-Test infrastructure error (log scan failed)'
-                         }            
+                    } else {
+                        error 'System Self-Test infrastructure error (log scan failed)'
+                    }
                 }
             }
         }
@@ -187,4 +187,3 @@ pipeline {
         }
     }
 }
-
