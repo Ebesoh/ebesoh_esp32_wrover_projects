@@ -169,17 +169,17 @@ def test_reconnect_after_sleep():
             print(f"\n✓ Reconnected - IP: {ip2}")
             
             if ip1 == ip2:
-                print("✓ Same IP address (DHCP cache)")
+                print(" Same IP address (DHCP cache)")
             else:
-                print("⚠️ Different IP address (new DHCP lease)")
+                print("Different IP address (new DHCP lease)")
             
-            print("\n✅ TEST 21 PASSED: Reconnection after sleep works")
+            print("\nTEST 21 PASSED: Reconnection after sleep works")
             return True
         else:
-            print("\n✗ Failed to auto-reconnect")
+            print("\n Failed to auto-reconnect")
             print("Note: Auto-reconnect depends on firmware")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 21 FAILED: {e}")
+        print(f"\n TEST 21 FAILED: {e}")
         return False

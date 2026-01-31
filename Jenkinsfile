@@ -30,6 +30,7 @@ pipeline {
                 }
             }
         }
+        
 
         /* =========================================================
            Auto-clean (Low disk space)
@@ -60,6 +61,7 @@ pipeline {
                 }
             }
         }
+        
 
         /* =========================================================
            Install Tools
@@ -80,6 +82,7 @@ pipeline {
                 '''
             }
         }
+        
 
         /* =========================================================
            Preflight: ESP32 connectivity
@@ -95,6 +98,21 @@ pipeline {
                 '''
             }
         }
+        
+        
+     /* =========================================================
+           FLASH FIRMWARE
+        ========================================================= */
+        stage('Flash ESP32 Firmware') {
+            steps {
+                bat '''
+                python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+                python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+                '''
+                powershell 'Start-Sleep -Seconds 15'
+            }
+        }
+        
 
         /* =========================================================
            Upload Test Files
@@ -120,6 +138,7 @@ pipeline {
                 '''
             }
         }
+        
 
         /* =========================================================
            SELF TEST (HARD GATE)
@@ -152,6 +171,7 @@ pipeline {
                 }
             }
         }
+        
 
         /* =========================================================
            DS18B20 TEMPERATURE SENSOR TEST

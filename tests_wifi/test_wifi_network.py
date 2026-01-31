@@ -37,11 +37,11 @@ def test_network_interfaces():
         # Deactivate AP to save power
         wlan_ap.active(False)
         
-        print("\n✅ TEST 4 PASSED: All network interfaces work")
+        print("\n TEST 4 PASSED: All network interfaces work")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 4 FAILED: {e}")
+        print(f"\n TEST 4 FAILED: {e}")
         return False
 
 def test_interface_status():
@@ -81,15 +81,15 @@ def test_interface_status():
             
             # Should be (0.0.0.0, 0.0.0.0, 0.0.0.0, 0.0.0.0)
             if config == ('0.0.0.0', '0.0.0.0', '0.0.0.0', '0.0.0.0'):
-                print("✓ Correct IP config when disconnected")
+                print(" Correct IP config when disconnected")
             else:
-                print("⚠️ Unexpected IP config when disconnected")
+                print(" Unexpected IP config when disconnected")
         
-        print("\n✅ TEST 5 PASSED: Status codes verified")
+        print("\nTEST 5 PASSED: Status codes verified")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 5 FAILED: {e}")
+        print(f"\n TEST 5 FAILED: {e}")
         return False
 
 def test_ap_mode():
@@ -126,12 +126,12 @@ def test_ap_mode():
         
         # Check if AP is active
         if wlan_ap.active():
-            print(f"\n✓ Access Point is active")
+            print(f"\n Access Point is active")
             print(f"  Connect to '{ap_ssid}' from another device")
             print(f"  Use password: {ap_password}")
             print(f"  AP IP: {ap_ip}")
         else:
-            print("\n✗ Access Point failed to activate")
+            print("\n Access Point failed to activate")
             return False
         
         # Keep AP running for a bit
@@ -142,11 +142,11 @@ def test_ap_mode():
         
         # Deactivate AP
         wlan_ap.active(False)
-        print("\n✓ AP deactivated")
+        print("\n AP deactivated")
         
-        print("\n✅ TEST 6 PASSED: Access Point mode works")
+        print("\n TEST 6 PASSED: Access Point mode works")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 6 FAILED: {e}")
+        print(f"\n TEST 6 FAILED: {e}")
         return False

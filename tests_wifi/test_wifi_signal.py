@@ -51,11 +51,11 @@ def test_signal_strength():
             print("Connected to network")
             print("Note: RSSI for current connection not available in standard MicroPython")
         
-        print("\n✅ TEST 13 PASSED: Signal strength monitoring tested")
+        print("\n TEST 13 PASSED: Signal strength monitoring tested")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 13 FAILED: {e}")
+        print(f"\n TEST 13 FAILED: {e}")
         return False
 
 def test_power_management():
@@ -90,17 +90,17 @@ def test_power_management():
             
             # Set back to default
             wlan.config(pm=network.WIFI_PS_NONE)
-            print("\n✓ Power management tested")
+            print("\n Power management tested")
             
         except Exception as e:
-            print(f"⚠️ Power management not supported: {e}")
+            print(f" Power management not supported: {e}")
             print("This is normal for some MicroPython builds")
         
-        print("\n✅ TEST 14 PASSED: Power management tested")
+        print("\n TEST 14 PASSED: Power management tested")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 14 FAILED: {e}")
+        print(f"\n TEST 14 FAILED: {e}")
         return False
 
 def test_connection_stability():
@@ -114,7 +114,7 @@ def test_connection_stability():
     TEST_DURATION = 30  # seconds
     
     if TEST_SSID == "YOUR_TEST_SSID":
-        print("⚠️  Set TEST_SSID and TEST_PASSWORD to run this test")
+        print("  Set TEST_SSID and TEST_PASSWORD to run this test")
         return False
     
     try:
@@ -131,11 +131,11 @@ def test_connection_stability():
             timeout -= 1
         
         if not wlan.isconnected():
-            print("✗ Failed to connect")
+            print(" Failed to connect")
             return False
         
         config = wlan.ifconfig()
-        print(f"✓ Connected - IP: {config[0]}")
+        print(f" Connected - IP: {config[0]}")
         
         # Monitor connection for specified duration
         print(f"\nMonitoring connection for {TEST_DURATION} seconds...")
@@ -150,9 +150,9 @@ def test_connection_stability():
             
             if current_status != last_status:
                 if current_status:
-                    print(f"\n✓ Reconnected at {time.time() - start_time:.1f}s")
+                    print(f"\n Reconnected at {time.time() - start_time:.1f}s")
                 else:
-                    print(f"\n✗ Disconnected at {time.time() - start_time:.1f}s")
+                    print(f"\n Disconnected at {time.time() - start_time:.1f}s")
                     disconnections += 1
             
             last_status = current_status
@@ -162,7 +162,7 @@ def test_connection_stability():
                 config = wlan.ifconfig()
                 # Simple check - just see if we have a non-zero IP
                 if config[0] == '0.0.0.0':
-                    print(f"⚠️  Lost IP at {time.time() - start_time:.1f}s")
+                    print(f"  Lost IP at {time.time() - start_time:.1f}s")
             
             print(".", end="")
             time.sleep(1)
@@ -172,16 +172,16 @@ def test_connection_stability():
         print(f"  Disconnections: {disconnections}")
         
         if disconnections == 0:
-            print("✓ Stable connection throughout test")
-            print("\n✅ TEST 15 PASSED: Connection is stable")
+            print(" Stable connection throughout test")
+            print("\n TEST 15 PASSED: Connection is stable")
             return True
         else:
-            print(f"⚠️  Connection unstable ({disconnections} disconnections)")
+            print(f"  Connection unstable ({disconnections} disconnections)")
             return False
             
     except KeyboardInterrupt:
         print("\n\nTest interrupted by user")
         return False
     except Exception as e:
-        print(f"\n❌ TEST 15 FAILED: {e}")
+        print(f"\n TEST 15 FAILED: {e}")
         return False

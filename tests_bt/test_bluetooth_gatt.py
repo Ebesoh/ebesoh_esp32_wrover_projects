@@ -45,17 +45,17 @@ def test_gatt_service_setup():
         # Write initial value to characteristic
         initial_value = b'\x00\x40'  # Flags (uint8) + Heart Rate (uint8)
         ble.gatts_write(hr_measurement_handle, initial_value)
-        print("✓ Initial value written to characteristic")
+        print("Initial value written to characteristic")
         
         # Read back the value
         read_value = ble.gatts_read(hr_measurement_handle)
-        print(f"✓ Value read back: {read_value}")
+        print(f"Value read back: {read_value}")
         
-        print("\n✅ TEST 9 PASSED: GATT service setup works")
+        print("\nTEST 9 PASSED: GATT service setup works")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 9 FAILED: {e}")
+        print(f"\n TEST 9 FAILED: {e}")
         return False
 
 def test_gatt_characteristic_properties():
@@ -100,26 +100,26 @@ def test_gatt_characteristic_properties():
                 
                 # Register service
                 ((char_handle,),) = ble.gatts_register_services(services)
-                print(f"  ✓ Created with flags: 0x{flags:02X}")
+                print(f"   Created with flags: 0x{flags:02X}")
                 
                 # Try to write if WRITE flag is set
                 if flags & bt.FLAG_WRITE:
                     ble.gatts_write(char_handle, b"Test Data")
-                    print("  ✓ Write operation successful")
+                    print("   Write operation successful")
                 
                 # Try to read if READ flag is set
                 if flags & bt.FLAG_READ:
                     value = ble.gatts_read(char_handle)
-                    print(f"  ✓ Read operation successful: {value}")
+                    print(f"   Read operation successful: {value}")
                 
             except Exception as e:
-                print(f"  ✗ Failed: {e}")
+                print(f"   Failed: {e}")
         
-        print("\n✅ TEST 10 PASSED: Characteristic properties tested")
+        print("\n TEST 10 PASSED: Characteristic properties tested")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 10 FAILED: {e}")
+        print(f"\n TEST 10 FAILED: {e}")
         return False
 
 def test_gatt_advertising_with_service():
@@ -173,9 +173,9 @@ def test_gatt_advertising_with_service():
         time.sleep(5)
         ble.gap_advertise(None)
         
-        print("\n✅ TEST 11 PASSED: Advertising with service UUID works")
+        print("\n TEST 11 PASSED: Advertising with service UUID works")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 11 FAILED: {e}")
+        print(f"\n TEST 11 FAILED: {e}")
         return False

@@ -11,11 +11,11 @@ def test_wifi_initialization():
     try:
         # Create STA interface
         wlan_sta = network.WLAN(network.STA_IF)
-        print("✓ STA interface created")
+        print("STA interface created")
         
         # Create AP interface
         wlan_ap = network.WLAN(network.AP_IF)
-        print("✓ AP interface created")
+        print("AP interface created")
         
         # Check initial states
         sta_active = wlan_sta.active()
@@ -38,11 +38,11 @@ def test_wifi_initialization():
         # Reactivate for further tests
         wlan_sta.active(True)
         
-        print("\n✅ TEST 1 PASSED: WiFi module initialized successfully")
+        print("\nTEST 1 PASSED: WiFi module initialized successfully")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 1 FAILED: {e}")
+        print(f"\nTEST 1 FAILED: {e}")
         return False
 
 def test_wifi_mac_address():
@@ -61,21 +61,21 @@ def test_wifi_mac_address():
         
         if mac:
             mac_str = ':'.join(['%02X' % b for b in mac])
-            print(f"✓ MAC address: {mac_str}")
+            print(f" MAC address: {mac_str}")
             
             # Check if MAC looks valid (not all zeros)
             if all(b == 0 for b in mac):
-                print("⚠️ MAC address is all zeros (might be invalid)")
+                print(" MAC address is all zeros (might be invalid)")
                 return False
             
-            print("\n✅ TEST 2 PASSED: Valid MAC address retrieved")
+            print("\n TEST 2 PASSED: Valid MAC address retrieved")
             return True
         else:
-            print("✗ Could not retrieve MAC address")
+            print(" Could not retrieve MAC address")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 2 FAILED: {e}")
+        print(f"\n TEST 2 FAILED: {e}")
         return False
 
 def test_wifi_configuration():
@@ -115,14 +115,14 @@ def test_wifi_configuration():
             print(f"\nCurrent TX power: {current_power}")
             
             # Note: Changing TX power might not be allowed on all devices
-            print("✓ Configuration get/set operations work")
+            print("Configuration get/set operations work")
             
         except:
-            print("⚠️ Some config parameters are read-only")
+            print(" Some config parameters are read-only")
         
-        print("\n✅ TEST 3 PASSED: Configuration functions tested")
+        print("\nTEST 3 PASSED: Configuration functions tested")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 3 FAILED: {e}")
+        print(f"\n TEST 3 FAILED: {e}")
         return False

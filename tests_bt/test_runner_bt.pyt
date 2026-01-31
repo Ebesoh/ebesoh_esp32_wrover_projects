@@ -52,7 +52,7 @@ def run_all_tests():
         )
 
     except Exception as e:
-        print("\n❌ FATAL: Bluetooth test module import failed")
+        print("\n FATAL: Bluetooth test module import failed")
         print("EXCEPTION:", e)
         print("CI_EXIT_CODE=1")
         sys.exit(1)
@@ -102,15 +102,15 @@ def run_all_tests():
             duration = time.time() - start
 
             if success:
-                print(f"✓ RESULT: PASS  | {test_name} ({duration:.2f}s)")
+                print(f" RESULT: PASS  | {test_name} ({duration:.2f}s)")
                 results.append((test_name, PASS, duration))
             else:
-                print(f"✗ RESULT: FAIL  | {test_name} ({duration:.2f}s)")
+                print(f" RESULT: FAIL  | {test_name} ({duration:.2f}s)")
                 results.append((test_name, FAIL, duration))
                 failed_tests.append(test_name)
 
         except Exception as e:
-            print(f"✗ RESULT: EXCEPTION | {test_name}")
+            print(f"RESULT: EXCEPTION | {test_name}")
             print("EXCEPTION:", e)
             results.append((test_name, FAIL, 0.0))
             failed_tests.append(test_name)
@@ -141,14 +141,14 @@ def run_all_tests():
     # CI VERDICT (AUTHORITATIVE, SINGLE SOURCE OF TRUTH)
     # -------------------------------------------------
     if failed_tests:
-        print("\n❌ CI VERDICT: BLUETOOTH TEST SUITE FAILED")
+        print("\n CI VERDICT: BLUETOOTH TEST SUITE FAILED")
         print("FAILED TESTS:")
         for name in failed_tests:
             print(f" - {name}")
         print("CI_RESULT=1")
         sys.exit(1)
 
-    print("\n✅ CI VERDICT: BLUETOOTH TEST SUITE PASSED")
+    print("\n CI VERDICT: BLUETOOTH TEST SUITE PASSED")
     print("CI_RESULT=0")
     sys.exit(0)
 

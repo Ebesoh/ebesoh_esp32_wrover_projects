@@ -51,13 +51,13 @@ def test_static_ip_configuration():
         if restored_config == original_config:
             print("✓ Original config restored")
         else:
-            print(f"⚠️ Config mismatch: {restored_config}")
+            print(f"Config mismatch: {restored_config}")
         
-        print("\n✅ TEST 10 PASSED: Static IP configuration tested")
+        print("\nTEST 10 PASSED: Static IP configuration tested")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 10 FAILED: {e}")
+        print(f"\nTEST 10 FAILED: {e}")
         return False
 
 def test_dhcp_renewal():
@@ -109,16 +109,16 @@ def test_dhcp_renewal():
             if new_config[0] != current_config[0]:
                 print("✓ DHCP gave different IP address")
             else:
-                print("⚠️ DHCP gave same IP address (normal if lease not expired)")
+                print("DHCP gave same IP address (normal if lease not expired)")
             
-            print("\n✅ TEST 11 PASSED: DHCP renewal tested")
+            print("\nTEST 11 PASSED: DHCP renewal tested")
             return True
         else:
-            print("\n✗ Failed to reconnect")
+            print("\n Failed to reconnect")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 11 FAILED: {e}")
+        print(f"\n TEST 11 FAILED: {e}")
         return False
 
 def test_multiple_reconnections():
@@ -133,7 +133,7 @@ def test_multiple_reconnections():
     NUM_RECONNECTIONS = 3
     
     if TEST_SSID == "YOUR_TEST_SSID":
-        print("⚠️  Set TEST_SSID and TEST_PASSWORD to run this test")
+        print("Set TEST_SSID and TEST_PASSWORD to run this test")
         return False
     
     try:
@@ -162,7 +162,7 @@ def test_multiple_reconnections():
             
             if wlan.isconnected():
                 config = wlan.ifconfig()
-                print(f"  ✓ Connected - IP: {config[0]}")
+                print(f"   Connected - IP: {config[0]}")
                 success_count += 1
                 
                 # Brief connection
@@ -172,21 +172,21 @@ def test_multiple_reconnections():
                 wlan.disconnect()
                 time.sleep(1)
             else:
-                print(f"  ✗ Connection failed")
+                print(f"   Connection failed")
         
         print(f"\nSuccess rate: {success_count}/{NUM_RECONNECTIONS}")
         
         if success_count == NUM_RECONNECTIONS:
-            print("✓ All reconnections successful")
-            print("\n✅ TEST 12 PASSED: Stable multiple reconnections")
+            print("All reconnections successful")
+            print("\nTEST 12 PASSED: Stable multiple reconnections")
             return True
         elif success_count > 0:
-            print("⚠️ Some reconnections failed")
+            print("Some reconnections failed")
             return False
         else:
-            print("✗ All reconnections failed")
+            print("All reconnections failed")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 12 FAILED: {e}")
+        print(f"\nTEST 12 FAILED: {e}")
         return False

@@ -35,25 +35,25 @@ def test_dns_resolution():
                 
                 if addr_info:
                     ip_address = addr_info[0][4][0]
-                    print(f"  ✓ Resolved to: {ip_address}")
+                    print(f"   Resolved to: {ip_address}")
                     successes += 1
                 else:
-                    print(f"  ✗ No resolution")
+                    print(f"   No resolution")
                     
             except Exception as e:
-                print(f"  ✗ Failed: {e}")
+                print(f"   Failed: {e}")
         
         print(f"\nDNS Success rate: {successes}/{len(test_domains)}")
         
         if successes > 0:
-            print("\n✅ TEST 16 PASSED: DNS resolution works")
+            print("\n TEST 16 PASSED: DNS resolution works")
             return True
         else:
-            print("\n✗ All DNS resolutions failed")
+            print("\n All DNS resolutions failed")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 16 FAILED: {e}")
+        print(f"\n TEST 16 FAILED: {e}")
         return False
 
 def test_http_connectivity():
@@ -90,24 +90,24 @@ def test_http_connectivity():
                 response = urequests.get(url, timeout=5)
                 
                 if response.status_code == 200:
-                    print(f"  ✓ HTTP 200 OK")
+                    print(f"   HTTP 200 OK")
                     print(f"  Response length: {len(response.text)} chars")
                     successes += 1
                 else:
-                    print(f"  ✗ HTTP {response.status_code}")
+                    print(f"   HTTP {response.status_code}")
                 
                 response.close()
                 
             except Exception as e:
-                print(f"  ✗ Failed: {e}")
+                print(f"   Failed: {e}")
         
         print(f"\nHTTP Success rate: {successes}/{len(test_urls)}")
         
         if successes > 0:
-            print("\n✅ TEST 17 PASSED: HTTP connectivity works")
+            print("\n TEST 17 PASSED: HTTP connectivity works")
             return True
         else:
-            print("\n✗ All HTTP tests failed")
+            print("\n All HTTP tests failed")
             return False
             
     except ImportError:
@@ -115,7 +115,7 @@ def test_http_connectivity():
         print("Install via: Tools > Manage packages > urequests")
         return False
     except Exception as e:
-        print(f"\n❌ TEST 17 FAILED: {e}")
+        print(f"\n TEST 17 FAILED: {e}")
         return False
 
 def test_socket_operations():
@@ -138,42 +138,42 @@ def test_socket_operations():
         print("\n1. Creating socket...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
-        print("  ✓ Socket created")
+        print("   Socket created")
         
         # Test 2: Connect to a server
         print("\n2. Testing connection to google.com:80...")
         try:
             sock.connect(("google.com", 80))
-            print("  ✓ Connected to google.com:80")
+            print("   Connected to google.com:80")
             
             # Test 3: Send HTTP request
             print("\n3. Sending HTTP request...")
             request = b"GET / HTTP/1.0\r\nHost: google.com\r\n\r\n"
             sock.send(request)
-            print("  ✓ Request sent")
+            print("   Request sent")
             
             # Test 4: Receive response
             print("\n4. Receiving response (first 100 bytes)...")
             response = sock.recv(100)
             if response:
-                print("  ✓ Response received")
+                print("   Response received")
                 print(f"  Preview: {response[:50]}...")
             else:
-                print("  ✗ No response")
+                print("   No response")
             
             # Test 5: Close socket
             print("\n5. Closing socket...")
             sock.close()
-            print("  ✓ Socket closed")
+            print("   Socket closed")
             
-            print("\n✅ TEST 18 PASSED: All socket operations work")
+            print("\n TEST 18 PASSED: All socket operations work")
             return True
             
         except Exception as e:
-            print(f"  ✗ Socket operation failed: {e}")
+            print(f"   Socket operation failed: {e}")
             sock.close()
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 18 FAILED: {e}")
+        print(f"\n TEST 18 FAILED: {e}")
         return False

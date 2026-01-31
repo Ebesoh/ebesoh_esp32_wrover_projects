@@ -103,12 +103,12 @@ def run_all_wifi_tests():
             results.append((test_name, success, elapsed))
 
             if success:
-                print(f"✓ {test_name}: PASSED ({elapsed:.1f}s)")
+                print(f" {test_name}: PASSED ({elapsed:.1f}s)")
             else:
-                print(f"✗ {test_name}: FAILED ({elapsed:.1f}s)")
+                print(f" {test_name}: FAILED ({elapsed:.1f}s)")
 
         except Exception as e:
-            print(f"✗ {test_name}: ERROR - {e}")
+            print(f" {test_name}: ERROR - {e}")
             results.append((test_name, False, 0.0))
 
         time.sleep(2)
@@ -131,17 +131,17 @@ def run_all_wifi_tests():
 
     # ===== CI VERDICT =====
     if passed == total:
-        print("🎉 ALL TESTS PASSED")
+        print(" ALL TESTS PASSED")
         print("CI_RESULT=0")
         sys.exit(0)
 
     elif passed >= int(total * 0.7):
-        print("⚠️ PARTIAL PASS — WiFi functional but issues detected")
+        print(" PARTIAL PASS — WiFi functional but issues detected")
         print("CI_RESULT=1")
         sys.exit(1)
 
     else:
-        print("❌ TEST FAILURE — WiFi not reliable")
+        print(" TEST FAILURE — WiFi not reliable")
         print("CI_RESULT=1")
         sys.exit(1)
 
@@ -168,20 +168,20 @@ def run_quick_connectivity_test(ssid, password):
             timeout -= 1
 
         if not wlan.isconnected():
-            print("\n✗ WiFi connection failed")
+            print("\n WiFi connection failed")
             return False
 
-        print("\n✓ Connected")
+        print("\n Connected")
 
         socket.getaddrinfo("google.com", 80)
         r = urequests.get("http://httpbin.org/ip", timeout=5)
         r.close()
 
-        print("✓ Internet OK")
+        print(" Internet OK")
         return True
 
     except Exception as e:
-        print(f"✗ Connectivity test failed: {e}")
+        print(f" Connectivity test failed: {e}")
         return False
 
 

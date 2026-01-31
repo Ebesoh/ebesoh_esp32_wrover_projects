@@ -29,13 +29,13 @@ def test_advertising_performance():
             time.sleep(1)
         
         ble.gap_advertise(None)
-        print("\n✓ Continuous advertising completed")
+        print("\nContinuous advertising completed")
         
-        print("\n✅ TEST 14 PASSED: Advertising performance stable")
+        print("\nTEST 14 PASSED: Advertising performance stable")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 14 FAILED: {e}")
+        print(f"\n TEST 14 FAILED: {e}")
         return False
 
 def test_memory_usage():
@@ -102,11 +102,11 @@ def test_memory_usage():
         memory_after_cleanup = gc.mem_free()
         print(f"Memory after cleanup: {memory_after_cleanup} bytes")
         
-        print("\n✅ TEST 15 PASSED: Memory usage tracked")
+        print("\nTEST 15 PASSED: Memory usage tracked")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 15 FAILED: {e}")
+        print(f"\n TEST 15 FAILED: {e}")
         return False
 
 def test_stress_multiple_services():
@@ -151,9 +151,9 @@ def test_stress_multiple_services():
             except:
                 print(f"  Service {i+1}: Error")
         
-        print("\n✅ TEST 16 PASSED: Multiple services created")
+        print("\n TEST 16 PASSED: Multiple services created")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 16 FAILED: {e}")
+        print(f"\n TEST 16 FAILED: {e}")
         return False

@@ -75,11 +75,11 @@ def test_device_scanning():
         # Clear IRQ handler
         ble.irq(None)
         
-        print("\n✅ TEST 7 PASSED: Device scanning works")
+        print("\n TEST 7 PASSED: Device scanning works")
         return len(scan_results) > 0
         
     except Exception as e:
-        print(f"\n❌ TEST 7 FAILED: {e}")
+        print(f"\n TEST 7 FAILED: {e}")
         return False
 
 def test_scan_parameters():
@@ -116,9 +116,9 @@ def test_scan_parameters():
             
             print(f"  Advertisements received: {scan_count[0]}")
         
-        print("\n✅ TEST 8 PASSED: Different scan durations work")
+        print("\n TEST 8 PASSED: Different scan durations work")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 8 FAILED: {e}")
+        print(f"\n TEST 8 FAILED: {e}")
         return False

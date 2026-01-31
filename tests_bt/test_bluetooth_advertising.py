@@ -46,11 +46,11 @@ def test_simple_advertising():
         ble.gap_advertise(None)
         print("\n✓ Advertising stopped")
         
-        print("\n✅ TEST 4 PASSED: Advertising works correctly")
+        print("\nTEST 4 PASSED: Advertising works correctly")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 4 FAILED: {e}")
+        print(f"\nTEST 4 FAILED: {e}")
         return False
 
 def test_advertising_parameters():
@@ -87,11 +87,11 @@ def test_advertising_parameters():
             ble.gap_advertise(None)
             print(f"  Stopped advertising")
         
-        print("\n✅ TEST 5 PASSED: All advertising intervals work")
+        print("\nTEST 5 PASSED: All advertising intervals work")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 5 FAILED: {e}")
+        print(f"\nTEST 5 FAILED: {e}")
         return False
 
 def test_advertising_without_scan_response():
@@ -120,9 +120,9 @@ def test_advertising_without_scan_response():
         ble.gap_advertise(None)
         print("✓ Advertising stopped")
         
-        print("\n✅ TEST 6 PASSED: Minimal advertising works")
+        print("\nTEST 6 PASSED: Minimal advertising works")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 6 FAILED: {e}")
+        print(f"\n TEST 6 FAILED: {e}")
         return False

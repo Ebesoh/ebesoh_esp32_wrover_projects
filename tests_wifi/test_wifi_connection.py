@@ -23,23 +23,23 @@ def test_connection_without_credentials():
         # Try to connect without SSID/password
         try:
             wlan.connect('', '')
-            print("✗ Unexpected: connect() accepted empty credentials")
+            print("Unexpected: connect() accepted empty credentials")
             return False
         except:
-            print("✓ Correctly rejected empty credentials")
+            print("Correctly rejected empty credentials")
         
         # Check status
         status = wlan.status()
         print(f"Connection status: {status}")
         
         if not wlan.isconnected():
-            print("✓ Correctly not connected")
+            print(" Correctly not connected")
         
-        print("\n✅ TEST 7 PASSED: Empty credentials handled properly")
+        print("\nTEST 7 PASSED: Empty credentials handled properly")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 7 FAILED: {e}")
+        print(f"\n TEST 7 FAILED: {e}")
         return False
 
 def test_scan_networks():
@@ -91,15 +91,15 @@ def test_scan_networks():
             print(f"\nVisible networks: {len(visible_ssids)}")
             print(f"Hidden networks: {len(networks) - len(visible_ssids)}")
             
-            print("\n✅ TEST 8 PASSED: Network scanning works")
+            print("\n TEST 8 PASSED: Network scanning works")
             return True
         else:
-            print("✗ No networks found")
+            print(" No networks found")
             print("Make sure there are WiFi networks in range")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 8 FAILED: {e}")
+        print(f"\n TEST 8 FAILED: {e}")
         return False
 
 def test_connect_disconnect():
@@ -113,7 +113,7 @@ def test_connect_disconnect():
     TEST_PASSWORD = "AmandaAlicia1991"
     
     if TEST_SSID == "YOUR_TEST_SSID":
-        print("⚠️  Please set TEST_SSID and TEST_PASSWORD in the code")
+        print("  Please set TEST_SSID and TEST_PASSWORD in the code")
         print("Skipping actual connection test")
         return False
     
@@ -152,25 +152,25 @@ def test_connect_disconnect():
             time.sleep(2)
             
             if not wlan.isconnected():
-                print("✓ Disconnected successfully")
+                print(" Disconnected successfully")
                 
                 # Verify IP config resets
                 config = wlan.ifconfig()
                 if config[0] == '0.0.0.0':
-                    print("✓ IP config reset to zeros")
+                    print(" IP config reset to zeros")
                 else:
-                    print(f"⚠️ IP config not reset: {config}")
+                    print(f" IP config not reset: {config}")
                 
-                print("\n✅ TEST 9 PASSED: Connect/disconnect cycle works")
+                print("\n TEST 9 PASSED: Connect/disconnect cycle works")
                 return True
             else:
-                print("✗ Failed to disconnect")
+                print(" Failed to disconnect")
                 return False
         else:
-            print(f"\n✗ Failed to connect (timeout)")
+            print(f"\n Failed to connect (timeout)")
             print(f"  Check SSID/password and network availability")
             return False
             
     except Exception as e:
-        print(f"\n❌ TEST 9 FAILED: {e}")
+        print(f"\n TEST 9 FAILED: {e}")
         return False

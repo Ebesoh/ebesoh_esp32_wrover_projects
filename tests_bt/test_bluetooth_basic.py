@@ -34,11 +34,11 @@ def test_ble_initialization():
         # Reactivate for further tests
         ble.active(True)
         
-        print("\n✅ TEST 1 PASSED: Bluetooth module works correctly")
+        print("\nTEST 1 PASSED: Bluetooth module works correctly")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 1 FAILED: {e}")
+        print(f"\nTEST 1 FAILED: {e}")
         return False
 
 def test_ble_mac_address():
@@ -60,18 +60,18 @@ def test_ble_mac_address():
         except:
             try:
                 mac_addr = ble.config('addr')
-                print(f"✓ MAC address retrieved via config('addr'): {mac_addr}")
+                print(f"MAC address retrieved via config('addr'): {mac_addr}")
             except:
                 # Try to get it from gap_advertise
-                print("⚠️ Direct MAC retrieval not supported")
+                print("Direct MAC retrieval not supported")
                 print("  This is normal for some MicroPython versions")
                 mac = "Unknown"
         
-        print(f"\n✅ TEST 2 PASSED: MAC address functionality checked")
+        print(f"\nTEST 2 PASSED: MAC address functionality checked")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 2 FAILED: {e}")
+        print(f"\n TEST 2 FAILED: {e}")
         return False
 
 def test_ble_configuration():
@@ -101,13 +101,13 @@ def test_ble_configuration():
         try:
             device_name = "ESP32-TEST"
             ble.config(gap_name=device_name)
-            print(f"✓ Device name set to: {device_name}")
+            print(f"Device name set to: {device_name}")
         except:
-            print("⚠️ Cannot set device name via config")
+            print("Cannot set device name via config")
         
-        print("\n✅ TEST 3 PASSED: Configuration functions work")
+        print("\nTEST 3 PASSED: Configuration functions work")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 3 FAILED: {e}")
+        print(f"\n TEST 3 FAILED: {e}")
         return False

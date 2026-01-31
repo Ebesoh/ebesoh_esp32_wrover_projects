@@ -82,12 +82,12 @@ def test_connection_callbacks():
         ble.gap_advertise(None)
         ble.irq(None)
         
-        print("\n\n✅ TEST 12 PASSED: Connection callbacks work")
+        print("\n\nTEST 12 PASSED: Connection callbacks work")
         print("Note: This test requires a device to connect")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 12 FAILED: {e}")
+        print(f"\n TEST 12 FAILED: {e}")
         return False
 
 def test_mtu_negotiation():
@@ -139,17 +139,17 @@ def test_mtu_negotiation():
                 # Read back
                 read_data = ble.gatts_read(char_handle)
                 if len(read_data) == size:
-                    print(f"  ✓ Read back {size} bytes successful")
+                    print(f" Read back {size} bytes successful")
                 else:
-                    print(f"  ✗ Read back {len(read_data)} bytes (expected {size})")
+                    print(f" Read back {len(read_data)} bytes (expected {size})")
                     
             except Exception as e:
-                print(f"  ✗ Failed at {size} bytes: {e}")
+                print(f"   Failed at {size} bytes: {e}")
                 break
         
-        print("\n✅ TEST 13 PASSED: MTU/data size testing completed")
+        print("\n TEST 13 PASSED: MTU/data size testing completed")
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST 13 FAILED: {e}")
+        print(f"\nTEST 13 FAILED: {e}")
         return False
