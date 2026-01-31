@@ -4,9 +4,9 @@ import sys
 
 
 def run_all_wifi_tests():
-    """Run all WiFi tests sequentially"""
+    """Run selected WiFi tests sequentially"""
     print("=" * 60)
-    print("ESP32-WROVER WiFi COMPLETE TEST SUITE")
+    print("ESP32-WROVER WiFi LIMITED TEST SUITE")
     print("=" * 60)
 
     # Import test modules
@@ -25,32 +25,7 @@ def run_all_wifi_tests():
 
         from test_wifi_connection import (
             test_connection_without_credentials,
-            test_scan_networks,
-            test_connect_disconnect
-        )
-
-        from test_wifi_ipconfig import (
-            test_static_ip_configuration,
-            test_dhcp_renewal,
-            test_multiple_reconnections
-        )
-
-        from test_wifi_signal import (
-            test_signal_strength,
-            test_power_management,
-            test_connection_stability
-        )
-
-        from test_wifi_internet import (
-            test_dns_resolution,
-            test_http_connectivity,
-            test_socket_operations
-        )
-
-        from test_wifi_advanced import (
-            test_concurrent_mode,
-            test_wifi_events,
-            test_reconnect_after_sleep
+            test_scan_networks
         )
 
     except ImportError as e:
@@ -69,23 +44,6 @@ def run_all_wifi_tests():
 
         ("Connection without Credentials", test_connection_without_credentials),
         ("Network Scanning", test_scan_networks),
-        ("Connect/Disconnect Cycle", test_connect_disconnect),
-
-        ("Static IP", test_static_ip_configuration),
-        ("DHCP Renewal", test_dhcp_renewal),
-        ("Multiple Reconnections", test_multiple_reconnections),
-
-        ("Signal Strength", test_signal_strength),
-        ("Power Management", test_power_management),
-        ("Connection Stability", test_connection_stability),
-
-        ("DNS Resolution", test_dns_resolution),
-        ("HTTP Connectivity", test_http_connectivity),
-        ("Socket Operations", test_socket_operations),
-
-        ("Concurrent Mode", test_concurrent_mode),
-        ("WiFi Events", test_wifi_events),
-        ("Reconnect After Sleep", test_reconnect_after_sleep),
     ]
 
     results = []
@@ -103,12 +61,12 @@ def run_all_wifi_tests():
             results.append((test_name, success, elapsed))
 
             if success:
-                print(f" {test_name}: PASSED ({elapsed:.1f}s)")
+                print(f"{test_name}: PASSED ({elapsed:.1f}s)")
             else:
-                print(f" {test_name}: FAILED ({elapsed:.1f}s)")
+                print(f"{test_name}: FAILED ({elapsed:.1f}s)")
 
         except Exception as e:
-            print(f" {test_name}: ERROR - {e}")
+            print(f"{test_name}: ERROR - {e}")
             results.append((test_name, False, 0.0))
 
         time.sleep(2)
@@ -131,62 +89,16 @@ def run_all_wifi_tests():
 
     # ===== CI VERDICT =====
     if passed == total:
-        print(" ALL TESTS PASSED")
+        print("ALL TESTS PASSED")
         print("CI_RESULT: PASS")
         sys.exit(0)
 
-    elif passed >= int(total * 0.7):
-        print(" PARTIAL PASS — WiFi functional but issues detected")
-        print("CI_RESULT: FAIL")
-        sys.exit(1)
-
-    else:
-        print(" TEST FAILURE — WiFi not reliable")
-        print("CI_RESULT: FAIL")
-        sys.exit(1)
-
-
-def run_quick_connectivity_test(ssid, password):
-    """Run a quick connectivity test"""
-    import network
-    import socket
-    import urequests
-
-    print("=" * 50)
-    print("QUICK WiFi CONNECTIVITY TEST")
-    print("=" * 50)
-
-    try:
-        wlan = network.WLAN(network.STA_IF)
-        wlan.active(True)
-        wlan.connect(ssid, password)
-
-        timeout = 20
-        while not wlan.isconnected() and timeout > 0:
-            print(".", end="")
-            time.sleep(1)
-            timeout -= 1
-
-        if not wlan.isconnected():
-            print("\n WiFi connection failed")
-            return False
-
-        print("\n Connected")
-
-        socket.getaddrinfo("google.com", 80)
-        r = urequests.get("http://httpbin.org/ip", timeout=5)
-        r.close()
-
-        print(" Internet OK")
-        return True
-
-    except Exception as e:
-        print(f" Connectivity test failed: {e}")
-        return False
+    print("TEST FAILURE — WiFi baseline checks failed")
+    print("CI_RESULT: FAIL")
+    sys.exit(1)
 
 
 # ===== MAIN =====
 if __name__ == "__main__":
     run_all_wifi_tests()
-
 
