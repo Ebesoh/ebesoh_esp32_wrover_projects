@@ -122,7 +122,8 @@ pipeline {
                         returnStatus: true,
                         script: 'findstr /C:"CI_RESULT: FAIL" system.txt > nul'
                     )
-                      echo result_st
+                    
+                     echo "findstr exit code = ${result_st}"
            
                     if (result_st == 0) {
                         env.SELF_TEST_PASSED = 'false'
@@ -133,7 +134,7 @@ pipeline {
                        echo 'System Self-Test PASSED'
                     
                     }else {
-                      echo 'System Self-Test PASSED'
+                      echo 'Unknown result_st'
                       }
                 }
             }
