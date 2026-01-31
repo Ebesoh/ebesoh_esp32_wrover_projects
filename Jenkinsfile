@@ -227,7 +227,7 @@ pipeline {
        stage('Reset before Wi-Fi') {
             steps {
                 bat '''
-                 python -m mpremote connect %ESP_PORT% reset || exit /b 0
+                 python -m mpremote connect %ESP_PORT% reset >nul 2>&1 || exit /b 0
                 timeout /t 3 >nul
                 '''
             }
