@@ -129,13 +129,14 @@ pipeline {
                         env.SELF_TEST_PASSED = 'false'
                         env.FAILED_TESTS = 'System Self-Test'
                         error('System Self-Test FAILED (hard gate)')
-                    } else if (result_st == 1){ 
-                       env.SELF_TEST_PASSED = 'true'
-                       echo 'System Self-Test PASSED'
+                    } 
                     
-                    }else {
-                      echo 'Unknown result_st'
-                      }
+                    if (result_st > 1){ 
+                       error('System Self infrastructure error(log scan failed)')
+                    }
+                    
+                     env.SELF_TEST_PASSED = 'true'
+                     echo 'System Self-Test PASSED'
                 }
             }
         }
