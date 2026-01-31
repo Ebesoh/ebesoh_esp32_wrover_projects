@@ -5,9 +5,7 @@ pipeline {
         ESP_PORT = 'COM5'
         FIRMWARE = 'firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin'
         PYTHONUNBUFFERED = '1'
-
-        WIFI_TEST_PASSED = 'true'
-        BT_TEST_PASSED   = 'true'
+        
     }
 
     options {
@@ -26,6 +24,7 @@ pipeline {
                     env.SELF_TEST_PASSED = 'false'
                     env.WIFI_TEST_PASSED = 'unknown'
                     env.TEMP_TEST_PASSED = 'unknown'
+                    env.BT_TEST_PASSED   = 'unknown'
                     env.FAILED_TESTS = ''
                     echo 'CI variables initialized'
                 }
@@ -106,9 +105,15 @@ pipeline {
                 for %%f in (test_temp\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
-                 for %%f in (tests_wifi\\*.py) do (
+                
+                for %%f in (tests_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
+                
+                 for %%f in (tests_bt\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                )
+                
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
@@ -213,6 +218,40 @@ pipeline {
                 }
             }
         }
+        
+    /* =========================================================
+              BLUETOOTH TEST
+     ========================================================= */
+        stage('Bluetooth Test') {
+            steps {
+                script {
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_runner_bt; test_runner_bt.run_all_tests()" ^
+                    > bt.txt
+                    '''
+
+                    def exitcode_bt = bat(
+                        returnStatus: true,
+                        script: 'findstr /C:"CI_RESULT: FAIL" bt.txt > nul'
+                    )
+
+                    echo "exitcode_BT = ${exitcode_bt}"
+
+                    if (exitcode_bt == 0) {
+                         env.BT_TEST_PASSED = 'false'
+                        env.FAILED_TESTS = 'BT Test'
+                        error 'BT Test FAILED'
+                    } else if (exitcode_bt == 1) {
+                        env.BT_TEST_PASSED = 'true'
+                        echo 'BT Test: PASSED'
+                    } else {
+                        error 'BT Test infrastructure error'
+                    }
+                }
+            }
+        }
+        
 
         /* =========================================================
            FINAL VERDICT
