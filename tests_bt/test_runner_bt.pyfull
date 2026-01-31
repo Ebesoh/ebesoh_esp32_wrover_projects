@@ -25,6 +25,7 @@ def run_all_tests():
 
         from test_bluetooth_advertising import (
             test_simple_advertising,
+            test_advertising_parameters,
             test_advertising_without_scan_response
         )
 
@@ -65,6 +66,7 @@ def run_all_tests():
         ("Configuration", test_ble_configuration),
 
         ("Simple Advertising", test_simple_advertising),
+        ("Advertising Parameters", test_advertising_parameters),
         ("Minimal Advertising", test_advertising_without_scan_response),
 
         ("Device Scanning", test_device_scanning),
@@ -156,3 +158,4 @@ def run_all_tests():
 # -------------------------------------------------
 if __name__ == "__main__":
     run_all_tests()
+
