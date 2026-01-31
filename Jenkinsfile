@@ -132,7 +132,7 @@ pipeline {
                        env.SELF_TEST_PASSED = 'true'
                        echo 'System Self-Test PASSED'
                     
-                    }esle {
+                    }else {
                       echo 'System Self-Test PASSED'
                       }
                 }
