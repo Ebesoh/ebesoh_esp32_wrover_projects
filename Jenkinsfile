@@ -145,7 +145,7 @@ pipeline {
         }
 
         /* =========================================================
-           DS18B20 TEMP SENSOR TEST
+           DS18B20 TEMPERATURE SENSOR TEST
            ========================================================= */
         stage('DS18B20 Temp-Sensor Test') {
             steps {
