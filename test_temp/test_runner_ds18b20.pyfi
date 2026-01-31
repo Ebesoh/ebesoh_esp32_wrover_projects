@@ -2,7 +2,7 @@
 DS18B20 Comprehensive Test Runner (ESP32 / MicroPython)
 
 Purpose:
-    Execute DS18B20 validation tests in a controlled sequence and
+    Execute all DS18B20 validation tests in a controlled sequence and
     produce a single CI verdict.
 
 CI Rules:
@@ -33,6 +33,11 @@ try:
     from test_ds18b20_accuracy_temp import ds18b20_accuracy_test
 except Exception as e:
     fail_import("accuracy test", e)
+
+try:
+    from test_ds18b20_fault_injection import ds18b20_fault_injection_test
+except Exception as e:
+    fail_import("fault injection test", e)
 
 try:
     from test_ds18b20_stability import ds18b20_stability_test
@@ -83,6 +88,11 @@ def main():
     ))
 
     results.append((
+        "Fault Injection (Unplug Sensor)",
+        run_test("DS18B20 Fault Injection Test", ds18b20_fault_injection_test)
+    ))
+
+    results.append((
         "Stability / Jitter",
         run_test("DS18B20 Stability Test", ds18b20_stability_test)
     ))
@@ -111,7 +121,7 @@ def main():
 
     if passed == total:
         print("\nALL DS18B20 TESTS PASSED")
-        print("CI_RESULT: PASS")
+        print("CI_RESULT: Pass")
         sys.exit(0)
 
     print("\nDS18B20 TEST FAILURE")
@@ -124,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
