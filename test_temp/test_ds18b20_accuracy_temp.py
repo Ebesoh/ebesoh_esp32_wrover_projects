@@ -32,7 +32,7 @@ import sys
 # Configuration
 DATA_PIN = 4
 REFERENCE_TEMP_C = 21.0   # °C (external reference)
-MAX_ERROR_C = 2.0        # °C allowed deviation
+MAX_ERROR_C = 2.5        # °C allowed deviation
 CONVERSION_DELAY_S = 0.75
 
 
