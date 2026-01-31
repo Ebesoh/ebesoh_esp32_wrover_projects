@@ -24,6 +24,7 @@ pipeline {
             steps {
                 script {
                     env.SELF_TEST_PASSED = 'false'
+                    env.WIFI_TEST_PASSED = 'unknown'
                     env.TEMP_TEST_PASSED = 'unknown'
                     env.FAILED_TESTS = ''
                     echo 'CI variables initialized'
@@ -105,6 +106,9 @@ pipeline {
                 for %%f in (test_temp\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
+                 for %%f in (tests_wifi\\*.py) do (
+                    python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+                )
                 for %%f in (tests_selftest_DS18B20_gps_wifi\\*.py) do (
                     python -m mpremote connect %ESP_PORT% fs cp "%%f" :
                 )
@@ -172,6 +176,39 @@ pipeline {
                         echo 'DS18B20 Temp-Sensor Test: PASSED'
                     } else {
                         error 'DS18B20 Test infrastructure error'
+                    }
+                }
+            }
+        }
+          
+        /* =========================================================
+              WI-FI TEST
+           ========================================================= */
+        stage('WI-FI TEST') {
+            steps {
+                script {
+                    bat '''
+                    python -m mpremote connect %ESP_PORT% exec ^
+                    "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" ^
+                    > wifi.txt
+                    '''
+
+                    def exitcode_wifi = bat(
+                        returnStatus: true,
+                        script: 'findstr /C:"CI_RESULT: FAIL" wifi.txt > nul'
+                    )
+
+                    echo "exitcode_wifi = ${exitcode_wifi}"
+
+                    if (exitcode_wifi == 0) {
+                        env.TEMP_TEST_PASSED = 'false'
+                        env.FAILED_TESTS = 'Wi-fi Test'
+                        error 'Wi-fi Test FAILED'
+                    } else if (exitcode_wifi == 1) {
+                        env.WIFI_TEST_PASSED = 'true'
+                        echo 'Wi-fi Test: PASSED'
+                    } else {
+                        error 'Wi-fi Test infrastructure error'
                     }
                 }
             }
