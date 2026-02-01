@@ -1,94 +1,101 @@
-# ===============================================================================
-# ESP32-WROVER HARDWARE CI — GITHUB ACTIONS ARCHITECTURE OVERVIEW by Ebesoh Ebesoh 
-# ===============================================================================
+# ==============================================================================
+# ESP32-WROVER DEVKIT CI — GitHub Actions Overview
+# by Ebesoh Ebesoh
+# ==============================================================================
 #
-# PURPOSE
-# -------
-# This GitHub Actions workflow implements a deterministic, hardware-in-the-loop
-# continuous integration system for ESP32-WROVER boards running MicroPython.
+# WHAT THIS IS
+# -----------
+# This workflow is a hardware-in-the-loop CI pipeline for ESP32-WROVER boards
+# running MicroPython.
 #
-# It flashes firmware, deploys test code over USB, executes hardware validation
-# suites directly on the device, and produces a single authoritative CI verdict.
+# It doesn’t simulate anything. It talks to a real board over USB, flashes
+# firmware, pushes test code, runs validation directly on the device, and then
+# decides—clearly and unambiguously—whether the hardware passes or fails.
 #
-# The workflow is designed to fail fast on critical faults, isolate hardware
-# subsystems between test phases, and remain stable when executed repeatedly
-# against the same physical board.
+# The goal is simple: repeatable, trustworthy hardware validation that you can
+# run every time without wondering what state the board is in.
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# HIGH-LEVEL EXECUTION FLOW
-# -------------------------
-# 1. Runner Preparation
-#    - Initialize mutable CI state variables
-#    - Optionally clean workspace when disk space is constrained
-#    - Install required host-side tooling (Python, esptool, mpremote)
+# HOW IT RUNS (HIGH LEVEL)
+# -----------------------
 #
-# 2. Hardware Bring-Up
-#    - Verify USB connectivity to the ESP32 device
-#    - Perform a full flash erase
-#    - Install a known-good MicroPython firmware image
-#    - Wait until the MicroPython REPL becomes responsive
+# 1. Runner setup
+#    The runner prepares itself:
+#    - CI state variables are initialized
+#    - Disk space is checked and cleaned if needed
+#    - Required tools (Python, esptool, mpremote) are installed
 #
-# 3. Test Deployment
-#    - Upload all test modules to the ESP32 filesystem using mpremote
+# 2. Hardware bring-up
+#    The ESP32 is brought to a known-good baseline:
+#    - USB connectivity is verified
+#    - Flash is fully erased
+#    - A known MicroPython firmware image is installed
+#    - The workflow waits until the REPL is actually responsive
 #
-# 4. Test Execution (Ordered and Isolated)
-#    - System Self-Test (HARD GATE)
-#    - DS18B20 temperature sensor validation
-#    - Controlled soft reset to clear Wi-Fi / network state
-#    - Wi-Fi functional test suite
-#    - Bluetooth (BLE) functional test suite
+# 3. Test deployment
+#    All test modules are uploaded directly to the ESP32 filesystem using
+#    mpremote. No magic, no side channels.
 #
-# 5. Final CI Verdict
-#    - Aggregate all test results
-#    - Emit a single pass/fail outcome for the workflow
-#    - Archive logs for traceability and post-mortem analysis
+# 4. Test execution (strict order)
+#    Tests run one at a time, in a fixed sequence:
+#    - System self-test (hard gate — must pass)
+#    - DS18B20 temperature sensor test
+#    - Soft reset to clear network state
+#    - Wi-Fi functional tests
+#    - Bluetooth (BLE) functional tests
 #
-# -------------------------------------------------------------------------------
+# 5. Final verdict
+#    Results from all tests are collected and evaluated.
+#    The workflow emits a single, authoritative PASS or FAIL.
+#    Logs are archived for debugging and traceability.
 #
-# DESIGN PRINCIPLES
-# -----------------
+# ------------------------------------------------------------------------------
+#
+# DESIGN CHOICES (WHY IT’S BUILT THIS WAY)
+# ----------------------------------------
+#
 # • HARD GATES
-#   The system self-test is a non-negotiable gate. Any failure immediately stops
-#   the workflow to prevent misleading downstream results.
+#   The system self-test is non-negotiable. If it fails, nothing else runs.
+#   This prevents false confidence from downstream tests.
 #
 # • STATE ISOLATION
-#   A soft reset is intentionally executed before Wi-Fi testing to prevent
-#   contamination from previous drivers, sockets, or network state.
+#   Network-related tests are separated by an intentional reset to avoid
+#   leftover sockets, drivers, or radio state contaminating results.
 #
-# • SINGLE SOURCE OF TRUTH
-#   Each test suite emits an explicit "CI_RESULT: PASS|FAIL" marker.
-#   The workflow determines success or failure solely by parsing this marker.
+# • ONE SOURCE OF TRUTH
+#   Each test explicitly reports PASS or FAIL using a clear marker.
+#   CI decisions are made by parsing those markers—nothing implicit.
 #
-# • DETERMINISTIC EXECUTION
-#   Tests run in a fixed, documented order. No parallel execution is used in
-#   order to protect shared hardware resources and ensure repeatability.
+# • DETERMINISM OVER SPEED
+#   Tests are run sequentially on purpose. Parallelism is avoided because
+#   shared hardware doesn’t forgive race conditions.
 #
 # • HARDWARE SAFETY
-#   This workflow assumes exclusive access to the ESP32 device. Parallel runs
-#   against the same hardware are explicitly avoided by design.
+#   The workflow assumes exclusive access to the ESP32. Concurrent runs against
+#   the same physical board are intentionally blocked.
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# RESULT HANDLING
-# ---------------
-# - All test output is redirected to log files (*.txt)
-# - CI results are derived by scanning logs for explicit verdict markers
-# - Logs are always uploaded as workflow artifacts
-# - The final workflow status is explicit and authoritative
+# RESULTS AND ARTIFACTS
+# --------------------
+# - All test output is written to log files
+# - CI decisions are based solely on explicit verdict markers
+# - Logs are always uploaded as artifacts, even on failure
+# - The final workflow result is clear, explicit, and final
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# INTENDED USE
-# ------------
-# - Self-hosted GitHub Actions runners with direct USB access to ESP32 hardware
-# - Continuous hardware validation during firmware or driver development
-# - Regression testing after changes to firmware, tests, or board revisions
+# WHEN TO USE THIS
+# ----------------
+# - Self-hosted GitHub Actions runners with direct USB access
+# - Firmware, driver, or board-level development
+# - Regression testing after hardware or firmware changes
 #
-# This workflow is intentionally explicit, conservative, and verbose.
-# Clarity, traceability, and hardware safety take priority over execution speed.
+# This workflow is intentionally conservative and explicit.
+# It favors clarity, repeatability, and hardware safety over speed or cleverness.
 #
-# ===============================================================================
+# ==============================================================================
 
 name: ESP32-WROVER DEVKIT CI
 
