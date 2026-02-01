@@ -109,7 +109,7 @@ env:
 
 jobs:
   esp32-hil-ci:
-    runs-on: windows-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
