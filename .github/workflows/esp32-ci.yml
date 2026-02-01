@@ -116,7 +116,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Init CI variables
-      shell: pwsh
+      shell: bash
       run: |
         echo "SELF_TEST_PASSED=false" >> $env:GITHUB_ENV
         echo "WIFI_TEST_PASSED=unknown" >> $env:GITHUB_ENV
@@ -126,7 +126,7 @@ jobs:
         echo "CI variables initialized"
 
     - name: Auto-clean (low disk space)
-      shell: pwsh
+      shell: bash
       run: |
         $drive = Get-PSDrive -Name C
         $freeGb = [math]::Round($drive.Free / 1GB, 2)
