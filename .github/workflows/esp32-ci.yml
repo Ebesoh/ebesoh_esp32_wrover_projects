@@ -235,9 +235,8 @@ jobs:
     - name: DS18B20 Temperature Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-        findstr /C:"CI_RESULT: FAIL" temp.txt > nul
-        if %errorlevel%==0 (
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" 
+        if errorlevel 1 (
           echo TEMP_TEST_PASSED=false >> %GITHUB_ENV%
           echo FAILED_TESTS=DS18B20 Temp-Sensor Test >> %GITHUB_ENV%
           exit /b 1
@@ -260,9 +259,8 @@ jobs:
     - name: Wi-Fi Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-        findstr /C:"CI_RESULT: FAIL" wifi.txt > nul
-        if %errorlevel%==0 (
+        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
+        if errorlevel 1 (
           echo WIFI_TEST_PASSED=false >> %GITHUB_ENV%
           echo FAILED_TESTS=Wi-Fi Test >> %GITHUB_ENV%
           exit /b 1
@@ -276,9 +274,8 @@ jobs:
     - name: Bluetooth Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-        findstr /C:"CI_RESULT: FAIL" bt.txt > nul
-        if %errorlevel%==0 (
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
+         if errorlevel 1 (
           echo BT_TEST_PASSED=false >> %GITHUB_ENV%
           echo FAILED_TESTS=Bluetooth Test >> %GITHUB_ENV%
           exit /b 1
