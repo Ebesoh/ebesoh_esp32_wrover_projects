@@ -185,17 +185,19 @@ jobs:
     - name: Wait for MicroPython REPL
       shell: cmd
       run: |
-        set READY=0
-        for /L %%i in (1,1,5) do (
-          python -m mpremote connect %ESP_PORT% --no-soft-reset exec "print('READY')" >nul 2>&1 && (
-            echo MicroPython READY
-            set READY=1
-            goto done
-          )
-          timeout /t 3 >nul
-        )
-        :done
-        if "%READY%"=="0" exit /b 1
+           set READY=0
+           for /L %%i in (1,1,5) do (
+              python -m mpremote connect %ESP_PORT% --no-soft-reset exec "print('READY')"
+              if not errorlevel 1 (
+                echo MicroPython READY
+                set READY=1
+                goto done
+               )
+                timeout /t 3 >nul
+               )
+               :done
+               if "%READY%"=="0" exit /b 1
+
 
     # ---------------------------------------------------------------------------
     # TEST DEPLOYMENT
