@@ -1,127 +1,145 @@
 # ==============================================================================
-# ESP32-WROVER DEVKIT CI — GitHub Actions Overview
-# by Ebesoh Ebesoh
+# ESP32-WROVER DEVKIT CI — GitHub Actions (Hardware-in-the-Loop)
+# Author: Ebesoh Ebesoh
 # ==============================================================================
 #
-# WHAT THIS IS
-# -----------
-# This workflow is a hardware-in-the-loop CI pipeline for ESP32-WROVER boards
-# running MicroPython.
+# WHAT THIS WORKFLOW DOES
+# ----------------------
+# This is a real hardware CI pipeline for ESP32-WROVER boards running
+# MicroPython.
 #
-# It doesn’t simulate anything. It talks to a real board over USB, flashes
-# firmware, pushes test code, runs validation directly on the device, and then
-# decides—clearly and unambiguously—whether the hardware passes or fails.
+# There’s no simulation here. No mocks. No shortcuts.
+# Every step talks to an actual ESP32 over USB, flashes it, loads test code,
+# runs the tests on the board itself, and then decides—very clearly—whether
+# things passed or failed.
 #
-# The goal is simple: repeatable, trustworthy hardware validation that you can
-# run every time without wondering what state the board is in.
+# The goal is simple: when this pipeline is green, you can trust the hardware functionalities verified in this pipeline.
 #
 # ------------------------------------------------------------------------------
 #
-# HOW IT RUNS (HIGH LEVEL)
-# -----------------------
+# HOW THE PIPELINE FLOWS
+# ---------------------
+# The workflow is split into multiple dependent jobs so each phase is explicit
+# and easy to reason about.
 #
-# 1. Runner setup
-#    The runner prepares itself:
+# 1. Runner preparation
+#    The runner gets itself into a clean, predictable state:
 #    - CI state variables are initialized
 #    - Disk space is checked and cleaned if needed
 #    - Required tools (Python, esptool, mpremote) are installed
 #
 # 2. Hardware bring-up
-#    The ESP32 is brought to a known-good baseline:
+#    The ESP32 is reset to a known-good baseline:
 #    - USB connectivity is verified
 #    - Flash is fully erased
-#    - A known MicroPython firmware image is installed
-#    - The workflow waits until the REPL is actually responsive
+#    - A specific MicroPython firmware image is installed
+#    - The workflow waits until the REPL actually responds
 #
 # 3. Test deployment
-#    All test modules are uploaded directly to the ESP32 filesystem using
-#    mpremote. No magic, no side channels.
+#    All test modules are copied directly onto the ESP32 filesystem using
+#    mpremote. Nothing runs from the host once testing begins.
 #
-# 4. Test execution (strict order)
-#    Tests run one at a time, in a fixed sequence:
-#    - System self-test (hard gate — must pass)
+# 4. Tests run (in a strict order)
+#    Tests are executed one at a time, on purpose:
+#    - System self-test (hard gate)
 #    - DS18B20 temperature sensor test
 #    - Soft reset to clear network state
 #    - Wi-Fi functional tests
 #    - Bluetooth (BLE) functional tests
+#    - GPS (GT-U7) functional tests
 #
 # 5. Final verdict
-#    Results from all tests are collected and evaluated.
-#    The workflow emits a single, authoritative PASS or FAIL.
-#    Logs are archived for debugging and traceability.
+#    Results from all test jobs are collected.
+#    The workflow produces one final answer: PASS or FAIL.
+#    Logs are archived so failures can be understood, not guessed.
 #
 # ------------------------------------------------------------------------------
 #
-# DESIGN CHOICES (WHY IT’S BUILT THIS WAY)
-# ----------------------------------------
+# WHY IT’S BUILT THIS WAY
+# ----------------------
 #
 # • HARD GATES
-#   The system self-test is non-negotiable. If it fails, nothing else runs.
-#   This prevents false confidence from downstream tests.
+#   The system self-test must pass. If it doesn’t, nothing else runs.
+#   That avoids false confidence from later tests.
 #
 # • STATE ISOLATION
-#   Network-related tests are separated by an intentional reset to avoid
-#   leftover sockets, drivers, or radio state contaminating results.
+#   A deliberate reset is done before Wi-Fi tests to clear out radios,
+#   sockets, and driver state from earlier stages.
 #
 # • ONE SOURCE OF TRUTH
-#   Each test explicitly reports PASS or FAIL using a clear marker.
-#   CI decisions are made by parsing those markers—nothing implicit.
+#   Each test suite explicitly reports success or failure.
+#   The CI doesn’t “infer” results—it reads clear verdicts.
 #
 # • DETERMINISM OVER SPEED
-#   Tests are run sequentially on purpose. Parallelism is avoided because
-#   shared hardware doesn’t forgive race conditions.
+#   Tests run sequentially. Shared hardware and parallel execution don’t mix
+#   well, and reliability matters more than shaving seconds.
 #
 # • HARDWARE SAFETY
-#   The workflow assumes exclusive access to the ESP32. Concurrent runs against
-#   the same physical board are intentionally blocked.
+#   The workflow assumes exclusive access to the ESP32.
+#   Concurrency is intentionally restricted to protect the device.
 #
 # ------------------------------------------------------------------------------
 #
-# RESULTS AND ARTIFACTS
-# --------------------
-# - All test output is written to log files
-# - CI decisions are based solely on explicit verdict markers
-# - Logs are always uploaded as artifacts, even on failure
-# - The final workflow result is clear, explicit, and final
-#
-# ------------------------------------------------------------------------------
-#
-# WHEN TO USE THIS
+# LOGS AND RESULTS
 # ----------------
-# - Self-hosted GitHub Actions runners with direct USB access
+# - All test output is written to log files
+# - CI decisions are based only on explicit pass/fail signals
+# - Logs are always uploaded, even when something breaks
+# - The final workflow result is clear and final
+#
+# ------------------------------------------------------------------------------
+#
+# WHEN THIS WORKFLOW MAKES SENSE
+# ------------------------------
+# - Self-hosted GitHub Actions runners with USB access to real hardware
 # - Firmware, driver, or board-level development
-# - Regression testing after hardware or firmware changes
+# - Regression testing after changes to code or hardware
 #
-# This workflow is intentionally conservative and explicit.
-# It favors clarity, repeatability, and hardware safety over speed or cleverness.
-#
+# This workflow is intentionally conservative.
+# It favors clarity, repeatability, scalbility, and trust over cleverness or speed.
+# More test suite could easily be added to the pipeline
 # ==============================================================================
+
 name: ESP32-WROVER DEVKIT CI
 
+# ------------------------------------------------------------------------------
+# Workflow triggers
+# ------------------------------------------------------------------------------
+# Runs automatically on pushes to main
+# Can also be triggered manually from the GitHub UI
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+# ------------------------------------------------------------------------------
+# Concurrency control
+# ------------------------------------------------------------------------------
+# Prevents multiple workflows from accessing the same physical ESP32 at once
 concurrency:
   group: esp32-wrover-hil
   cancel-in-progress: true
 
+# ------------------------------------------------------------------------------
+# Global environment variables
+# ------------------------------------------------------------------------------
+# Shared across all jobs
 env:
-  ESP_PORT: COM5
+  ESP_PORT: COM5                          # USB serial port for ESP32
   FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
-  PYTHONUNBUFFERED: "1"
+  PYTHONUNBUFFERED: "1"                   # Ensure real-time Python output
 
 jobs:
 
 # ==============================================================================
 # JOB 1 — INIT CI VARIABLES
 # ==============================================================================
-
+# Initializes mutable CI state used across downstream jobs
+# These values act as explicit pass/fail markers
   init-ci-vars:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4         # Checkout repository (required by Actions)
       - shell: powershell
         run: |
           "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
@@ -134,7 +152,7 @@ jobs:
 # ==============================================================================
 # JOB 2 — AUTO CLEAN
 # ==============================================================================
-
+# Frees disk space on the runner if storage is critically low
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
@@ -150,15 +168,15 @@ jobs:
 # ==============================================================================
 # JOB 3 — INSTALL HOST TOOLS
 # ==============================================================================
-
+# Installs all required host-side tooling for flashing and control
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
     steps:
       - shell: cmd
         run: |
-          where python
-          python --version
+          where python                          # Verify Python path
+          python --version                     # Log Python version
           python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
           python -m pip install --upgrade pip
           python -m pip install esptool mpremote
@@ -166,7 +184,7 @@ jobs:
 # ==============================================================================
 # JOB 4 — PREFLIGHT
 # ==============================================================================
-
+# Verifies ESP32 is reachable over USB before doing anything destructive
   preflight:
     runs-on: self-hosted
     needs: install-tools
@@ -180,7 +198,7 @@ jobs:
 # ==============================================================================
 # JOB 5 — WAIT AFTER PREFLIGHT
 # ==============================================================================
-
+# Allows USB stack and device reset to settle
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -191,7 +209,7 @@ jobs:
 # ==============================================================================
 # JOB 6 — FLASH FIRMWARE
 # ==============================================================================
-
+# Fully erases flash and installs a known MicroPython firmware image
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
@@ -204,7 +222,7 @@ jobs:
 # ==============================================================================
 # JOB 7 — WAIT AFTER FLASH
 # ==============================================================================
-
+# Gives the ESP32 time to reboot cleanly after flashing
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
@@ -215,7 +233,8 @@ jobs:
 # ==============================================================================
 # JOB 8 — WAIT FOR REPL
 # ==============================================================================
-
+# Polls the MicroPython REPL until it responds
+# Fails if the board never becomes ready
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
@@ -237,7 +256,7 @@ jobs:
 # ==============================================================================
 # JOB 9 — UPLOAD TEST FILES
 # ==============================================================================
-
+# Copies all test modules onto the ESP32 filesystem
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -253,7 +272,7 @@ jobs:
 # ==============================================================================
 # JOB 10 — SYSTEM SELF TEST
 # ==============================================================================
-
+# Hard gate: pipeline stops immediately if this fails
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
@@ -274,7 +293,7 @@ jobs:
 # ==============================================================================
 # JOB 11 — TEMPERATURE TEST
 # ==============================================================================
-
+# DS18B20 temperature sensor validation
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
@@ -295,7 +314,7 @@ jobs:
 # ==============================================================================
 # JOB 12 — WIFI TEST
 # ==============================================================================
-
+# Includes a soft reset to clear radio and network state
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
@@ -320,7 +339,7 @@ jobs:
 # ==============================================================================
 # JOB 13 — BLUETOOTH TEST
 # ==============================================================================
-
+# Executes BLE functional validation
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
@@ -341,7 +360,7 @@ jobs:
 # ==============================================================================
 # JOB 14 — GPS TEST
 # ==============================================================================
-
+# Validates GT-U7 GPS module via UART and NMEA parsing
   gps-test:
     runs-on: self-hosted
     needs: bluetooth-test
@@ -362,7 +381,7 @@ jobs:
 # ==============================================================================
 # JOB 15 — FINAL VERDICT
 # ==============================================================================
-
+# Single authoritative CI decision based on all upstream results
   final-verdict:
     runs-on: self-hosted
     needs:
@@ -386,11 +405,13 @@ jobs:
 
           Write-Host "FINAL VERDICT: ALL TESTS PASSED"
 
+      # Always archive logs for traceability
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: esp32-ci-logs
           path: "*.txt"
+
 
 
 
