@@ -1,103 +1,108 @@
-# ===============================================================================
-# ESP32-WROVER HARDWARE CI — GITHUB ACTIONS ARCHITECTURE OVERVIEW by Ebesoh Ebesoh 
-# ===============================================================================
+# ==============================================================================
+# ESP32-WROVER DEVKIT CI — GitHub Actions Overview
+# by Ebesoh Ebesoh
+# ==============================================================================
 #
-# PURPOSE
-# -------
-# This GitHub Actions workflow implements a deterministic, hardware-in-the-loop
-# continuous integration system for ESP32-WROVER boards running MicroPython.
+# WHAT THIS IS
+# -----------
+# This workflow is a hardware-in-the-loop CI pipeline for ESP32-WROVER boards
+# running MicroPython.
 #
-# It flashes firmware, deploys test code over USB, executes hardware validation
-# suites directly on the device, and produces a single authoritative CI verdict.
+# It doesn’t simulate anything. It talks to a real board over USB, flashes
+# firmware, pushes test code, runs validation directly on the device, and then
+# decides—clearly and unambiguously—whether the hardware passes or fails.
 #
-# The workflow is designed to fail fast on critical faults, isolate hardware
-# subsystems between test phases, and remain stable when executed repeatedly
-# against the same physical board.
+# The goal is simple: repeatable, trustworthy hardware validation that you can
+# run every time without wondering what state the board is in.
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# HIGH-LEVEL EXECUTION FLOW
-# -------------------------
-# 1. Runner Preparation
-#    - Initialize mutable CI state variables
-#    - Optionally clean workspace when disk space is constrained
-#    - Install required host-side tooling (Python, esptool, mpremote)
+# HOW IT RUNS (HIGH LEVEL)
+# -----------------------
 #
-# 2. Hardware Bring-Up
-#    - Verify USB connectivity to the ESP32 device
-#    - Perform a full flash erase
-#    - Install a known-good MicroPython firmware image
-#    - Wait until the MicroPython REPL becomes responsive
+# 1. Runner setup
+#    The runner prepares itself:
+#    - CI state variables are initialized
+#    - Disk space is checked and cleaned if needed
+#    - Required tools (Python, esptool, mpremote) are installed
 #
-# 3. Test Deployment
-#    - Upload all test modules to the ESP32 filesystem using mpremote
+# 2. Hardware bring-up
+#    The ESP32 is brought to a known-good baseline:
+#    - USB connectivity is verified
+#    - Flash is fully erased
+#    - A known MicroPython firmware image is installed
+#    - The workflow waits until the REPL is actually responsive
 #
-# 4. Test Execution (Ordered and Isolated)
-#    - System Self-Test (HARD GATE)
-#    - DS18B20 temperature sensor validation
-#    - Controlled soft reset to clear Wi-Fi / network state
-#    - Wi-Fi functional test suite
-#    - Bluetooth (BLE) functional test suite
+# 3. Test deployment
+#    All test modules are uploaded directly to the ESP32 filesystem using
+#    mpremote. No magic, no side channels.
 #
-# 5. Final CI Verdict
-#    - Aggregate all test results
-#    - Emit a single pass/fail outcome for the workflow
-#    - Archive logs for traceability and post-mortem analysis
+# 4. Test execution (strict order)
+#    Tests run one at a time, in a fixed sequence:
+#    - System self-test (hard gate — must pass)
+#    - DS18B20 temperature sensor test
+#    - Soft reset to clear network state
+#    - Wi-Fi functional tests
+#    - Bluetooth (BLE) functional tests
 #
-# -------------------------------------------------------------------------------
+# 5. Final verdict
+#    Results from all tests are collected and evaluated.
+#    The workflow emits a single, authoritative PASS or FAIL.
+#    Logs are archived for debugging and traceability.
 #
-# DESIGN PRINCIPLES
-# -----------------
+# ------------------------------------------------------------------------------
+#
+# DESIGN CHOICES (WHY IT’S BUILT THIS WAY)
+# ----------------------------------------
+#
 # • HARD GATES
-#   The system self-test is a non-negotiable gate. Any failure immediately stops
-#   the workflow to prevent misleading downstream results.
+#   The system self-test is non-negotiable. If it fails, nothing else runs.
+#   This prevents false confidence from downstream tests.
 #
 # • STATE ISOLATION
-#   A soft reset is intentionally executed before Wi-Fi testing to prevent
-#   contamination from previous drivers, sockets, or network state.
+#   Network-related tests are separated by an intentional reset to avoid
+#   leftover sockets, drivers, or radio state contaminating results.
 #
-# • SINGLE SOURCE OF TRUTH
-#   Each test suite emits an explicit "CI_RESULT: PASS|FAIL" marker.
-#   The workflow determines success or failure solely by parsing this marker.
+# • ONE SOURCE OF TRUTH
+#   Each test explicitly reports PASS or FAIL using a clear marker.
+#   CI decisions are made by parsing those markers—nothing implicit.
 #
-# • DETERMINISTIC EXECUTION
-#   Tests run in a fixed, documented order. No parallel execution is used in
-#   order to protect shared hardware resources and ensure repeatability.
+# • DETERMINISM OVER SPEED
+#   Tests are run sequentially on purpose. Parallelism is avoided because
+#   shared hardware doesn’t forgive race conditions.
 #
 # • HARDWARE SAFETY
-#   This workflow assumes exclusive access to the ESP32 device. Parallel runs
-#   against the same hardware are explicitly avoided by design.
+#   The workflow assumes exclusive access to the ESP32. Concurrent runs against
+#   the same physical board are intentionally blocked.
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# RESULT HANDLING
-# ---------------
-# - All test output is redirected to log files (*.txt)
-# - CI results are derived by scanning logs for explicit verdict markers
-# - Logs are always uploaded as workflow artifacts
-# - The final workflow status is explicit and authoritative
+# RESULTS AND ARTIFACTS
+# --------------------
+# - All test output is written to log files
+# - CI decisions are based solely on explicit verdict markers
+# - Logs are always uploaded as artifacts, even on failure
+# - The final workflow result is clear, explicit, and final
 #
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
-# INTENDED USE
-# ------------
-# - Self-hosted GitHub Actions runners with direct USB access to ESP32 hardware
-# - Continuous hardware validation during firmware or driver development
-# - Regression testing after changes to firmware, tests, or board revisions
+# WHEN TO USE THIS
+# ----------------
+# - Self-hosted GitHub Actions runners with direct USB access
+# - Firmware, driver, or board-level development
+# - Regression testing after hardware or firmware changes
 #
-# This workflow is intentionally explicit, conservative, and verbose.
-# Clarity, traceability, and hardware safety take priority over execution speed.
+# This workflow is intentionally conservative and explicit.
+# It favors clarity, repeatability, and hardware safety over speed or cleverness.
 #
-# ===============================================================================
-
-name: ESP32-WROVER Hardware CI
+# ==============================================================================
+name: ESP32-WROVER DEVKIT CI
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
-# Prevent concurrent access to the same physical ESP32
 concurrency:
   group: esp32-wrover-hil
   cancel-in-progress: true
@@ -108,169 +113,284 @@ env:
   PYTHONUNBUFFERED: "1"
 
 jobs:
-  esp32-hil-ci:
-    runs-on: windows-latest
 
+# ==============================================================================
+# JOB 1 — INIT CI VARIABLES
+# ==============================================================================
+
+  init-ci-vars:
+    runs-on: self-hosted
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - shell: powershell
+        run: |
+          "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
+          "WIFI_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "BT_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "GPS_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
-    - name: Init CI variables
-      shell: pwsh
-      run: |
-        echo "SELF_TEST_PASSED=false" >> $env:GITHUB_ENV
-        echo "WIFI_TEST_PASSED=unknown" >> $env:GITHUB_ENV
-        echo "TEMP_TEST_PASSED=unknown" >> $env:GITHUB_ENV
-        echo "BT_TEST_PASSED=unknown" >> $env:GITHUB_ENV
-        echo "FAILED_TESTS=" >> $env:GITHUB_ENV
-        echo "CI variables initialized"
+# ==============================================================================
+# JOB 2 — AUTO CLEAN
+# ==============================================================================
 
-    - name: Auto-clean (low disk space)
-      shell: pwsh
-      run: |
-        $drive = Get-PSDrive -Name C
-        $freeGb = [math]::Round($drive.Free / 1GB, 2)
-        Write-Host "Free disk space on C: $freeGb GB"
+  auto-clean:
+    runs-on: self-hosted
+    needs: init-ci-vars
+    steps:
+      - shell: powershell
+        run: |
+          $drive = Get-PSDrive -Name C
+          $freeGb = [math]::Round($drive.Free / 1GB, 2)
+          if ($freeGb -lt 10) {
+            Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
 
-        if ($freeGb -lt 10) {
-          Write-Host "Low disk space detected (<10 GB). Cleaning workspace..."
-          Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-        }
+# ==============================================================================
+# JOB 3 — INSTALL HOST TOOLS
+# ==============================================================================
 
-    - name: Install host tools
-      shell: cmd
-      run: |
-        where python
-        python --version
-        python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
-        python -m pip install --upgrade pip
-        python -m pip install esptool mpremote
+  install-tools:
+    runs-on: self-hosted
+    needs: auto-clean
+    steps:
+      - shell: cmd
+        run: |
+          where python
+          python --version
+          python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+          python -m pip install --upgrade pip
+          python -m pip install esptool mpremote
 
-    - name: Preflight ESP32 connectivity
-      shell: cmd
-      run: |
-        echo Preflight: checking ESP32 on %ESP_PORT%...
-        python -m mpremote connect %ESP_PORT% exec "print('ESP detected')"
-        if errorlevel 1 exit /b 1
-        echo Preflight OK
+# ==============================================================================
+# JOB 4 — PREFLIGHT
+# ==============================================================================
 
-    - name: Flash ESP32 firmware
-      shell: cmd
-      run: |
-        python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
-        python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+  preflight:
+    runs-on: self-hosted
+    needs: install-tools
+    steps:
+      - shell: cmd
+        run: |
+          echo Preflight: checking ESP32 on %ESP_PORT%...
+          python -m mpremote connect %ESP_PORT% reset
+          if errorlevel 1 exit /b 1
 
-    - name: Wait after flash
-      shell: pwsh
-      run: Start-Sleep -Seconds 15
+# ==============================================================================
+# JOB 5 — WAIT AFTER PREFLIGHT
+# ==============================================================================
 
-    - name: Wait for MicroPython REPL
-      shell: cmd
-      run: |
-        set READY=0
-        for /L %%i in (1,1,5) do (
-          python -m mpremote connect %ESP_PORT% exec "print('READY')" >nul 2>&1 && (
-            echo MicroPython READY
-            set READY=1
-            goto done
+  wait-after-preflight:
+    runs-on: self-hosted
+    needs: preflight
+    steps:
+      - shell: powershell
+        run: Start-Sleep -Seconds 15
+
+# ==============================================================================
+# JOB 6 — FLASH FIRMWARE
+# ==============================================================================
+
+  flash-firmware:
+    runs-on: self-hosted
+    needs: wait-after-preflight
+    steps:
+      - shell: cmd
+        run: |
+          python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+          python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+
+# ==============================================================================
+# JOB 7 — WAIT AFTER FLASH
+# ==============================================================================
+
+  wait-after-flashing:
+    runs-on: self-hosted
+    needs: flash-firmware
+    steps:
+      - shell: powershell
+        run: Start-Sleep -Seconds 15
+
+# ==============================================================================
+# JOB 8 — WAIT FOR REPL
+# ==============================================================================
+
+  wait-for-repl:
+    runs-on: self-hosted
+    needs: wait-after-flashing
+    steps:
+      - shell: cmd
+        run: |
+          set READY=0
+          for /L %%i in (1,1,5) do (
+            python -m mpremote connect %ESP_PORT% exec "print('READY')"
+            if not errorlevel 1 (
+              set READY=1
+              goto done
+            )
+            timeout /t 3 >nul
           )
-          timeout /t 3 >nul
-        )
-        :done
-        if "%READY%"=="0" exit /b 1
+          :done
+          if "%READY%"=="0" exit /b 1
 
-    - name: Upload test files to ESP32
-      shell: cmd
-      run: |
-        for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+# ==============================================================================
+# JOB 9 — UPLOAD TEST FILES
+# ==============================================================================
 
-    - name: System Self-Test (HARD GATE)
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > selftest.txt
-        findstr /C:"CI_RESULT: FAIL" selftest.txt > nul
-        if %errorlevel%==0 (
-          echo SELF_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=System Self-Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo SELF_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+  upload-tests:
+    runs-on: self-hosted
+    needs: wait-for-repl
+    steps:
+      - shell: cmd
+        run: |
+          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_gps\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-    - name: DS18B20 Temperature Test
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
-        findstr /C:"CI_RESULT: FAIL" temp.txt > nul
-        if %errorlevel%==0 (
-          echo TEMP_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=DS18B20 Temp-Sensor Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo TEMP_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+# ==============================================================================
+# JOB 10 — SYSTEM SELF TEST
+# ==============================================================================
 
-    - name: Reset before Wi-Fi
-      shell: pwsh
-      run: |
-        python -m mpremote connect $env:ESP_PORT reset *> $null
-        Start-Sleep -Seconds 5
+  system-self-test:
+    runs-on: self-hosted
+    needs: upload-tests
+    outputs:
+      self_test_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
-    - name: Wi-Fi Test
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
-        findstr /C:"CI_RESULT: FAIL" wifi.txt > nul
-        if %errorlevel%==0 (
-          echo WIFI_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=Wi-Fi Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo WIFI_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+# ==============================================================================
+# JOB 11 — TEMPERATURE TEST
+# ==============================================================================
 
-    - name: Bluetooth Test
-      shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
-        findstr /C:"CI_RESULT: FAIL" bt.txt > nul
-        if %errorlevel%==0 (
-          echo BT_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=Bluetooth Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo BT_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+  temp-test:
+    runs-on: self-hosted
+    needs: system-self-test
+    outputs:
+      temp_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
-    - name: Final CI Verdict
-      shell: pwsh
-      run: |
-        Write-Host "SELF_TEST_PASSED = $env:SELF_TEST_PASSED"
-        Write-Host "TEMP_TEST_PASSED = $env:TEMP_TEST_PASSED"
-        Write-Host "WIFI_TEST_PASSED = $env:WIFI_TEST_PASSED"
-        Write-Host "BT_TEST_PASSED   = $env:BT_TEST_PASSED"
-        Write-Host "FAILED_TESTS     = $env:FAILED_TESTS"
+# ==============================================================================
+# JOB 12 — WIFI TEST
+# ==============================================================================
 
-        if ($env:SELF_TEST_PASSED -ne "true") {
-          throw "Final verdict: System Self-Test failed"
-        }
+  wifi-test:
+    runs-on: self-hosted
+    needs: temp-test
+    outputs:
+      wifi_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - shell: powershell
+        run: |
+          python -m mpremote connect $env:ESP_PORT reset *> $null
+          Start-Sleep -Seconds 5
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
-        if (
-          $env:TEMP_TEST_PASSED -ne "true" -or
-          $env:WIFI_TEST_PASSED -ne "true" -or
-          $env:BT_TEST_PASSED   -ne "true"
-        ) {
-          throw "Final verdict: Test failures detected: $env:FAILED_TESTS"
-        }
+# ==============================================================================
+# JOB 13 — BLUETOOTH TEST
+# ==============================================================================
 
-        Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+  bluetooth-test:
+    runs-on: self-hosted
+    needs: wifi-test
+    outputs:
+      bt_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
-    - name: Archive logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: esp32-ci-logs
-        path: "*.txt"
+# ==============================================================================
+# JOB 14 — GPS TEST
+# ==============================================================================
+
+  gps-test:
+    runs-on: self-hosted
+    needs: bluetooth-test
+    outputs:
+      gps_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+# ==============================================================================
+# JOB 15 — FINAL VERDICT
+# ==============================================================================
+
+  final-verdict:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - temp-test
+      - wifi-test
+      - bluetooth-test
+      - gps-test
+    steps:
+      - shell: powershell
+        run: |
+          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
+          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
+          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
+          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
+          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
+
+          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
+            throw "Final verdict: One or more functional tests failed"
+          }
+
+          Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: esp32-ci-logs
+          path: "*.txt"
+
+
+
