@@ -187,7 +187,7 @@ jobs:
       run: |
            set READY=0
            for /L %%i in (1,1,5) do (
-              python -m mpremote connect --no-soft-reset %ESP_PORT% exec "print('READY')"
+              python -m mpremote connect %ESP_PORT% exec "print('READY')"
               if not errorlevel 1 (
                 echo MicroPython READY
                 set READY=1
