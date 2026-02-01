@@ -289,25 +289,27 @@ jobs:
     - name: Final CI Verdict
       shell: powershell
       run: |
-        Write-Host "SELF_TEST_PASSED = $env:SELF_TEST_PASSED"
-        Write-Host "TEMP_TEST_PASSED = $env:TEMP_TEST_PASSED"
-        Write-Host "WIFI_TEST_PASSED = $env:WIFI_TEST_PASSED"
-        Write-Host "BT_TEST_PASSED   = $env:BT_TEST_PASSED"
+        $SELF = ($env:SELF_TEST_PASSED   ?? "").Trim().ToLower()
+        $TEMP = ($env:TEMP_TEST_PASSED   ?? "").Trim().ToLower()
+        $WIFI = ($env:WIFI_TEST_PASSED   ?? "").Trim().ToLower()
+        $BT   = ($env:BT_TEST_PASSED     ?? "").Trim().ToLower()
+
+        Write-Host "SELF_TEST_PASSED = $SELF"
+        Write-Host "TEMP_TEST_PASSED = $TEMP"
+        Write-Host "WIFI_TEST_PASSED = $WIFI"
+        Write-Host "BT_TEST_PASSED   = $BT"
         Write-Host "FAILED_TESTS     = $env:FAILED_TESTS"
 
-        if ($env:SELF_TEST_PASSED -ne "true") {
+        if ($SELF -ne "true") {
           throw "Final verdict: System Self-Test failed"
         }
 
-        if (
-          $env:TEMP_TEST_PASSED -ne "true" -or
-          $env:WIFI_TEST_PASSED -ne "true" -or
-          $env:BT_TEST_PASSED   -ne "true"
-        ) {
+        if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
           throw "Final verdict: Test failures detected: $env:FAILED_TESTS"
-        }
+         }
 
-        Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+          Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+
 
     # ---------------------------------------------------------------------------
     # LOG ARCHIVAL
