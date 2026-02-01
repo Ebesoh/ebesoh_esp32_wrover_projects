@@ -114,16 +114,15 @@ jobs:
 
   init-ci-vars:
     runs-on: self-hosted
-    name: Init CI variables
     steps:
-    - uses: actions/checkout@v4
-    - shell: powershell
-      run: |
-        "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
-        "WIFI_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
-        "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
-        "BT_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
-        "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
+      - uses: actions/checkout@v4
+      - shell: powershell
+        run: |
+          "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
+          "WIFI_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "BT_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
 # ==============================================================================
 # JOB 2 — AUTO CLEAN
@@ -132,15 +131,14 @@ jobs:
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
-    name: Auto-clean (low disk space)
     steps:
-    - shell: powershell
-      run: |
-        $drive = Get-PSDrive -Name C
-        $freeGb = [math]::Round($drive.Free / 1GB, 2)
-        if ($freeGb -lt 10) {
-          Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-        }
+      - shell: powershell
+        run: |
+          $drive = Get-PSDrive -Name C
+          $freeGb = [math]::Round($drive.Free / 1GB, 2)
+          if ($freeGb -lt 10) {
+            Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
 
 # ==============================================================================
 # JOB 3 — INSTALL HOST TOOLS
@@ -149,15 +147,14 @@ jobs:
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
-    name: Install host tools
     steps:
-    - shell: cmd
-      run: |
-        where python
-        python --version
-        python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
-        python -m pip install --upgrade pip
-        python -m pip install esptool mpremote
+      - shell: cmd
+        run: |
+          where python
+          python --version
+          python -c "import serial.tools.list_ports; print([p.device for p in serial.tools.list_ports.comports()])"
+          python -m pip install --upgrade pip
+          python -m pip install esptool mpremote
 
 # ==============================================================================
 # JOB 4 — PREFLIGHT
@@ -166,13 +163,12 @@ jobs:
   preflight:
     runs-on: self-hosted
     needs: install-tools
-    name: Preflight ESP32 connectivity
     steps:
-    - shell: cmd
-      run: |
-        echo Preflight: checking ESP32 on %ESP_PORT%...
-        python -m mpremote connect %ESP_PORT% reset
-        if errorlevel 1 exit /b 1
+      - shell: cmd
+        run: |
+          echo Preflight: checking ESP32 on %ESP_PORT%...
+          python -m mpremote connect %ESP_PORT% reset
+          if errorlevel 1 exit /b 1
 
 # ==============================================================================
 # JOB 5 — WAIT AFTER PREFLIGHT
@@ -181,10 +177,9 @@ jobs:
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
-    name: Wait after preflight
     steps:
-    - shell: powershell
-      run: Start-Sleep -Seconds 15
+      - shell: powershell
+        run: Start-Sleep -Seconds 15
 
 # ==============================================================================
 # JOB 6 — FLASH FIRMWARE
@@ -193,47 +188,44 @@ jobs:
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
-    name: Flash ESP32 firmware
     steps:
-    - shell: cmd
-      run: |
-        python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
-        python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+      - shell: cmd
+        run: |
+          python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
+          python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
 
 # ==============================================================================
-# JOB 7 — WAIT AFTER FLASHING
+# JOB 7 — WAIT AFTER FLASH
 # ==============================================================================
 
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
-    name: Wait after flashing
     steps:
-    - shell: powershell
-      run: Start-Sleep -Seconds 15
+      - shell: powershell
+        run: Start-Sleep -Seconds 15
 
 # ==============================================================================
-# JOB 8 — WAIT FOR MICROPYTHON REPL
+# JOB 8 — WAIT FOR REPL
 # ==============================================================================
 
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
-    name: Wait for MicroPython REPL
     steps:
-    - shell: cmd
-      run: |
-        set READY=0
-        for /L %%i in (1,1,5) do (
-          python -m mpremote connect %ESP_PORT% exec "print('READY')"
-          if not errorlevel 1 (
-            set READY=1
-            goto done
+      - shell: cmd
+        run: |
+          set READY=0
+          for /L %%i in (1,1,5) do (
+            python -m mpremote connect %ESP_PORT% exec "print('READY')"
+            if not errorlevel 1 (
+              set READY=1
+              goto done
+            )
+            timeout /t 3 >nul
           )
-          timeout /t 3 >nul
-        )
-        :done
-        if "%READY%"=="0" exit /b 1
+          :done
+          if "%READY%"=="0" exit /b 1
 
 # ==============================================================================
 # JOB 9 — UPLOAD TEST FILES
@@ -242,19 +234,19 @@ jobs:
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
-    name: Upload test files to ESP32
     steps:
-    - shell: cmd
-      run: |
-        for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-        for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+      - shell: cmd
+        run: |
+          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
 # ==============================================================================
-# JOB 10 — SYSTEM SELF TEST (HARD GATE)
+# JOB 10 — SYSTEM SELF TEST (EXPORTS OUTPUT)
 # ==============================================================================
-system-self-test:
+
+  system-self-test:
     runs-on: self-hosted
     needs: upload-tests
 
@@ -262,18 +254,17 @@ system-self-test:
       self_test_passed: ${{ steps.result.outputs.passed }}
 
     steps:
-     - name: system self-Test
-       id: result
-       shell: cmd
-       run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
-        if errorlevel 1 (
-          echo passed=false>>"%GITHUB_OUTPUT%"
-          exit /b 1
-        ) else (
-          echo passed=true>>"%GITHUB_OUTPUT%"
-        )
-
+      - name: System Self-Test
+        id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
 # ==============================================================================
 # JOB 11 — TEMPERATURE TEST
@@ -282,18 +273,21 @@ system-self-test:
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
-    name: DS18B20 Temperature Test
+
+    outputs:
+      temp_passed: ${{ steps.result.outputs.passed }}
+
     steps:
-    - shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
-        if errorlevel 1 (
-          echo TEMP_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=DS18B20 Temp-Sensor Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo TEMP_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
 # ==============================================================================
 # JOB 12 — WIFI TEST
@@ -302,22 +296,25 @@ system-self-test:
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
-    name: Wi-Fi Test
+
+    outputs:
+      wifi_passed: ${{ steps.result.outputs.passed }}
+
     steps:
-    - shell: powershell
-      run: |
-        python -m mpremote connect $env:ESP_PORT reset *> $null
-        Start-Sleep -Seconds 5
-    - shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
-        if errorlevel 1 (
-          echo WIFI_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=Wi-Fi Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo WIFI_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+      - shell: powershell
+        run: |
+          python -m mpremote connect $env:ESP_PORT reset *> $null
+          Start-Sleep -Seconds 5
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
 # ==============================================================================
 # JOB 13 — BLUETOOTH TEST
@@ -326,30 +323,37 @@ system-self-test:
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
-    name: Bluetooth Test
+
+    outputs:
+      bt_passed: ${{ steps.result.outputs.passed }}
+
     steps:
-    - shell: cmd
-      run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
-        if errorlevel 1 (
-          echo BT_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=Bluetooth Test >> %GITHUB_ENV%
-          exit /b 1
-        ) else (
-          echo BT_TEST_PASSED=true >> %GITHUB_ENV%
-        )
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
 
 # ==============================================================================
-# JOB 14 — FINAL VERDICT + ARTIFACTS
+# JOB 14 — FINAL VERDICT
 # ==============================================================================
 
   final-verdict:
     runs-on: self-hosted
-    needs: bluetooth-test
-    name: Final CI Verdict
+    needs:
+      - system-self-test
+      - temp-test
+      - wifi-test
+      - bluetooth-test
+
     steps:
-    - shell: powershell
-      run: |
+      - shell: powershell
+        run: |
           $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
           $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
           $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
@@ -361,18 +365,19 @@ system-self-test:
           Write-Host "BT_TEST_PASSED   = $BT"
 
           if ($SELF -ne "true") {
-             throw "Final verdict: System Self-Test failed"
+            throw "Final verdict: System Self-Test failed"
           }
 
           if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
-             throw "Final verdict: One or more functional tests failed"
-           }
+            throw "Final verdict: One or more functional tests failed"
+          }
 
-           Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+          Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: esp32-ci-logs
+          path: "*.txt"
 
 
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: esp32-ci-logs
-        path: "*.txt"
