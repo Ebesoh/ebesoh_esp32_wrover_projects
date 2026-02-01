@@ -254,22 +254,26 @@ jobs:
 # ==============================================================================
 # JOB 10 — SYSTEM SELF TEST (HARD GATE)
 # ==============================================================================
-
-  system-self-test:
+system-self-test:
     runs-on: self-hosted
     needs: upload-tests
-    name: System Self-Test
+
+    outputs:
+      self_test_passed: ${{ steps.result.outputs.passed }}
+
     steps:
-    - shell: cmd
-      run: |
+     - name: system self-Test
+       id: result
+       shell: cmd
+       run: |
         python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
         if errorlevel 1 (
-          echo SELF_TEST_PASSED=false >> %GITHUB_ENV%
-          echo FAILED_TESTS=System Self-Test >> %GITHUB_ENV%
+          echo passed=false>>"%GITHUB_OUTPUT%"
           exit /b 1
         ) else (
-          echo SELF_TEST_PASSED=true >> %GITHUB_ENV%
+          echo passed=true>>"%GITHUB_OUTPUT%"
         )
+
 
 # ==============================================================================
 # JOB 11 — TEMPERATURE TEST
@@ -346,35 +350,23 @@ jobs:
     steps:
     - shell: powershell
       run: |
-          $SELF = $env:SELF_TEST_PASSED
-          if ($null -eq $SELF) { $SELF = "" }
-          $SELF = $SELF.Trim().ToLower()
-
-           $TEMP = $env:TEMP_TEST_PASSED
-           if ($null -eq $TEMP) { $TEMP = "" }
-           $TEMP = $TEMP.Trim().ToLower()
-
-          $WIFI = $env:WIFI_TEST_PASSED
-          if ($null -eq $WIFI) { $WIFI = "" }
-          $WIFI = $WIFI.Trim().ToLower()
-
-          $BT = $env:BT_TEST_PASSED
-          if ($null -eq $BT) { $BT = "" }
-          $BT = $BT.Trim().ToLower()
+          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
+          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
+          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
+          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
 
           Write-Host "SELF_TEST_PASSED = $SELF"
           Write-Host "TEMP_TEST_PASSED = $TEMP"
           Write-Host "WIFI_TEST_PASSED = $WIFI"
           Write-Host "BT_TEST_PASSED   = $BT"
-          Write-Host "FAILED_TESTS     = $env:FAILED_TESTS"
 
           if ($SELF -ne "true") {
              throw "Final verdict: System Self-Test failed"
           }
 
           if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
-            throw "Final verdict: Test failures detected: $env:FAILED_TESTS"
-          }
+             throw "Final verdict: One or more functional tests failed"
+           }
 
            Write-Host "FINAL VERDICT: ALL TESTS PASSED"
 
