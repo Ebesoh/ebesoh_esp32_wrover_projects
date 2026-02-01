@@ -96,7 +96,6 @@
 # It favors clarity, repeatability, and hardware safety over speed or cleverness.
 #
 # ==============================================================================
-
 name: ESP32-WROVER DEVKIT CI
 
 on:
@@ -252,19 +251,16 @@ jobs:
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
 # ==============================================================================
-# JOB 10 — SYSTEM SELF TEST (EXPORTS OUTPUT)
+# JOB 10 — SYSTEM SELF TEST
 # ==============================================================================
 
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
-
     outputs:
       self_test_passed: ${{ steps.result.outputs.passed }}
-
     steps:
-      - name: System Self-Test
-        id: result
+      - id: result
         shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
@@ -282,10 +278,8 @@ jobs:
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
-
     outputs:
       temp_passed: ${{ steps.result.outputs.passed }}
-
     steps:
       - id: result
         shell: cmd
@@ -305,10 +299,8 @@ jobs:
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
-
     outputs:
       wifi_passed: ${{ steps.result.outputs.passed }}
-
     steps:
       - shell: powershell
         run: |
@@ -332,10 +324,8 @@ jobs:
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
-
     outputs:
       bt_passed: ${{ steps.result.outputs.passed }}
-
     steps:
       - id: result
         shell: cmd
@@ -352,13 +342,11 @@ jobs:
 # JOB 14 — GPS TEST
 # ==============================================================================
 
-gps-test:
+  gps-test:
     runs-on: self-hosted
     needs: bluetooth-test
-
     outputs:
       gps_passed: ${{ steps.result.outputs.passed }}
-
     steps:
       - id: result
         shell: cmd
@@ -372,7 +360,7 @@ gps-test:
           )
 
 # ==============================================================================
-# JOB 14 — FINAL VERDICT
+# JOB 15 — FINAL VERDICT
 # ==============================================================================
 
   final-verdict:
@@ -382,7 +370,7 @@ gps-test:
       - temp-test
       - wifi-test
       - bluetooth-test
-
+      - gps-test
     steps:
       - shell: powershell
         run: |
@@ -390,19 +378,9 @@ gps-test:
           $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
           $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
           $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
-          $GPS   = "${{ needs.gps-test.outputs.gps_passed }}"
+          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
 
-          Write-Host "SELF_TEST_PASSED = $SELF"
-          Write-Host "TEMP_TEST_PASSED = $TEMP"
-          Write-Host "WIFI_TEST_PASSED = $WIFI"
-          Write-Host "BT_TEST_PASSED   = $BT"
-          Write-Host "GPS_TEST_PASSED   = $GPS"
-
-          if ($SELF -ne "true") {
-            throw "Final verdict: System Self-Test failed"
-          }
-
-          if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
+          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
             throw "Final verdict: One or more functional tests failed"
           }
 
@@ -413,5 +391,6 @@ gps-test:
         with:
           name: esp32-ci-logs
           path: "*.txt"
+
 
 
