@@ -105,11 +105,16 @@ name: ESP32-WROVER DEVKIT CI
 # ------------------------------------------------------------------------------
 # Workflow triggers
 # ------------------------------------------------------------------------------
-# Runs automatically on pushes to main
-# Can also be triggered manually from the GitHub UI
+# This workflow can be configured to run automatically on pushes to `main`
+# by enabling:
+#   push:
+#     branches: [ main ]
+#
+# It can also be triggered manually from the GitHub UI.
+# The current configuration uses manual triggering only, since the same
+# test suite can be executed from both Jenkins and GitHub Actions.
+
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 # ------------------------------------------------------------------------------
