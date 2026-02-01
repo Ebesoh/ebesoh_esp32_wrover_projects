@@ -214,7 +214,7 @@ jobs:
         )
 
     - name: Reset before Wi-Fi
-      shell: pwsh
+      shell: powershell
       run: |
         python -m mpremote connect $env:ESP_PORT reset *> $null
         Start-Sleep -Seconds 5
@@ -246,7 +246,7 @@ jobs:
         )
 
     - name: Final CI Verdict
-      shell: pwsh
+      shell: powershell
       run: |
         Write-Host "SELF_TEST_PASSED = $env:SELF_TEST_PASSED"
         Write-Host "TEMP_TEST_PASSED = $env:TEMP_TEST_PASSED"
