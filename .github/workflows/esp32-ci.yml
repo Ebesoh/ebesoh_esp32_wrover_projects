@@ -209,10 +209,10 @@ jobs:
     - name: Upload test files to ESP32
       shell: cmd
       run: |
-        for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% --no-soft-reset fs cp "%%f" :
-        for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% --no-soft-reset fs cp "%%f" :
-        for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% --no-soft-reset fs cp "%%f" :
-        for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% --no-soft-reset fs cp "%%f" :
+        for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+        for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+        for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+        for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
     # ---------------------------------------------------------------------------
     # SYSTEM SELF-TEST (HARD GATE)
@@ -220,7 +220,7 @@ jobs:
     - name: System Self-Test (HARD GATE)
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% --no-soft-reset exec "import test_runner_system; test_runner_system.main()" > selftest.txt
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > selftest.txt
         findstr /C:"CI_RESULT: FAIL" selftest.txt > nul
         if %errorlevel%==0 (
           echo SELF_TEST_PASSED=false >> %GITHUB_ENV%
@@ -236,7 +236,7 @@ jobs:
     - name: DS18B20 Temperature Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% --no-soft-reset exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()" > temp.txt
         findstr /C:"CI_RESULT: FAIL" temp.txt > nul
         if %errorlevel%==0 (
           echo TEMP_TEST_PASSED=false >> %GITHUB_ENV%
@@ -261,7 +261,7 @@ jobs:
     - name: Wi-Fi Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% --no-soft-reset exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
+        python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()" > wifi.txt
         findstr /C:"CI_RESULT: FAIL" wifi.txt > nul
         if %errorlevel%==0 (
           echo WIFI_TEST_PASSED=false >> %GITHUB_ENV%
@@ -277,7 +277,7 @@ jobs:
     - name: Bluetooth Test
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% --no-soft-reset exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()" > bt.txt
         findstr /C:"CI_RESULT: FAIL" bt.txt > nul
         if %errorlevel%==0 (
           echo BT_TEST_PASSED=false >> %GITHUB_ENV%
