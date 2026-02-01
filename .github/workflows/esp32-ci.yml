@@ -162,9 +162,13 @@ jobs:
       shell: cmd
       run: |
         echo Preflight: checking ESP32 on %ESP_PORT%...
-         python -m mpremote connect %ESP_PORT% exec "print('ESP detected')"
+         python -m mpremote connect %ESP_PORT% reset
         if errorlevel 1 exit /b 1
         echo Preflight OK
+        
+    - name: Wait after flash
+      shell: powershell
+      run: Start-Sleep -Seconds 15
 
     # ---------------------------------------------------------------------------
     # FIRMWARE FLASH
