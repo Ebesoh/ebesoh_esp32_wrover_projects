@@ -220,9 +220,8 @@ jobs:
     - name: System Self-Test (HARD GATE)
       shell: cmd
       run: |
-        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()" > selftest.txt
-        findstr /C:"CI_RESULT: FAIL" selftest.txt > nul
-        if %errorlevel%==0 (
+        python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
+        if errorlevel 1 (
           echo SELF_TEST_PASSED=false >> %GITHUB_ENV%
           echo FAILED_TESTS=System Self-Test >> %GITHUB_ENV%
           exit /b 1
