@@ -90,7 +90,7 @@
 #
 # ===============================================================================
 
-name: ESP32-WROVER Hardware CI
+name: ESP32-WROVER DEVKIT CI
 
 on:
   push:
@@ -181,7 +181,7 @@ jobs:
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
-    name: Wait after reset
+    name: Wait after preflight
     steps:
     - shell: powershell
       run: Start-Sleep -Seconds 15
@@ -201,19 +201,19 @@ jobs:
         python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
 
 # ==============================================================================
-# JOB 5 — WAIT AFTER FLASHING
+# JOB 7 — WAIT AFTER FLASHING
 # ==============================================================================
 
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
-    name: Wait after reset
+    name: Wait after flashing
     steps:
     - shell: powershell
       run: Start-Sleep -Seconds 15
 
 # ==============================================================================
-# JOB 7 — WAIT FOR MICROPYTHON REPL
+# JOB 8 — WAIT FOR MICROPYTHON REPL
 # ==============================================================================
 
   wait-for-repl:
@@ -236,7 +236,7 @@ jobs:
         if "%READY%"=="0" exit /b 1
 
 # ==============================================================================
-# JOB 8 — UPLOAD TEST FILES
+# JOB 9 — UPLOAD TEST FILES
 # ==============================================================================
 
   upload-tests:
@@ -252,7 +252,7 @@ jobs:
         for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
 # ==============================================================================
-# JOB 9 — SYSTEM SELF TEST (HARD GATE)
+# JOB 10 — SYSTEM SELF TEST (HARD GATE)
 # ==============================================================================
 
   system-self-test:
@@ -272,7 +272,7 @@ jobs:
         )
 
 # ==============================================================================
-# JOB 10 — TEMPERATURE TEST
+# JOB 11 — TEMPERATURE TEST
 # ==============================================================================
 
   temp-test:
@@ -292,7 +292,7 @@ jobs:
         )
 
 # ==============================================================================
-# JOB 11 — WIFI TEST
+# JOB 12 — WIFI TEST
 # ==============================================================================
 
   wifi-test:
@@ -316,7 +316,7 @@ jobs:
         )
 
 # ==============================================================================
-# JOB 12 — BLUETOOTH TEST
+# JOB 13 — BLUETOOTH TEST
 # ==============================================================================
 
   bluetooth-test:
@@ -336,7 +336,7 @@ jobs:
         )
 
 # ==============================================================================
-# JOB 13 — FINAL VERDICT + ARTIFACTS
+# JOB 14 — FINAL VERDICT + ARTIFACTS
 # ==============================================================================
 
   final-verdict:
@@ -346,26 +346,38 @@ jobs:
     steps:
     - shell: powershell
       run: |
-        $SELF = ($env:SELF_TEST_PASSED ?? "").Trim().ToLower()
-        $TEMP = ($env:TEMP_TEST_PASSED ?? "").Trim().ToLower()
-        $WIFI = ($env:WIFI_TEST_PASSED ?? "").Trim().ToLower()
-        $BT   = ($env:BT_TEST_PASSED   ?? "").Trim().ToLower()
+          $SELF = $env:SELF_TEST_PASSED
+          if ($null -eq $SELF) { $SELF = "" }
+          $SELF = $SELF.Trim().ToLower()
 
-        Write-Host "SELF_TEST_PASSED = $SELF"
-        Write-Host "TEMP_TEST_PASSED = $TEMP"
-        Write-Host "WIFI_TEST_PASSED = $WIFI"
-        Write-Host "BT_TEST_PASSED   = $BT"
-        Write-Host "FAILED_TESTS     = $env:FAILED_TESTS"
+           $TEMP = $env:TEMP_TEST_PASSED
+           if ($null -eq $TEMP) { $TEMP = "" }
+           $TEMP = $TEMP.Trim().ToLower()
 
-        if ($SELF -ne "true") {
-          throw "Final verdict: System Self-Test failed"
-        }
+          $WIFI = $env:WIFI_TEST_PASSED
+          if ($null -eq $WIFI) { $WIFI = "" }
+          $WIFI = $WIFI.Trim().ToLower()
 
-        if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
-          throw "Final verdict: Test failures detected: $env:FAILED_TESTS"
-        }
+          $BT = $env:BT_TEST_PASSED
+          if ($null -eq $BT) { $BT = "" }
+          $BT = $BT.Trim().ToLower()
 
-        Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+          Write-Host "SELF_TEST_PASSED = $SELF"
+          Write-Host "TEMP_TEST_PASSED = $TEMP"
+          Write-Host "WIFI_TEST_PASSED = $WIFI"
+          Write-Host "BT_TEST_PASSED   = $BT"
+          Write-Host "FAILED_TESTS     = $env:FAILED_TESTS"
+
+          if ($SELF -ne "true") {
+             throw "Final verdict: System Self-Test failed"
+          }
+
+          if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
+            throw "Final verdict: Test failures detected: $env:FAILED_TESTS"
+          }
+
+           Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+
 
     - uses: actions/upload-artifact@v4
       if: always()
