@@ -1,90 +1,99 @@
 /*
 ===============================================================================
-ESP32-WROVER HARDWARE CI PIPELINE — ARCHITECTURE OVERVIEW by Ebesoh Ebesoh 
+ESP32-WROVER HARDWARE CI PIPELINE — ARCHITECTURE OVERVIEW
+Author: Ebesoh Ebesoh
 ===============================================================================
 
-PURPOSE
--------
-This Jenkins pipeline provides a deterministic, hardware-in-the-loop CI system
-for ESP32-WROVER boards running MicroPython. It flashes firmware, deploys test
-code, executes hardware validation suites, and produces a single authoritative
-CI verdict.
+WHAT THIS PIPELINE IS FOR
+-------------------------
+This Jenkins pipeline is a hardware-in-the-loop CI system for ESP32-WROVER
+boards running MicroPython.
 
-The pipeline is designed to fail fast on critical issues, isolate test domains,
-and remain stable when executed repeatedly on the same physical device.
+It does four things, every time, in a predictable way:
+- Flashes known-good firmware
+- Deploys test code to the board
+- Runs real hardware tests
+- Produces one clear pass/fail result
+
+The goal is simple: if this pipeline says “PASS”, the firmware and hardware
+work together as expected. If it says “FAIL”, something is genuinely broken.
+
+It is designed to be repeatable, conservative, and safe to run over and over
+on the same physical device.
 
 -------------------------------------------------------------------------------
 
-HIGH-LEVEL FLOW
----------------
-1. Host Preparation
-   - Initialize mutable CI state variables
-   - Auto-clean workspace if disk space is low
-   - Install required host-side tooling (Python, esptool, mpremote)
+HOW IT FLOWS
+------------
+1. Host Setup
+   - Initialize CI state variables
+   - Clean the workspace if disk space is running low
+   - Install required host tools (Python, esptool, mpremote)
 
 2. Hardware Bring-Up
-   - Preflight connectivity check to ensure ESP32 is reachable
-   - Full flash erase + MicroPython firmware installation
-   - Wait until MicroPython REPL is responsive
+   - Verify the ESP32 is reachable over USB
+   - Fully erase flash and install MicroPython firmware
+   - Wait until the MicroPython REPL responds
 
 3. Test Deployment
-   - Upload all test modules to the ESP32 filesystem via mpremote
+   - Upload all test modules to the ESP32 filesystem using mpremote
 
-4. Test Execution (Ordered, Isolated)
-   - System Self-Test (HARD GATE)
+4. Test Execution (Strict Order, No Shortcuts)
+   - System self-test (this is a hard gate)
    - DS18B20 temperature sensor validation
-   - Soft reset to clear Wi-Fi/network state
-   - Wi-Fi functional test suite
-   - Bluetooth (BLE) functional test suite
+   - Soft reset to clear Wi-Fi and network state
+   - Wi-Fi functional tests
+   - Bluetooth (BLE) functional tests
 
-5. Final CI Verdict
-   - Aggregate all results
-   - Produce a single pass/fail decision
-   - Archive logs for traceability
+5. Final CI Decision
+   - Collect all test results
+   - Produce a single, authoritative pass/fail verdict
+   - Archive logs for traceability and debugging
 
 -------------------------------------------------------------------------------
 
-DESIGN PRINCIPLES
+CORE DESIGN IDEAS
 -----------------
 • HARD GATES
-  The system self-test is a non-negotiable gate. Failure immediately stops
-  the pipeline to avoid meaningless downstream results.
+  The system self-test is non-negotiable. If it fails, the pipeline stops
+  immediately. There’s no point running further tests on a broken baseline.
 
 • STATE ISOLATION
-  A soft reset is performed before Wi-Fi testing to avoid cross-contamination
-  from previous tests or driver state.
+  A soft reset is performed before Wi-Fi testing to prevent leftover state
+  from earlier tests affecting the results.
 
 • SINGLE SOURCE OF TRUTH
-  Each test suite emits a clear "CI_RESULT: PASS|FAIL" marker.
-  Jenkins evaluates results only by parsing this marker.
+  Each test suite prints an explicit marker:
+      CI_RESULT: PASS or CI_RESULT: FAIL
+  Jenkins does not guess. It only trusts this marker.
 
 • DETERMINISTIC ORDER
-  Tests run in a fixed, documented order. No parallelism is used to protect
-  shared hardware and ensure repeatability.
+  Tests always run in the same order. No parallel execution.
+  This protects shared hardware and makes failures reproducible.
 
 • HARDWARE SAFETY
-  Concurrent pipeline executions are disabled to prevent multiple jobs from
-  accessing the same ESP32 simultaneously.
+  Only one pipeline run is allowed at a time.
+  This prevents multiple jobs from fighting over the same ESP32.
 
 -------------------------------------------------------------------------------
 
-RESULT HANDLING
----------------
-- All test output is redirected to text files (*.txt)
+HOW RESULTS ARE HANDLED
+----------------------
+- All test output is written to text files (*.txt)
 - Jenkins scans logs using `findstr` to detect failures
-- Artifacts are always archived for post-mortem analysis
-- Final verdict is explicit and authoritative
+- Logs are always archived, even on failure
+- The final result is explicit and unambiguous
 
 -------------------------------------------------------------------------------
 
-INTENDED USE
-------------
-- Local Jenkins agents with direct USB access to ESP32 hardware
-- Continuous validation of firmware + hardware integration
-- Regression testing after firmware, driver, or test changes
+WHEN TO USE THIS
+----------------
+- Jenkins agents with direct USB access to ESP32 hardware
+- Continuous validation of firmware and hardware integration
+- Regression testing after changes to firmware, drivers, or tests
 
-This pipeline is intentionally verbose, explicit, and conservative.
-Clarity, traceability, and hardware safety are prioritized over speed.
+This pipeline is intentionally verbose and cautious.
+Speed is secondary. Clarity, repeatability, and hardware safety come first.
 
 ===============================================================================
 */
