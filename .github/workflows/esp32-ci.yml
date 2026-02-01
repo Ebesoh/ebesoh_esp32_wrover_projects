@@ -129,6 +129,7 @@ jobs:
           "WIFI_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "BT_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "GPS_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
 # ==============================================================================
@@ -247,6 +248,7 @@ jobs:
           for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_gps\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
 # ==============================================================================
@@ -347,6 +349,29 @@ jobs:
           )
 
 # ==============================================================================
+# JOB 14 — GPS TEST
+# ==============================================================================
+
+gps-test:
+    runs-on: self-hosted
+    needs: bluetooth-test
+
+    outputs:
+      gps_passed: ${{ steps.result.outputs.passed }}
+
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+# ==============================================================================
 # JOB 14 — FINAL VERDICT
 # ==============================================================================
 
@@ -365,17 +390,19 @@ jobs:
           $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
           $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
           $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
+          $GPS   = "${{ needs.gps-test.outputs.gps_passed }}"
 
           Write-Host "SELF_TEST_PASSED = $SELF"
           Write-Host "TEMP_TEST_PASSED = $TEMP"
           Write-Host "WIFI_TEST_PASSED = $WIFI"
           Write-Host "BT_TEST_PASSED   = $BT"
+          Write-Host "GPS_TEST_PASSED   = $GPS"
 
           if ($SELF -ne "true") {
             throw "Final verdict: System Self-Test failed"
           }
 
-          if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true") {
+          if ($TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
             throw "Final verdict: One or more functional tests failed"
           }
 
