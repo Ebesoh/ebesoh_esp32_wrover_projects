@@ -1,108 +1,113 @@
 # ==============================================================================
-# ESP32-WROVER DEVKIT CI — GitHub Actions
+# ESP32-WROVER DEVKIT CI PIPELINE
 # ==============================================================================
-#
-# ===========================
-#  BIG PICTURE (HUMAN NOTES)
-# ===========================
-#
-# This pipeline is about hardware truth.
-#
-# There is a real ESP32-WROVER board plugged into a machine somewhere.
-# This workflow talks to that exact board over USB and treats it like a
-# tiny, remote test runner.
-#
-# A green pipeline means:
-#   "The physical board behaved as expected."
-#
-# A red pipeline means:
-#   "Something in the real system broke."
-#
+# 
+# HARDWARE-IN-THE-LOOP CONTINUOUS INTEGRATION
+# ==============================================================================
+# 
+# PURPOSE: Test real ESP32-WROVER hardware with real firmware in a CI environment
+# 
+# KEY CHARACTERISTICS:
+# - Tests PHYSICAL HARDWARE connected via USB (not simulated)
+# - One test run at a time (concurrency protection)
+# - Deterministic, sequential test execution
+# - Skip-tolerant design (optional tests don't break the pipeline)
+# - Clear pass/fail reporting with artifact collection
+# 
+# ==============================================================================
+# HOW TO INTERPRET PIPELINE RESULTS
+# ==============================================================================
+# 
+# GREEN PIPELINE: Physical hardware behaved exactly as expected
+# RED PIPELINE:   Something in the real hardware/firmware system failed
+# 
 # This is NOT:
-# - a simulator
-# - a mock
-# - a purely unit-test pipeline
-#
-# It is hardware-in-the-loop CI.
-#
-# -------------------------------------------------------------------------------
-# HOW TO READ THIS PIPELINE (MENTAL MODEL)
-# -------------------------------------------------------------------------------
-#
-# Think of it in three phases:
-#
-# PHASE 1 — SETUP (Jobs 1–3)
-#   Get the runner into a sane, predictable state.
-#
-# PHASE 2 — HARDWARE BRING-UP (Jobs 4–8)
-#   Make sure the ESP32 is alive, reachable, and ready.
-#
-# PHASE 3 — TESTING (Jobs 9–15)
-#   Upload real tests to the board, run them on real hardware,
-#   and produce one clear final verdict.
-#
-# -------------------------------------------------------------------------------
-# QUICK vs FULL TEST MODE
-# -------------------------------------------------------------------------------
-#
-# QUICK MODE (default)
-# - System self-test (hard gate)
-# - GPS test
-# - Fast, lightweight, safe for normal CI
-#
-# FULL MODE
-# - Runs all enabled tests
-# - Intended for releases, deep validation, or debugging
-#
-# Flashing is ALWAYS manual-only, regardless of mode.
-#
-# -------------------------------------------------------------------------------
-# GPS BEHAVIOR (EXPLICIT DESIGN)
-# -------------------------------------------------------------------------------
-#
-# This is the behavior you asked for:
-#
-# - Quick mode  → GPS runs right after system-self-test.
-# - Full mode   → GPS waits for Bluetooth IF Bluetooth actually ran.
-# - In both cases, GPS still depends on the hard gate (system-self-test).
-# - A skipped Bluetooth job must NOT block GPS.
-#
-# -------------------------------------------------------------------------------
-# DESIGN PRINCIPLES
-# -------------------------------------------------------------------------------
-#
-# 1) HARD GATE: SYSTEM SELF-TEST
-#    This must run and must pass.
-#
-# 2) SKIP TOLERANCE
-#    Skipping optional steps should NOT break the pipeline.
-#
-# 3) STATE ISOLATION
-#    We reset before Wi-Fi tests to avoid stale network state.
-#
-# 4) DETERMINISTIC ORDER
-#    Tests run sequentially — no parallel fights over hardware.
-#
-# 5) HARDWARE SAFETY
-#    Only one workflow can talk to the board at a time.
-#
-# -------------------------------------------------------------------------------
-# ARTIFACTS
-# -------------------------------------------------------------------------------
-# All *.txt logs are uploaded even on failure.
-#
+# - A software simulator
+# - A unit test mock
+# - A purely software-based CI
+# 
+# This IS:
+# - Hardware validation in production-like conditions
+# - Firmware/hardware integration testing
+# - Real-world peripheral validation (Wi-Fi, Bluetooth, GPS, sensors)
+# 
 # ==============================================================================
-
+# PIPELINE ARCHITECTURE (THREE PHASES)
+# ==============================================================================
+# 
+# PHASE 1: SETUP & PREPARATION (Jobs 1-3)
+#   - Initialize environment and clean workspace
+#   - Install necessary host tools (esptool, mpremote)
+# 
+# PHASE 2: HARDWARE BRING-UP (Jobs 4-8)
+#   - Connect to ESP32 and verify it's alive (preflight)
+#   - Optionally flash new firmware (MANUAL ONLY)
+#   - Wait for board to stabilize and enter REPL
+# 
+# PHASE 3: TEST EXECUTION (Jobs 9-15)
+#   - Upload test scripts to ESP32
+#   - Execute tests in sequence
+#   - Collect results and produce final verdict
+# 
+# ==============================================================================
+# TEST MODES: QUICK vs FULL
+# ==============================================================================
+# 
+# QUICK MODE (default):
+#   - Runs only: System Self-Test (REQUIRED) + GPS Test
+#   - Fast (~2-3 minutes)
+#   - Safe for normal CI/CD (pull requests, commits)
+#   - Validates core functionality
+# 
+# FULL MODE:
+#   - Runs ALL enabled tests
+#   - Includes: Temperature, Wi-Fi, Bluetooth, GPS
+#   - Slower (~5-10 minutes)
+#   - Used for: Releases, deep validation, debugging
+# 
+# IMPORTANT: Firmware flashing is ALWAYS manual-only for safety
+# 
+# ==============================================================================
+# GPS TEST BEHAVIOR (SPECIAL DESIGN)
+# ==============================================================================
+# 
+# This implements the exact behavior requested:
+# 
+# QUICK MODE:
+#   GPS runs immediately after System Self-Test passes
+# 
+# FULL MODE:
+#   GPS waits for Bluetooth test IF Bluetooth actually ran
+#   If Bluetooth was skipped, GPS proceeds immediately
+# 
+# CRITICAL DESIGN:
+# - Only System Self-Test failure can block GPS
+# - Skipped Bluetooth does NOT block GPS
+# - GPS dependency on Bluetooth is conditional on Bluetooth execution
+# 
+# ==============================================================================
+# DESIGN PRINCIPLES
+# ==============================================================================
+# 
+# 1. HARD GATE: System Self-Test must pass for any functional testing
+# 2. SKIP TOLERANCE: Optional tests can be skipped without breaking pipeline
+# 3. STATE ISOLATION: Wi-Fi tests reset the board to avoid stale connections
+# 4. DETERMINISTIC ORDER: No parallel execution to prevent hardware conflicts
+# 5. HARDWARE SAFETY: Concurrency protection prevents multiple workflows
+# 6. ARTIFACT PRESERVATION: Logs saved even on failure for debugging
+# 
+# ==============================================================================
 name: ESP32-WROVER DEVKIT CI
 
 # -------------------------------------------------------------------------------
 # TRIGGERS + MANUAL CONTROLS
 # -------------------------------------------------------------------------------
-
 on:
+  # Automated trigger on main branch pushes
   push:
     branches: [ main ]
-
+  
+  # Manual trigger with full control over execution
   workflow_dispatch:
     inputs:
       # -----------------------------
@@ -112,35 +117,36 @@ on:
         description: "Run JOB 1 — Init CI variables?"
         required: true
         default: "true"
-
+      
       run_autoclean:
         description: "Run JOB 2 — Auto-clean workspace?"
         required: true
         default: "true"
-
+      
       run_wait_after_preflight:
         description: "Run JOB 5 — Wait after preflight?"
         required: true
         default: "true"
-
-      # Flashing is MANUAL ONLY by design.
+      
+      # IMPORTANT: Flashing is MANUAL ONLY for hardware safety
+      # Never automate firmware flashing to prevent bricking
       run_flash:
         description: "Run JOB 6 — Flash firmware? (MANUAL ONLY)"
         required: false
         default: "false"
-
+      
       run_wait_after_flash:
         description: "Run JOB 7 — Wait after flashing?"
         required: true
         default: "true"
-
+      
       run_wait_for_repl:
         description: "Run JOB 8 — Wait for MicroPython REPL?"
         required: true
         default: "true"
-
+      
       # -----------------------------
-      # QUICK vs FULL MODE
+      # QUICK vs FULL MODE SELECTION
       # -----------------------------
       test_mode:
         description: "Test mode: quick or full?"
@@ -150,45 +156,59 @@ on:
         options:
           - quick
           - full
-
+      
       # -----------------------------
       # INDIVIDUAL TEST TOGGLES
       # -----------------------------
+      # NOTE: Using boolean type for cleaner logic
+      # In quick mode: These default to false (only GPS runs)
+      # In full mode: These are ignored (all tests run)
+      # Can override in either mode by setting to true
+      
       run_temp:
         description: "Run DS18B20 temperature test?"
         required: false
-        default: "false"
-
+        default: false
+        type: boolean
+      
       run_wifi:
         description: "Run Wi-Fi tests?"
         required: false
-        default: "false"
-
+        default: false
+        type: boolean
+      
       run_bt:
         description: "Run Bluetooth tests?"
         required: false
-        default: "false"
-
+        default: false
+        type: boolean
+      
       run_gps:
         description: "Run GPS tests?"
         required: true
-        default: "true"
+        default: true
+        type: boolean
 
 # -------------------------------------------------------------------------------
-# CONCURRENCY — protects the physical board
+# CONCURRENCY PROTECTION
 # -------------------------------------------------------------------------------
-
+# Prevents multiple workflows from accessing the same physical board simultaneously
+# Critical for hardware safety and deterministic results
 concurrency:
   group: esp32-wrover-hil
   cancel-in-progress: true
 
 # -------------------------------------------------------------------------------
-# GLOBAL ENVIRONMENT
+# GLOBAL ENVIRONMENT VARIABLES
 # -------------------------------------------------------------------------------
-
 env:
+  # COM port where ESP32 is connected (Windows specific)
   ESP_PORT: COM5
+  
+  # Path to firmware binary
   FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+  
+  # Ensure Python output is not buffered for real-time logging
   PYTHONUNBUFFERED: "1"
 
 # ==============================================================================
@@ -196,11 +216,11 @@ env:
 # ==============================================================================
 
 jobs:
-
-# ==============================================================================
-# JOB 1 — INIT CI VARIABLES
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 1 — INIT CI VARIABLES
+  # ==============================================================================
+  # Purpose: Initialize environment variables for test result tracking
+  # Runs on: Push events (auto) or when manually enabled
   init-ci-vars:
     runs-on: self-hosted
     if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
@@ -208,6 +228,7 @@ jobs:
       - uses: actions/checkout@v4
       - shell: powershell
         run: |
+          # Initialize all test result trackers
           "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
           "WIFI_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
@@ -215,10 +236,11 @@ jobs:
           "GPS_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
-# ==============================================================================
-# JOB 2 — AUTO CLEAN
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 2 — AUTO CLEAN WORKSPACE
+  # ==============================================================================
+  # Purpose: Free disk space if running low
+  # Safety: Only cleans if disk has less than 10GB free
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
@@ -228,14 +250,16 @@ jobs:
         run: |
           $drive = Get-PSDrive -Name C
           $freeGb = [math]::Round($drive.Free / 1GB, 2)
+          # Only clean if dangerously low on space
           if ($freeGb -lt 10) {
             Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
           }
 
-# ==============================================================================
-# JOB 3 — INSTALL HOST TOOLS
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 3 — INSTALL HOST TOOLS
+  # ==============================================================================
+  # Purpose: Install Python tools needed for ESP32 communication
+  # Required: esptool (flashing), mpremote (MicroPython communication)
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
@@ -247,10 +271,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install esptool mpremote
 
-# ==============================================================================
-# JOB 4 — PREFLIGHT
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 4 — PREFLIGHT CHECK
+  # ==============================================================================
+  # Purpose: Verify ESP32 is connected and responsive
+  # Critical: If this fails, all subsequent tests will fail
   preflight:
     runs-on: self-hosted
     needs: install-tools
@@ -258,13 +283,15 @@ jobs:
       - shell: cmd
         run: |
           echo Preflight: checking ESP32 on %ESP_PORT%...
+          # Send reset command to verify communication
           python -m mpremote connect %ESP_PORT% reset
           if errorlevel 1 exit /b 1
 
-# ==============================================================================
-# JOB 5 — WAIT AFTER PREFLIGHT
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 5 — WAIT AFTER PREFLIGHT
+  # ==============================================================================
+  # Purpose: Allow ESP32 to stabilize after reset
+  # Timing: 15 seconds for boot process to complete
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -273,10 +300,12 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-# ==============================================================================
-# JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
+  # ==============================================================================
+  # IMPORTANT: This job is MANUAL-ONLY for safety
+  # Purpose: Erase and flash new firmware to ESP32
+  # Warning: Automated flashing could brick the device
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
@@ -284,35 +313,40 @@ jobs:
     steps:
       - shell: cmd
         run: |
+          # Erase entire flash memory
           python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
+          # Write new firmware starting at 0x1000
           python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 %FIRMWARE%
 
-# ==============================================================================
-# JOB 7 — WAIT AFTER FLASH (SKIP-TOLERANT)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 7 — WAIT AFTER FLASHING
+  # ==============================================================================
+  # Purpose: Allow ESP32 to complete first boot after flashing
+  # Skip-tolerant: Runs even if flashing was skipped
+  # Timing: 15 seconds for first-time boot initialization
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
-    if: ${{ always() && needs.flash-firmware.result != 'failure' &&
-            (inputs.run_wait_after_flash == 'true' || github.event_name == 'push') }}
+    if: ${{ always() && needs.flash-firmware.result != 'failure' && (inputs.run_wait_after_flash == 'true' || github.event_name == 'push') }}
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-# ==============================================================================
-# JOB 8 — WAIT FOR REPL (SKIP-TOLERANT)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 8 — WAIT FOR REPL
+  # ==============================================================================
+  # Purpose: Verify MicroPython REPL is ready for commands
+  # Method: Attempts to execute a simple print command up to 5 times
+  # Skip-tolerant: Handles skipped flashing gracefully
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
-    if: ${{ always() && needs.wait-after-flashing.result != 'failure' &&
-            (inputs.run_wait_for_repl == 'true' || github.event_name == 'push') }}
+    if: ${{ always() && needs.wait-after-flashing.result != 'failure' && (inputs.run_wait_for_repl == 'true' || github.event_name == 'push') }}
     steps:
       - shell: cmd
         run: |
           set READY=0
+          # Try up to 5 times with 3-second intervals
           for /L %%i in (1,1,5) do (
             python -m mpremote connect %ESP_PORT% exec "print('READY')"
             if not errorlevel 1 (
@@ -324,10 +358,11 @@ jobs:
           :done
           if "%READY%"=="0" exit /b 1
 
-# ==============================================================================
-# JOB 9 — UPLOAD TEST FILES
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 9 — UPLOAD TEST FILES
+  # ==============================================================================
+  # Purpose: Copy all test scripts to ESP32 filesystem
+  # Organization: Tests are grouped by function in separate directories
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -335,16 +370,24 @@ jobs:
     steps:
       - shell: cmd
         run: |
+          # Upload temperature test files
           for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          # Upload Wi-Fi test files
           for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          # Upload Bluetooth test files
           for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          # Upload GPS test files
           for %%f in (tests_gps\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          # Upload system self-test files
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
 
-# ==============================================================================
-# JOB 10 — SYSTEM SELF TEST (HARD GATE)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 10 — SYSTEM SELF TEST (HARD GATE)
+  # ==============================================================================
+  # CRITICAL JOB: This is the HARD GATE for all functional testing
+  # Purpose: Validate core system functionality
+  # Failure: If this fails, NO functional tests will run
+  # Output: Sets self_test_passed for downstream jobs
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
@@ -363,15 +406,16 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==============================================================================
-# JOB 11 — TEMPERATURE TEST (OPTIONAL)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 11 — TEMPERATURE TEST (OPTIONAL)
+  # ==============================================================================
+  # Purpose: Test DS18B20 temperature sensor functionality
+  # Condition: Runs only in FULL mode OR when explicitly enabled
+  # Skip logic: Properly skips when run_temp is false in quick mode
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
-    if: ${{ always() && needs.system-self-test.result != 'failure' &&
-            (inputs.test_mode == 'full' || inputs.run_temp == 'true') }}
+    if: ${{ always() && needs.system-self-test.result != 'failure' && (inputs.test_mode == 'full' || inputs.run_temp == true) }}
     outputs:
       temp_passed: ${{ steps.result.outputs.passed }}
     steps:
@@ -386,20 +430,22 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==============================================================================
-# JOB 12 — WIFI TEST (OPTIONAL)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 12 — WIFI TEST (OPTIONAL)
+  # ==============================================================================
+  # Purpose: Test Wi-Fi connectivity and functionality
+  # Special: Resets ESP32 before test to ensure clean network state
+  # Condition: Runs only in FULL mode OR when explicitly enabled
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
-    if: ${{ always() && needs.temp-test.result != 'failure' &&
-            (inputs.test_mode == 'full' || inputs.run_wifi == 'true') }}
+    if: ${{ always() && needs.temp-test.result != 'failure' && (inputs.test_mode == 'full' || inputs.run_wifi == true) }}
     outputs:
       wifi_passed: ${{ steps.result.outputs.passed }}
     steps:
       - shell: powershell
         run: |
+          # Reset ESP32 to ensure clean network state
           python -m mpremote connect $env:ESP_PORT reset *> $null
           Start-Sleep -Seconds 5
       - id: result
@@ -413,15 +459,16 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==============================================================================
-# JOB 13 — BLUETOOTH TEST (OPTIONAL)
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 13 — BLUETOOTH TEST (OPTIONAL)
+  # ==============================================================================
+  # Purpose: Test Bluetooth functionality
+  # Condition: Runs only in FULL mode OR when explicitly enabled
+  # GPS dependency: In full mode, GPS waits for this test if it runs
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
-    if: ${{ always() && needs.wifi-test.result != 'failure' &&
-            (inputs.test_mode == 'full' || inputs.run_bt == 'true') }}
+    if: ${{ always() && needs.wifi-test.result != 'failure' && (inputs.test_mode == 'full' || inputs.run_bt == true) }}
     outputs:
       bt_passed: ${{ steps.result.outputs.passed }}
     steps:
@@ -436,35 +483,40 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==============================================================================
-# JOB 14 — GPS TEST (FIXED)
-# ==============================================================================
-# Behavior you asked for:
-# - Quick mode → runs right after system-self-test.
-# - Full mode  → waits for bluetooth-test IF Bluetooth actually ran.
-# - Skipped Bluetooth must NOT block GPS.
-# - Only a real system-self-test failure can block GPS.
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 14 — GPS TEST (SPECIAL CONDITIONAL LOGIC)
+  # ==============================================================================
+  # COMPLEX BEHAVIOR: Implements the exact GPS logic requested
+  # 
+  # QUICK MODE:
+  #   - Runs immediately after system-self-test
+  #   - Does NOT wait for bluetooth-test
+  # 
+  # FULL MODE:
+  #   - Waits for bluetooth-test IF bluetooth-test actually ran
+  #   - If bluetooth-test was skipped, proceeds immediately
+  # 
+  # DEPENDENCY DESIGN:
+  #   - needs: [system-self-test, bluetooth-test] ← This is valid GitHub syntax
+  #   - Condition checks: system-self-test.result != 'failure'
+  #   - bluetooth-test.result is ignored if bluetooth-test was skipped
+  # 
+  # KEY PRINCIPLE: Only system-self-test failure can block GPS
   gps-test:
     runs-on: self-hosted
-
-    # VALID GitHub dependency that supports your behavior:
+    # Dual dependency supports both modes:
+    # - In quick mode: bluetooth-test is skipped, GPS proceeds
+    # - In full mode: GPS waits for bluetooth-test completion
     needs:
       - system-self-test
       - bluetooth-test
-
-    # Core gate:
-    # - Always evaluate
-    # - Block only on real system-self-test failure
-    # - Respect the GPS toggle
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            inputs.run_gps == 'true' }}
-
+    # Core condition:
+    # 1. Always check system-self-test didn't fail (hard gate)
+    # 2. Respect the GPS toggle (inputs.run_gps)
+    # Note: bluetooth-test status is NOT checked here intentionally
+    if: ${{ always() && needs.system-self-test.result != 'failure' && inputs.run_gps == true }}
     outputs:
       gps_passed: ${{ steps.result.outputs.passed }}
-
     steps:
       - id: result
         shell: cmd
@@ -477,10 +529,15 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==============================================================================
-# JOB 15 — FINAL VERDICT + READABLE SUMMARY
-# ==============================================================================
-
+  # ==============================================================================
+  # JOB 15 — FINAL VERDICT + READABLE SUMMARY
+  # ==============================================================================
+  # Purpose: Aggregate all test results and produce final pass/fail
+  # Features:
+  #   - Always runs (if: always())
+  #   - Shows skipped tests as "skipped"
+  #   - Treats skipped tests as passed for final verdict
+  #   - Uploads all log files as artifacts
   final-verdict:
     runs-on: self-hosted
     needs:
@@ -494,19 +551,20 @@ jobs:
       - shell: powershell
         run: |
           $MODE = "${{ inputs.test_mode }}"
-
           $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
           $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
           $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
-          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
-          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
-
+          $BT = "${{ needs.bluetooth-test.outputs.bt_passed }}"
+          $GPS = "${{ needs.gps-test.outputs.gps_passed }}"
+          
+          # Handle skipped tests (empty output)
           if ($SELF -eq "") { $SELF = "skipped" }
           if ($TEMP -eq "") { $TEMP = "skipped" }
           if ($WIFI -eq "") { $WIFI = "skipped" }
-          if ($BT   -eq "") { $BT   = "skipped" }
-          if ($GPS  -eq "") { $GPS  = "skipped" }
-
+          if ($BT -eq "") { $BT = "skipped" }
+          if ($GPS -eq "") { $GPS = "skipped" }
+          
+          # Display clean summary
           Write-Host ""
           Write-Host "================== TEST SUMMARY =================="
           Write-Host "MODE              : $MODE"
@@ -517,22 +575,25 @@ jobs:
           Write-Host "GPS TEST          : $GPS"
           Write-Host "=================================================="
           Write-Host ""
-
+          
+          # For final verdict, treat skipped tests as passed
           if ($SELF -eq "skipped") { $SELF = "true" }
           if ($TEMP -eq "skipped") { $TEMP = "true" }
           if ($WIFI -eq "skipped") { $WIFI = "true" }
-          if ($BT   -eq "skipped") { $BT   = "true" }
-          if ($GPS  -eq "skipped") { $GPS  = "true" }
-
+          if ($BT -eq "skipped") { $BT = "true" }
+          if ($GPS -eq "skipped") { $GPS = "true" }
+          
+          # Final pass/fail determination
           if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
             throw "Final verdict: One or more functional tests failed"
           }
-
+          
           Write-Host "FINAL VERDICT: ALL TESTS PASSED"
-
+      
+      # Upload all log files as artifacts for debugging
+      # Runs even on failure to preserve evidence
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: esp32-ci-logs
           path: "*.txt"
-
