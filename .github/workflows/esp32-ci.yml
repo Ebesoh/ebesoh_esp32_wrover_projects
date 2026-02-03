@@ -207,7 +207,7 @@ concurrency:
 # ------------------------------------------------------------------------------
 env:
   ESP_PORT: COM5
-  FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+  FIRMWARE: ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
   PYTHONUNBUFFERED: "1"
 
 jobs:
