@@ -458,4 +458,65 @@ jobs:
 
 # ==============================================================================
 # JOB 14 — GPS TEST (SKIP-TOLERANT)
-# ==========================================================
+# ==============================================================================
+  gps-test:
+    runs-on: self-hosted
+    needs: bluetooth-test
+    if: ${{ always() && needs.bluetooth-test.result != 'failure' &&
+            (inputs.run_gps == 'true' || github.event_name == 'push') }}
+    outputs:
+      gps_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+# ==============================================================================
+# JOB 15 — FINAL VERDICT (SKIP-TOLERANT)
+# ==============================================================================
+# This step treats SKIPPED tests as PASS.
+# Only a real failure makes the workflow red.
+# ==============================================================================
+  final-verdict:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - temp-test
+      - wifi-test
+      - bluetooth-test
+      - gps-test
+    if: ${{ always() }}
+    steps:
+      - shell: powershell
+        run: |
+          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
+          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
+          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
+          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
+          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
+
+          # Treat skipped jobs (empty outputs) as PASS
+          if ($SELF -eq "") { $SELF = "true" }
+          if ($TEMP -eq "") { $TEMP = "true" }
+          if ($WIFI -eq "") { $WIFI = "true" }
+          if ($BT   -eq "") { $BT   = "true" }
+          if ($GPS  -eq "") { $GPS  = "true" }
+
+          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
+            throw "Final verdict: One or more functional tests failed"
+          }
+
+          Write-Host "FINAL VERDICT: ALL TESTS PASSED"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: esp32-ci-logs
+          path: "*.txt"
