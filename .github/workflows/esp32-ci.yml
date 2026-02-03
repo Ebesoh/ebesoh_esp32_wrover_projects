@@ -2,109 +2,39 @@
 # ESP32-WROVER DEVKIT CI — GitHub Actions
 # ==============================================================================
 #
-# WHAT THIS WORKFLOW IS REALLY ABOUT
-# -----------------------------------
+# BIG PICTURE
+# -----------
+# This workflow treats your ESP32 as real hardware under test, not a simulator.
+# A green run means: "the physical board behaved correctly."
+# A red run means:   "something in the real system regressed."
 #
-# This pipeline exists for one simple reason:
-# to make sure your ESP32 hardware behaves the same way every time code changes.
+# DESIGN PHILOSOPHY
+# ------------------
+# 1) Bring the board to a known, sane state.
+# 2) Run a mandatory system self-test (hard gate).
+# 3) Run optional tests only when explicitly requested.
+# 4) Treat skipped steps as acceptable, not as failures.
+# 5) Never flash on push — flashing is manual and intentional.
+# 6) Never let two workflows fight over the same board.
 #
-# This is not a simulator, not a mock, and not a unit-test-only setup.
-# There is a real ESP32-WROVER board plugged into a USB port somewhere,
-# and this workflow talks to that exact piece of hardware.
+# MENTAL MODEL (3 PHASES)
+# -----------------------
+# Phase 1 — Setup:
+#   Make sure the runner has Python, esptool, and mpremote.
 #
-# Every run follows the same philosophy:
-#
-# 1. Make sure the runner and tools are sane.
-# 2. Make sure the ESP32 is actually reachable over USB.
-# 3. Optionally wipe and re-flash it with a known MicroPython firmware.
-# 4. Upload real test code onto the device.
-# 5. Run those tests directly on the hardware.
-# 6. End with one clear verdict: PASS or FAIL.
-#
-# If this pipeline turns red, it should mean something real broke.
-# Not "a script glitched", not "GitHub was weird", but:
-# "the board did not behave the way we expected."
-#
-# ------------------------------------------------------------------------------
-#
-# HOW TO THINK ABOUT THE STRUCTURE
-# --------------------------------
-#
-# You can mentally divide this into three big phases:
-#
-# PHASE 1 — SETUP (Jobs 1–3)
-#   Get the runner ready:
-#   - Define shared CI state.
-#   - Clean disk if needed.
-#   - Install esptool and mpremote.
-#
-# PHASE 2 — HARDWARE BRING-UP (Jobs 4–8)
-#   Make sure the ESP32 is alive and in a good state:
-#   - Check that we can talk to it at all (preflight).
-#   - Wait a bit so USB settles.
-#   - Optionally erase and re-flash MicroPython.
+# Phase 2 — Hardware Bring-Up:
+#   - Check that the ESP32 is reachable (preflight).
+#   - Optionally wait.
+#   - Optionally flash.
 #   - Optionally wait again.
-#   - Optionally poll until the REPL is ready.
+#   - Optionally wait for MicroPython REPL.
 #
-# PHASE 3 — TESTING (Jobs 9–15)
-#   - Copy test files onto the ESP32.
-#   - Run system self-test (this is the hard gate).
-#   - Run optional tests (temperature, Wi-Fi, Bluetooth, GPS).
+# Phase 3 — Testing:
+#   - Upload test files.
+#   - Run mandatory system self-test.
+#   - Run optional tests (temp, Wi-Fi, BT, GPS) only if toggled.
 #   - Print a readable summary.
-#   - Make one final PASS/FAIL decision.
-#
-# ------------------------------------------------------------------------------
-#
-# HOW PUSH vs MANUAL RUNS BEHAVE
-# ------------------------------
-#
-# PUSH TO MAIN:
-# -------------
-# - This is "normal CI mode".
-# - All core steps run by default.
-# - Flashing is DISABLED on purpose.
-#   (You generally do not want every commit wiping your board.)
-#
-# MANUAL RUN (workflow_dispatch):
-# --------------------------------
-# - You get a control panel in GitHub UI.
-# - You can turn individual steps on or off.
-# - Flashing runs ONLY if you explicitly enable it.
-# - If you skip optional waits or tests, the pipeline still continues.
-#
-# ------------------------------------------------------------------------------
-#
-# DESIGN PRINCIPLES (why this pipeline is written this way)
-# ---------------------------------------------------------
-#
-# 1) HARD GATE: SYSTEM SELF-TEST
-#    This test must run and must pass.
-#    If it fails, the rest of the pipeline stops.
-#
-# 2) SKIP TOLERANCE
-#    If you choose to skip optional steps (waiting, flashing, optional tests),
-#    that should NOT break the pipeline.
-#    Only real failures should block progress.
-#
-# 3) STATE ISOLATION
-#    Before Wi-Fi tests, we soft-reset the ESP32 so old network state
-#    does not contaminate results.
-#
-# 4) DETERMINISTIC ORDER
-#    Tests run one after another.
-#    No parallel jobs fighting over the same physical board.
-#
-# 5) HARDWARE SAFETY
-#    Only one workflow run can access the ESP32 at a time.
-#    If a new run starts, the previous one is canceled.
-#
-# ------------------------------------------------------------------------------
-#
-# ARTIFACTS AND TRACEABILITY
-# --------------------------
-# - All test logs (*.txt) are kept.
-# - Logs are uploaded even if the pipeline fails.
-# - The final verdict is the single source of truth.
+#   - Make a final PASS/FAIL decision (skipped = pass).
 #
 # ==============================================================================
 
@@ -115,29 +45,49 @@ name: ESP32-WROVER DEVKIT CI
 # ------------------------------------------------------------------------------
 
 on:
-  # Normal CI trigger
+  # NORMAL CI MODE
+  # Runs automatically on every push to main.
   push:
     branches: [ main ]
 
-  # Manual trigger with UI toggles
+  # MANUAL MODE
+  # Gives you a UI control panel in GitHub where you can enable/disable steps.
   workflow_dispatch:
     inputs:
+
+      # ----------------------------
+      # SETUP / BRING-UP CONTROLS
+      # ----------------------------
+
       run_init:
         description: "Run JOB 1 — Init CI variables?"
         required: true
         default: "true"
+        # Why this exists:
+        # Initializes environment variables that track test results.
+        # Normally you leave this on.
 
       run_autoclean:
         description: "Run JOB 2 — Auto-clean workspace?"
         required: true
         default: "true"
+        # Defensive step to avoid disk-space failures on the self-hosted runner.
 
       run_wait_after_preflight:
         description: "Run JOB 5 — Wait after preflight?"
         required: true
         default: "true"
+        # Gives USB and the ESP32 time to settle before doing anything risky.
 
-      # IMPORTANT: default is false so pushes never flash.
+      # ----------------------------
+      # FLASH CONTROL (MANUAL ONLY)
+      # ----------------------------
+      #
+      # CRITICAL RULE:
+      # - Default = false
+      # - Pushes NEVER flash.
+      # - You must explicitly enable this in a manual run.
+
       run_flash:
         description: "Run JOB 6 — Flash firmware? (MANUAL ONLY)"
         required: false
@@ -147,11 +97,21 @@ on:
         description: "Run JOB 7 — Wait after flashing?"
         required: true
         default: "true"
+        # Helps avoid timing issues right after a flash.
 
       run_wait_for_repl:
         description: "Run JOB 8 — Wait for MicroPython REPL?"
         required: true
         default: "true"
+        # Polls until MicroPython is responsive.
+
+      # ----------------------------
+      # TEST TOGGLES (AFTER OUR FIX)
+      # ----------------------------
+      #
+      # KEY BEHAVIOR:
+      # - A test runs ONLY if its toggle is "true".
+      # - There is NO hidden "auto-run-on-push" behavior anymore.
 
       run_temp:
         description: "Run DS18B20 temperature test?"
@@ -174,7 +134,10 @@ on:
         default: "true"
 
 # ------------------------------------------------------------------------------
-# CONCURRENCY — only one workflow can talk to the board at a time
+# CONCURRENCY — HARDWARE SAFETY
+# ------------------------------------------------------------------------------
+# Only one workflow can talk to the physical ESP32 at a time.
+# If a new run starts, the previous one is canceled.
 # ------------------------------------------------------------------------------
 
 concurrency:
@@ -194,19 +157,25 @@ env:
 # JOBS
 # ==============================================================================
 
-jobs:
-
 # ==============================================================================
 # JOB 1 — INIT CI VARIABLES
 # ==============================================================================
-# Establishes a clean, explicit baseline for all test results.
-# Even if tests are skipped, we still have predictable variables.
+# Creates a predictable baseline for all test results.
+# Even if some tests are skipped, we still have clean variables.
 # ==============================================================================
+
+jobs:
   init-ci-vars:
     runs-on: self-hosted
+
+    # Runs on:
+    # - any push to main
+    # - OR a manual run where the user left this enabled
     if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
+
     steps:
       - uses: actions/checkout@v4
+
       - shell: powershell
         run: |
           "SELF_TEST_PASSED=false" | Out-File -Append $env:GITHUB_ENV
@@ -219,12 +188,17 @@ jobs:
 # ==============================================================================
 # JOB 2 — AUTO CLEAN
 # ==============================================================================
-# Defensive step: avoids weird failures when disk is almost full.
+# Defensive cleanup to avoid random disk-space failures.
 # ==============================================================================
+
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
+
+    # Same logic as init:
+    # runs on push OR if manually enabled
     if: ${{ inputs.run_autoclean == 'true' || github.event_name == 'push' }}
+
     steps:
       - shell: powershell
         run: |
@@ -237,11 +211,13 @@ jobs:
 # ==============================================================================
 # JOB 3 — INSTALL HOST TOOLS
 # ==============================================================================
-# Ensures we actually have esptool and mpremote available.
+# Ensures esptool and mpremote are available on the runner.
 # ==============================================================================
+
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
+
     steps:
       - shell: cmd
         run: |
@@ -254,12 +230,15 @@ jobs:
 # ==============================================================================
 # JOB 4 — PREFLIGHT
 # ==============================================================================
-# First reality check: can we even talk to the ESP32?
-# If this fails, we stop immediately.
+# First real hardware check:
+# Can we even talk to the ESP32 over USB?
+# If this fails, everything stops.
 # ==============================================================================
+
   preflight:
     runs-on: self-hosted
     needs: install-tools
+
     steps:
       - shell: cmd
         run: |
@@ -270,12 +249,15 @@ jobs:
 # ==============================================================================
 # JOB 5 — WAIT AFTER PREFLIGHT
 # ==============================================================================
-# Gives USB and the device a moment to settle.
+# Gives USB and the board time to stabilize.
 # ==============================================================================
+
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
+
     if: ${{ inputs.run_wait_after_preflight == 'true' || github.event_name == 'push' }}
+
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
@@ -284,12 +266,15 @@ jobs:
 # JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
 # ==============================================================================
 # This wipes the board and installs a clean MicroPython image.
-# It will NEVER run on push — only on manual runs with the toggle enabled.
+# NEVER runs on push — only on manual runs with the toggle enabled.
 # ==============================================================================
+
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
+
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_flash == 'true' }}
+
     steps:
       - shell: cmd
         run: |
@@ -302,11 +287,14 @@ jobs:
 # Runs if flash succeeded OR if flash was skipped.
 # Does NOT run if flash actually failed.
 # ==============================================================================
+
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
+
     if: ${{ always() && needs.flash-firmware.result != 'failure' &&
             (inputs.run_wait_after_flash == 'true' || github.event_name == 'push') }}
+
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
@@ -316,11 +304,14 @@ jobs:
 # ==============================================================================
 # Polls MicroPython until it responds.
 # ==============================================================================
+
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
+
     if: ${{ always() && needs.wait-after-flashing.result != 'failure' &&
             (inputs.run_wait_for_repl == 'true' || github.event_name == 'push') }}
+
     steps:
       - shell: cmd
         run: |
@@ -341,10 +332,15 @@ jobs:
 # ==============================================================================
 # Copies all test modules onto the ESP32 filesystem.
 # ==============================================================================
+
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
+
+    # Runs even if earlier optional steps were skipped,
+    # as long as nothing actually failed.
     if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
+
     steps:
       - shell: cmd
         run: |
@@ -360,12 +356,16 @@ jobs:
 # This must run unless something actually failed earlier.
 # Skipped steps do NOT block this anymore.
 # ==============================================================================
+
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
+
     if: ${{ always() && needs.upload-tests.result != 'failure' }}
+
     outputs:
       self_test_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - id: result
         shell: cmd
@@ -379,15 +379,23 @@ jobs:
           )
 
 # ==============================================================================
-# JOB 11 — TEMPERATURE TEST (OPTIONAL)
+# JOB 11 — TEMPERATURE TEST (FIXED)
 # ==============================================================================
+# Runs ONLY if:
+# - system-self-test did NOT fail
+# - AND the user explicitly enabled run_temp = true
+# ==============================================================================
+
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
+
     if: ${{ always() && needs.system-self-test.result != 'failure' &&
-            (inputs.run_temp == 'true' || github.event_name == 'push') }}
+            inputs.run_temp == 'true' }}
+
     outputs:
       temp_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - id: result
         shell: cmd
@@ -401,20 +409,27 @@ jobs:
           )
 
 # ==============================================================================
-# JOB 12 — WIFI TEST (OPTIONAL)
+# JOB 12 — WIFI TEST (FIXED)
 # ==============================================================================
+# Same logic as temp-test, but also soft-resets the board first.
+# ==============================================================================
+
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
+
     if: ${{ always() && needs.temp-test.result != 'failure' &&
-            (inputs.run_wifi == 'true' || github.event_name == 'push') }}
+            inputs.run_wifi == 'true' }}
+
     outputs:
       wifi_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - shell: powershell
         run: |
           python -m mpremote connect $env:ESP_PORT reset *> $null
           Start-Sleep -Seconds 5
+
       - id: result
         shell: cmd
         run: |
@@ -427,15 +442,19 @@ jobs:
           )
 
 # ==============================================================================
-# JOB 13 — BLUETOOTH TEST (OPTIONAL)
+# JOB 13 — BLUETOOTH TEST (FIXED)
 # ==============================================================================
+
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
+
     if: ${{ always() && needs.wifi-test.result != 'failure' &&
-            (inputs.run_bt == 'true' || github.event_name == 'push') }}
+            inputs.run_bt == 'true' }}
+
     outputs:
       bt_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - id: result
         shell: cmd
@@ -449,15 +468,19 @@ jobs:
           )
 
 # ==============================================================================
-# JOB 14 — GPS TEST (OPTIONAL)
+# JOB 14 — GPS TEST (FIXED)
 # ==============================================================================
+
   gps-test:
     runs-on: self-hosted
     needs: bluetooth-test
+
     if: ${{ always() && needs.bluetooth-test.result != 'failure' &&
-            (inputs.run_gps == 'true' || github.event_name == 'push') }}
+            inputs.run_gps == 'true' }}
+
     outputs:
       gps_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - id: result
         shell: cmd
@@ -473,6 +496,10 @@ jobs:
 # ==============================================================================
 # JOB 15 — FINAL VERDICT + READABLE SUMMARY
 # ==============================================================================
+# Always runs.
+# Treats skipped tests as PASS.
+# ==============================================================================
+
   final-verdict:
     runs-on: self-hosted
     needs:
@@ -481,7 +508,9 @@ jobs:
       - wifi-test
       - bluetooth-test
       - gps-test
+
     if: ${{ always() }}
+
     steps:
       - shell: powershell
         run: |
@@ -492,7 +521,8 @@ jobs:
           $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
 
           # If a job was skipped, GitHub gives us an empty string.
-          # We display it as "skipped" in the summary.
+          # We display it clearly in the summary.
+
           if ($SELF -eq "") { $SELF = "skipped" }
           if ($TEMP -eq "") { $TEMP = "skipped" }
           if ($WIFI -eq "") { $WIFI = "skipped" }
@@ -509,7 +539,7 @@ jobs:
           Write-Host "=================================================="
           Write-Host ""
 
-          # For the final decision, we treat "skipped" as PASS.
+          # For the final decision, treat "skipped" as PASS.
           if ($SELF -eq "skipped") { $SELF = "true" }
           if ($TEMP -eq "skipped") { $TEMP = "true" }
           if ($WIFI -eq "skipped") { $WIFI = "true" }
