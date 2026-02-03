@@ -325,7 +325,7 @@ jobs:
     runs-on: self-hosted
     needs: flash-firmware
 
-    if: ${{ inputs.run_wait_after_flash == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_wait_after_flash == 'true' || github.event_name == 'push' || needs.flash-firmware.result == 'success' }}
 
     steps:
       - shell: powershell
