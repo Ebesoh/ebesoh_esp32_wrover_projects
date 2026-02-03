@@ -10,7 +10,7 @@
 #
 # There is a real ESP32-WROVER board plugged into a machine somewhere.
 # This workflow talks to that exact board over USB and treats it like a
-# tiny test runner.
+# tiny, remote test runner.
 #
 # A green pipeline means:
 #   "The physical board behaved as expected."
@@ -42,7 +42,7 @@
 #   and produce one clear final verdict.
 #
 # -------------------------------------------------------------------------------
-# QUICK vs FULL TEST MODE (NEW)
+# QUICK vs FULL TEST MODE
 # -------------------------------------------------------------------------------
 #
 # QUICK MODE (default)
@@ -55,6 +55,17 @@
 # - Intended for releases, deep validation, or debugging
 #
 # Flashing is ALWAYS manual-only, regardless of mode.
+#
+# -------------------------------------------------------------------------------
+# GPS BEHAVIOR (EXPLICIT DESIGN)
+# -------------------------------------------------------------------------------
+#
+# This is the behavior you asked for:
+#
+# - Quick mode  → GPS runs right after system-self-test.
+# - Full mode   → GPS waits for Bluetooth IF Bluetooth actually ran.
+# - In both cases, GPS still depends on the hard gate (system-self-test).
+# - A skipped Bluetooth job must NOT block GPS.
 #
 # -------------------------------------------------------------------------------
 # DESIGN PRINCIPLES
@@ -89,11 +100,9 @@ name: ESP32-WROVER DEVKIT CI
 # -------------------------------------------------------------------------------
 
 on:
-  # Normal CI mode
   push:
     branches: [ main ]
 
-  # Manual mode with UI toggles
   workflow_dispatch:
     inputs:
       # -----------------------------
@@ -144,7 +153,6 @@ on:
 
       # -----------------------------
       # INDIVIDUAL TEST TOGGLES
-      # (used mainly in FULL mode)
       # -----------------------------
       run_temp:
         description: "Run DS18B20 temperature test?"
@@ -192,8 +200,6 @@ jobs:
 # ==============================================================================
 # JOB 1 — INIT CI VARIABLES
 # ==============================================================================
-# Creates predictable baseline variables for all downstream jobs.
-# ==============================================================================
 
   init-ci-vars:
     runs-on: self-hosted
@@ -212,8 +218,6 @@ jobs:
 # ==============================================================================
 # JOB 2 — AUTO CLEAN
 # ==============================================================================
-# Defensive cleanup to avoid disk-space failures.
-# ==============================================================================
 
   auto-clean:
     runs-on: self-hosted
@@ -231,8 +235,6 @@ jobs:
 # ==============================================================================
 # JOB 3 — INSTALL HOST TOOLS
 # ==============================================================================
-# Ensures esptool and mpremote are available.
-# ==============================================================================
 
   install-tools:
     runs-on: self-hosted
@@ -247,8 +249,6 @@ jobs:
 
 # ==============================================================================
 # JOB 4 — PREFLIGHT
-# ==============================================================================
-# First reality check: can we talk to the ESP32?
 # ==============================================================================
 
   preflight:
@@ -365,7 +365,6 @@ jobs:
 
 # ==============================================================================
 # JOB 11 — TEMPERATURE TEST (OPTIONAL)
-# Runs in FULL mode or if explicitly enabled.
 # ==============================================================================
 
   temp-test:
@@ -438,16 +437,34 @@ jobs:
           )
 
 # ==============================================================================
-# JOB 14 — GPS TEST (DEFAULT FUNCTIONAL TEST)
+# JOB 14 — GPS TEST (FIXED)
+# ==============================================================================
+# Behavior you asked for:
+# - Quick mode → runs right after system-self-test.
+# - Full mode  → waits for bluetooth-test IF Bluetooth actually ran.
+# - Skipped Bluetooth must NOT block GPS.
+# - Only a real system-self-test failure can block GPS.
 # ==============================================================================
 
   gps-test:
     runs-on: self-hosted
-    needs: bluetooth-test
-    if: ${{ always() && needs.bluetooth-test.result != 'failure' &&
+
+    # VALID GitHub dependency that supports your behavior:
+    needs:
+      - system-self-test
+      - bluetooth-test
+
+    # Core gate:
+    # - Always evaluate
+    # - Block only on real system-self-test failure
+    # - Respect the GPS toggle
+    if: ${{ always() &&
+            needs.system-self-test.result != 'failure' &&
             inputs.run_gps == 'true' }}
+
     outputs:
       gps_passed: ${{ steps.result.outputs.passed }}
+
     steps:
       - id: result
         shell: cmd
@@ -518,3 +535,4 @@ jobs:
         with:
           name: esp32-ci-logs
           path: "*.txt"
+
