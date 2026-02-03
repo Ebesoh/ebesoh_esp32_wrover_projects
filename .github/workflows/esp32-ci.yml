@@ -239,7 +239,7 @@ jobs:
     runs-on: self-hosted
     needs: init-ci-vars
 
-    if: ${{ inputs.run_autoclean == 'true'}}
+    if: ${{ inputs.run_autoclean == 'true'|| github.event_name == 'push'}}
 
     steps:
       - shell: powershell
@@ -308,7 +308,7 @@ jobs:
     runs-on: self-hosted
     needs: wait-after-preflight
 
-    if: ${{ inputs.run_flash == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_flash == 'true'}}
 
     steps:
       - shell: cmd
