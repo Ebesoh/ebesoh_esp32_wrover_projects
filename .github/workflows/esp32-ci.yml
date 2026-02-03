@@ -178,17 +178,17 @@ on:
       run_wifi:
         description: "Run Wi-Fi tests?"
         required: false
-        default: "false"
+        default: "true"
 
       run_bt:
         description: "Run Bluetooth tests?"
         required: false
-        default: "false"
+        default: "true"
 
       run_gps:
         description: "Run GPS tests?"
         required: false
-        default: "false"
+        default: "true"
 
 # ------------------------------------------------------------------------------
 # CONCURRENCY CONTROL
@@ -221,7 +221,7 @@ jobs:
 # ==============================================================================
   init-ci-vars:
     runs-on: self-hosted
-    if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_init == 'true' && github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v4
       - shell: powershell
@@ -242,7 +242,7 @@ jobs:
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
-    if: ${{ inputs.run_autoclean == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_autoclean == 'true' && github.event_name == 'push' }}
     steps:
       - shell: powershell
         run: |
@@ -297,7 +297,7 @@ jobs:
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
-    if: ${{ inputs.run_wait_after_preflight == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_wait_after_preflight == 'true' && github.event_name == 'push' }}
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
@@ -311,7 +311,7 @@ jobs:
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
-    if: ${{ inputs.run_flash == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_flash == 'true' && github.event_name == 'push' }}
     steps:
       - shell: cmd
         run: |
@@ -327,7 +327,7 @@ jobs:
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
-    if: ${{ inputs.run_wait_after_flash == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_wait_after_flash == 'true' && github.event_name == 'push' }}
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
@@ -342,7 +342,7 @@ jobs:
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
-    if: ${{ inputs.run_wait_for_repl == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_wait_for_repl == 'true' && github.event_name == 'push' }}
     steps:
       - shell: cmd
         run: |
@@ -407,7 +407,7 @@ jobs:
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
-    if: ${{ inputs.run_temp == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_temp == 'true' && github.event_name == 'push' }}
     outputs:
       temp_passed: ${{ steps.result.outputs.passed }}
     steps:
@@ -431,7 +431,7 @@ jobs:
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
-    if: ${{ inputs.run_wifi == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_wifi == 'true' && github.event_name == 'push' }}
     outputs:
       wifi_passed: ${{ steps.result.outputs.passed }}
     steps:
@@ -459,7 +459,7 @@ jobs:
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
-    if: ${{ inputs.run_bt == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_bt == 'true' && github.event_name == 'push' }}
     outputs:
       bt_passed: ${{ steps.result.outputs.passed }}
     steps:
@@ -483,7 +483,7 @@ jobs:
   gps-test:
     runs-on: self-hosted
     needs: bluetooth-test
-    if: ${{ inputs.run_gps == 'true' || github.event_name == 'push' }}
+    if: ${{ inputs.run_gps == 'true' && github.event_name == 'push' }}
     outputs:
       gps_passed: ${{ steps.result.outputs.passed }}
     steps:
