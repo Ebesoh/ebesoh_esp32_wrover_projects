@@ -31,7 +31,7 @@ name: ESP32-WROVER DEVKIT CI
 # This IS:
 # - Hardware validation in production-like conditions
 # - Firmware/hardware integration testing
-# - Real-world peripheral validation (Wi-Fi, Bluetooth, GPS, sensors)
+# - Real-world peripheral validation (Wi-Fi, Bluetooth, GPS,and Temperature sensors)
 # 
 # ==============================================================================
 # PIPELINE ARCHITECTURE (THREE PHASES)
