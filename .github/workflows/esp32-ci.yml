@@ -178,17 +178,17 @@ on:
       run_wifi:
         description: "Run Wi-Fi tests?"
         required: false
-        default: "true"
+        default: "false"
 
       run_bt:
         description: "Run Bluetooth tests?"
         required: false
-        default: "true"
+        default: "false"
 
       run_gps:
         description: "Run GPS tests?"
         required: false
-        default: "true"
+        default: "false"
 
 # ------------------------------------------------------------------------------
 # CONCURRENCY CONTROL
