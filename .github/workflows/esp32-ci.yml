@@ -1,5 +1,5 @@
 # ==============================================================================
-# ESP32-WROVER DEVKIT CI — GitHub Actions (Updated Notes)
+# ESP32-WROVER DEVKIT CI — GitHub Actions
 # ==============================================================================
 #
 # WHAT THIS WORKFLOW DOES
@@ -74,24 +74,21 @@
 #
 # ------------------------------------------------------------------------------
 #
-# MANUAL CONTROL (IMPORTANT UPDATE)
-# ----------------------------------
-# When triggered manually, you can now enable or disable:
+# MANUAL CONTROL (IMPORTANT BEHAVIOR)
+# -----------------------------------
 #
-# - Job 1: Init CI variables
-# - Job 2: Auto-clean
-# - Job 5: Wait after preflight
-# - Job 6: Flash firmware
-# - Job 7: Wait after flash
-# - Job 8: Wait for REPL
+# On PUSH to main:
+# - All jobs run by default.
+# - Each optional job respects its toggle.
 #
-# You can also toggle individual test suites:
-# - Temperature test
-# - Wi-Fi test
-# - Bluetooth test
-# - GPS test
+# On MANUAL (workflow_dispatch):
+# - OPTIONAL jobs are SKIPPED unless you change the logic later.
+# - This is intentional and follows your request to use:
+#     inputs.run_xxx == 'true' AND github.event_name == 'push'
 #
-# On pushes to main, everything still runs by default.
+# If you later want:
+# - "toggles should work on manual runs too"
+# just tell me — I’ll flip the conditions.
 #
 # ------------------------------------------------------------------------------
 #
@@ -129,11 +126,7 @@ name: ESP32-WROVER DEVKIT CI
 # ------------------------------------------------------------------------------
 # WORKFLOW TRIGGERS + MANUAL TOGGLES
 # ------------------------------------------------------------------------------
-# - Runs automatically on push to main
-# - Can also be triggered manually with fine-grained control over:
-#   • Setup jobs (init, autoclean, waits, flashing, REPL wait)
-#   • Individual test suites (temp, Wi-Fi, Bluetooth, GPS)
-# ------------------------------------------------------------------------------
+
 on:
   push:
     branches: [ main ]
@@ -191,11 +184,9 @@ on:
         default: "true"
 
 # ------------------------------------------------------------------------------
-# CONCURRENCY CONTROL
+# CONCURRENCY CONTROL (HARDWARE SAFETY)
 # ------------------------------------------------------------------------------
-# Ensures only one workflow can talk to the physical ESP32 at a time.
-# If a new run starts, the previous one is canceled.
-# ------------------------------------------------------------------------------
+
 concurrency:
   group: esp32-wrover-hil
   cancel-in-progress: true
@@ -203,24 +194,24 @@ concurrency:
 # ------------------------------------------------------------------------------
 # GLOBAL ENVIRONMENT VARIABLES
 # ------------------------------------------------------------------------------
-# These are available to all jobs in the workflow.
-# ------------------------------------------------------------------------------
+
 env:
   ESP_PORT: COM5
   FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
   PYTHONUNBUFFERED: "1"
+
+# ==============================================================================
+# JOB DEFINITIONS
+# ==============================================================================
 
 jobs:
 
 # ==============================================================================
 # JOB 1 — INIT CI VARIABLES
 # ==============================================================================
-# Initializes mutable CI state used across downstream jobs.
-# These act as explicit pass/fail markers.
-# Can be skipped on manual runs.
-# ==============================================================================
   init-ci-vars:
     runs-on: self-hosted
+    # NOTE: Runs ONLY on push AND when toggle is true
     if: ${{ inputs.run_init == 'true' && github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v4
@@ -235,9 +226,6 @@ jobs:
 
 # ==============================================================================
 # JOB 2 — AUTO CLEAN
-# ==============================================================================
-# Frees disk space if the runner is critically low on storage.
-# Optional on manual runs.
 # ==============================================================================
   auto-clean:
     runs-on: self-hosted
@@ -255,11 +243,6 @@ jobs:
 # ==============================================================================
 # JOB 3 — INSTALL HOST TOOLS
 # ==============================================================================
-# Installs required tools on the runner:
-# - Python (already present, but verified)
-# - esptool (for flashing)
-# - mpremote (for controlling MicroPython)
-# ==============================================================================
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
@@ -275,9 +258,6 @@ jobs:
 # ==============================================================================
 # JOB 4 — PREFLIGHT
 # ==============================================================================
-# Verifies that the ESP32 is reachable over USB before doing anything risky.
-# Performs a soft reset of the board.
-# ==============================================================================
   preflight:
     runs-on: self-hosted
     needs: install-tools
@@ -291,9 +271,6 @@ jobs:
 # ==============================================================================
 # JOB 5 — WAIT AFTER PREFLIGHT
 # ==============================================================================
-# Gives USB and device state time to settle.
-# Optional on manual runs.
-# ==============================================================================
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -305,9 +282,6 @@ jobs:
 # ==============================================================================
 # JOB 6 — FLASH FIRMWARE
 # ==============================================================================
-# Completely erases flash and installs a known MicroPython image.
-# Optional on manual runs.
-# ==============================================================================
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
@@ -315,14 +289,11 @@ jobs:
     steps:
       - shell: cmd
         run: |
-          python -m esptool --chip esp32 --port %ESP_PORT% erase-flash
-          python -m esptool --chip esp32 --port %ESP_PORT% write-flash -z 0x1000 %FIRMWARE%
+          python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
+          python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 %FIRMWARE%
 
 # ==============================================================================
 # JOB 7 — WAIT AFTER FLASH
-# ==============================================================================
-# Allows the ESP32 to reboot cleanly after flashing.
-# Optional on manual runs.
 # ==============================================================================
   wait-after-flashing:
     runs-on: self-hosted
@@ -334,10 +305,6 @@ jobs:
 
 # ==============================================================================
 # JOB 8 — WAIT FOR REPL
-# ==============================================================================
-# Polls the MicroPython REPL until it responds.
-# Fails if the board never becomes ready.
-# Optional on manual runs.
 # ==============================================================================
   wait-for-repl:
     runs-on: self-hosted
@@ -361,8 +328,6 @@ jobs:
 # ==============================================================================
 # JOB 9 — UPLOAD TEST FILES
 # ==============================================================================
-# Copies all test modules onto the ESP32 filesystem via mpremote.
-# ==============================================================================
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -377,9 +342,6 @@ jobs:
 
 # ==============================================================================
 # JOB 10 — SYSTEM SELF TEST (HARD GATE)
-# ==============================================================================
-# Mandatory gate.
-# If this fails, the workflow stops immediately.
 # ==============================================================================
   system-self-test:
     runs-on: self-hosted
@@ -400,9 +362,6 @@ jobs:
 
 # ==============================================================================
 # JOB 11 — TEMPERATURE TEST
-# ==============================================================================
-# Validates DS18B20 sensor behavior.
-# Optional on manual runs.
 # ==============================================================================
   temp-test:
     runs-on: self-hosted
@@ -425,9 +384,6 @@ jobs:
 # ==============================================================================
 # JOB 12 — WIFI TEST
 # ==============================================================================
-# Includes a soft reset before running to avoid stale network state.
-# Optional on manual runs.
-# ==============================================================================
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
@@ -444,91 +400,4 @@ jobs:
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
           if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-# ==============================================================================
-# JOB 13 — BLUETOOTH TEST
-# ==============================================================================
-# Executes BLE functional validation.
-# Optional on manual runs.
-# ==============================================================================
-  bluetooth-test:
-    runs-on: self-hosted
-    needs: wifi-test
-    if: ${{ inputs.run_bt == 'true' && github.event_name == 'push' }}
-    outputs:
-      bt_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-# ==============================================================================
-# JOB 14 — GPS TEST
-# ==============================================================================
-# Validates GT-U7 GPS module via UART and NMEA parsing.
-# Optional on manual runs.
-# ==============================================================================
-  gps-test:
-    runs-on: self-hosted
-    needs: bluetooth-test
-    if: ${{ inputs.run_gps == 'true' && github.event_name == 'push' }}
-    outputs:
-      gps_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-# ==============================================================================
-# JOB 15 — FINAL VERDICT
-# ==============================================================================
-# Aggregates results from all upstream jobs and issues a single decision.
-# ==============================================================================
-  final-verdict:
-    runs-on: self-hosted
-    needs:
-      - system-self-test
-      - temp-test
-      - wifi-test
-      - bluetooth-test
-      - gps-test
-    steps:
-      - shell: powershell
-        run: |
-          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
-          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
-          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
-          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
-          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
-
-          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
-            throw "Final verdict: One or more functional tests failed"
-          }
-
-          Write-Host "FINAL VERDICT: ALL TESTS PASSED"
-
-      # Always archive logs for traceability, even on failure
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: esp32-ci-logs
-          path: "*.txt"
+            echo passed=false>>
