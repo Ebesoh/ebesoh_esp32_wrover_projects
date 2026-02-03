@@ -155,17 +155,17 @@ on:
 
       run_temp:
         description: "Run DS18B20 temperature test?"
-        required: true
+        required: false
         default: "true"
 
       run_wifi:
         description: "Run Wi-Fi tests?"
-        required: true
+        required: false
         default: "true"
 
       run_bt:
         description: "Run Bluetooth tests?"
-        required: true
+        required: false
         default: "true"
 
       run_gps:
