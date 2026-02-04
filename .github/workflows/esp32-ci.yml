@@ -1,7 +1,7 @@
 name: ESP32-WROVER DEVKIT CI
 
-# ========================= TOP-LEVEL NOTES (UNCHANGED BY YOU) =========================
-# [Your long documentation block preserved — unchanged]
+# ==============================================================================
+# ESP32-WROVER DEVKIT CI PIPELINE — TOP-LEVEL INTENT
 # ==============================================================================
 
 on:
@@ -80,8 +80,6 @@ concurrency:
 
 env:
   ESP_PORT: COM5
-  # FIX 1 — GitHub Actions cannot reliably expand bare Windows paths with spaces.
-  # We store it quoted and use it quoted later.
   FIRMWARE: "C:\\ESP32_Wrover\\ebesoh_esp32_wrover_projects\\firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin"
   PYTHONUNBUFFERED: "1"
 
@@ -137,7 +135,6 @@ jobs:
         run: |
           echo Preflight: checking ESP32 on %ESP_PORT%...
 
-          REM Use a simple print instead of reset to avoid raw-REPL issues
           python -m mpremote connect %ESP_PORT% exec "print('OK')" || (
             echo "Preflight failed: cannot communicate with ESP32"
             exit /b 1
@@ -164,7 +161,6 @@ jobs:
           python -m esptool erase-flash --chip esp32 --port %ESP_PORT%
 
           echo Flashing firmware...
-          REM FIX 2 — Correct esptool syntax + quoted path
           python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 "%FIRMWARE%"
 
   # ========================== JOB 7 — WAIT AFTER FLASH ==========================
@@ -203,7 +199,7 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 9 — UPLOAD TEST FILES ==========================
+  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ==========================
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -211,9 +207,58 @@ jobs:
     steps:
       - shell: cmd
         run: |
-          echo "Uploading test files to ESP32..."
+          echo "=============================================="
+          echo "Checking test folders before upload..."
+          echo "=============================================="
 
-          REM FIX 3 — indentation and syntax corrected
+          if not exist test_tcp (
+            echo "ERROR: Folder test_tcp does NOT exist"
+            exit /b 1
+          )
+
+          if not exist test_temp (
+            echo "ERROR: Folder test_temp does NOT exist"
+            exit /b 1
+          )
+
+          if not exist tests_wifi (
+            echo "ERROR: Folder tests_wifi does NOT exist"
+            exit /b 1
+          )
+
+          if not exist tests_bt (
+            echo "ERROR: Folder tests_bt does NOT exist"
+            exit /b 1
+          )
+
+          if not exist tests_gps (
+            echo "ERROR: Folder tests_gps does NOT exist"
+            exit /b 1
+          )
+
+          if not exist tests_selftest_DS18B20_gps_wifi (
+            echo "ERROR: Folder tests_selftest_DS18B20_gps_wifi does NOT exist"
+            exit /b 1
+          )
+
+          echo "All required folders exist."
+          echo ""
+
+          echo "=============================================="
+          echo "Listing files that will be uploaded"
+          echo "=============================================="
+
+          dir test_tcp
+          dir test_temp
+          dir tests_wifi
+          dir tests_bt
+          dir tests_gps
+          dir tests_selftest_DS18B20_gps_wifi
+
+          echo ""
+          echo "=============================================="
+          echo "Uploading test files to ESP32..."
+          echo "=============================================="
 
           for %%f in (test_tcp\*.py) do (
             echo Uploading %%f
@@ -269,7 +314,14 @@ jobs:
             )
           )
 
-          echo "All test files uploaded successfully."
+          echo ""
+          echo "=============================================="
+          echo "Verifying files on ESP32"
+          echo "=============================================="
+
+          python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
+
+          echo "All test files uploaded and verified."
 
   # ========================== JOB 10 — SYSTEM SELF TEST ==========================
   system-self-test:
