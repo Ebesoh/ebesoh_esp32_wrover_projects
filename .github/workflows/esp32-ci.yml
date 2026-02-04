@@ -248,6 +248,11 @@ on:
       # This fixes the earlier behavior where "full" accidentally forced tests to run.
       # -----------------------------
 
+       run_tcp:
+        description: "Run tcp test?"
+        required: false
+        default: "false"
+        
       run_temp:
         description: "Run DS18B20 temperature test?"
         required: false
@@ -320,6 +325,7 @@ jobs:
           "TEMP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "BT_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "GPS_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
+          "TCP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
   # ==============================================================================
@@ -496,6 +502,7 @@ jobs:
     steps:
       - shell: cmd
         run: |
+          for %%f in (test_tcp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
           for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -535,7 +542,7 @@ jobs:
           )
 
   # ==============================================================================
-  # JOB 11 — TEMPERATURE TEST (FIXED BEHAVIOR)
+  # JOB 11 — TEMPERATURE TEST 
   # ==============================================================================
   #
   # New, clean rule:
@@ -565,7 +572,7 @@ jobs:
           )
 
   # ==============================================================================
-  # JOB 12 — WIFI TEST (FIXED BEHAVIOR)
+  # JOB 12 — WIFI TEST 
   # ==============================================================================
   #
   # I reset the board right before Wi-Fi tests.
@@ -600,7 +607,7 @@ jobs:
           )
 
   # ==============================================================================
-  # JOB 13 — BLUETOOTH TEST (FIXED BEHAVIOR)
+  # JOB 13 — BLUETOOTH TEST 
   # ==============================================================================
   #
   # Same philosophy as temperature and Wi-Fi:
@@ -627,7 +634,7 @@ jobs:
           )
 
   # ==============================================================================
-  # JOB 14 — GPS TEST (DESIGN PRESERVED)
+  # JOB 14 — GPS TEST 
   # ==============================================================================
   #
   # This job has very specific behavior I designed deliberately:
@@ -663,8 +670,46 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
+    # ==============================================================================
+  # JOB 15 — TCP TEST 
   # ==============================================================================
-  # JOB 15 — FINAL VERDICT + READABLE SUMMARY
+  #
+  # This job has very specific behavior I designed deliberately:
+  #
+  # - Quick mode → TCP runs right after GPS-test.
+  # - Full mode  → TCP waits for GPS ONLY IF GPS actually ran.
+  # - Skipped GPS must NOT block GPS.
+  # - Only a real system-self-test failure can block TCP.
+  #
+  # The "needs: GPS-test" line is intentional.
+  # GitHub will mark GPS-test as "skipped" if not enabled,
+  # and that will NOT block TCP because of the if-condition below.
+  # ==============================================================================
+  tcp-test:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - gps-test
+    if: ${{ always() &&
+            needs.system-self-test.result != 'failure' &&
+            inputs.run_tcp == 'true' }}
+    outputs:
+      tcp_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_tcp; test_runner_tcp.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+
+  # ==============================================================================
+  # JOB 16 — FINAL VERDICT + READABLE SUMMARY
   # ==============================================================================
   #
   # This job does two things:
@@ -686,6 +731,7 @@ jobs:
       - wifi-test
       - bluetooth-test
       - gps-test
+      - tcp-test
     if: ${{ always() }}
     steps:
       - shell: powershell
@@ -696,12 +742,14 @@ jobs:
           $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
           $BT = "${{ needs.bluetooth-test.outputs.bt_passed }}"
           $GPS = "${{ needs.gps-test.outputs.gps_passed }}"
+          $TCP = "${{ needs.tcp-test.outputs.tcp_passed }}"
           
           if ($SELF -eq "") { $SELF = "skipped" }
           if ($TEMP -eq "") { $TEMP = "skipped" }
           if ($WIFI -eq "") { $WIFI = "skipped" }
           if ($BT -eq "") { $BT = "skipped" }
           if ($GPS -eq "") { $GPS = "skipped" }
+          if ($TCP -eq "") { $TCP = "skipped" }
           
           Write-Host ""
           Write-Host "================== TEST SUMMARY =================="
@@ -711,6 +759,7 @@ jobs:
           Write-Host "WIFI TEST         : $WIFI"
           Write-Host "BLUETOOTH TEST    : $BT"
           Write-Host "GPS TEST          : $GPS"
+          Write-Host "TCP TEST          : $TCP"
           Write-Host "=================================================="
           Write-Host ""
           
@@ -722,8 +771,9 @@ jobs:
           if ($WIFI -eq "skipped") { $WIFI = "true" }
           if ($BT -eq "skipped") { $BT = "true" }
           if ($GPS -eq "skipped") { $GPS = "true" }
+          if ($TCP -eq "skipped") { $TCP = "true" }
           
-          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true") {
+          if ($SELF -ne "true" -or $TEMP -ne "true" -or $WIFI -ne "true" -or $BT -ne "true" -or $GPS -ne "true" -or $TCP -ne "true") {
             throw "Final verdict: One or more functional tests failed"
           }
           
