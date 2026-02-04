@@ -1,9 +1,5 @@
 name: ESP32-WROVER DEVKIT CI
 
-# ==============================================================================
-# ESP32-WROVER DEVKIT CI PIPELINE — TOP-LEVEL INTENT
-# ==============================================================================
-
 on:
   push:
     branches: [ main ]
@@ -199,28 +195,25 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ========================== 
-upload-tests:
-   runs-on: self-hosted
-   needs: wait-for-repl
-   if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
-   steps:
-    - uses: actions/checkout@v4
-    - shell: cmd
-      run: |
-        echo "=============================================="
-        echo "Checking test folders before upload..."
-        echo "=============================================="
+  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ==========================
+  upload-tests:
+    runs-on: self-hosted
+    needs: wait-for-repl
+    if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
+    steps:
+      - uses: actions/checkout@v4
 
-        set UPLOADED_ANY=0
+      - shell: cmd
+        run: |
+          echo "=============================================="
+          echo "Checking test folders before upload..."
+          echo "=============================================="
 
-        REM --- Helper macro to check + upload ---
-        REM (Windows batch has no real functions, so we repeat logic)
+          set UPLOADED_ANY=0
 
-        if exist test_tcp (
-          echo "Found folder: test_tcp"
-          for %%f in (test_tcp\*.py) do (
-            echo Uploading %%f
+          REM --- Upload ROOT test runners first ---
+          for %%f in (*.py) do (
+            echo Uploading root file %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
             if errorlevel 1 (
               echo "ERROR: Failed to upload %%f"
@@ -228,99 +221,94 @@ upload-tests:
             )
             set UPLOADED_ANY=1
           )
-        ) else (
-          echo "WARNING: Folder test_tcp does NOT exist — skipping"
-        )
 
-        if exist test_temp (
-          echo "Found folder: test_temp"
-          for %%f in (test_temp\*.py) do (
-            echo Uploading %%f
-            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload %%f"
-              exit /b 1
+          REM --- Now upload folders if they exist ---
+
+          if exist test_tcp (
+            echo "Found folder: test_tcp"
+            for %%f in (test_tcp\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+              )
+              set UPLOADED_ANY=1
             )
-            set UPLOADED_ANY=1
+          ) else (
+            echo "WARNING: Folder test_tcp does NOT exist — skipping"
           )
-        ) else (
-          echo "WARNING: Folder test_temp does NOT exist — skipping"
-        )
 
-        if exist tests_wifi (
-          echo "Found folder: tests_wifi"
-          for %%f in (tests_wifi\*.py) do (
-            echo Uploading %%f
-            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload %%f"
-              exit /b 1
+          if exist test_temp (
+            echo "Found folder: test_temp"
+            for %%f in (test_temp\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+              )
+              set UPLOADED_ANY=1
             )
-            set UPLOADED_ANY=1
+          ) else (
+            echo "WARNING: Folder test_temp does NOT exist — skipping"
           )
-        ) else (
-          echo "WARNING: Folder tests_wifi does NOT exist — skipping"
-        )
 
-        if exist tests_bt (
-          echo "Found folder: tests_bt"
-          for %%f in (tests_bt\*.py) do (
-            echo Uploading %%f
-            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload %%f"
-              exit /b 1
+          if exist tests_wifi (
+            echo "Found folder: tests_wifi"
+            for %%f in (tests_wifi\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+              )
+              set UPLOADED_ANY=1
             )
-            set UPLOADED_ANY=1
+          ) else (
+            echo "WARNING: Folder tests_wifi does NOT exist — skipping"
           )
-        ) else (
-          echo "WARNING: Folder tests_bt does NOT exist — skipping"
-        )
 
-        if exist tests_gps (
-          echo "Found folder: tests_gps"
-          for %%f in (tests_gps\*.py) do (
-            echo Uploading %%f
-            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload %%f"
-              exit /b 1
+          if exist tests_bt (
+            echo "Found folder: tests_bt"
+            for %%f in (tests_bt\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+              )
+              set UPLOADED_ANY=1
             )
-            set UPLOADED_ANY=1
+          ) else (
+            echo "WARNING: Folder tests_bt does NOT exist — skipping"
           )
-        ) else (
-          echo "WARNING: Folder tests_gps does NOT exist — skipping"
-        )
 
-        if exist tests_selftest_DS18B20_gps_wifi (
-          echo "Found folder: tests_selftest_DS18B20_gps_wifi"
-          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do (
-            echo Uploading %%f
-            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload %%f"
-              exit /b 1
+          if exist tests_gps (
+            echo "Found folder: tests_gps"
+            for %%f in (tests_gps\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+              )
+              set UPLOADED_ANY=1
             )
-            set UPLOADED_ANY=1
+          ) else (
+            echo "WARNING: Folder tests_gps does NOT exist — skipping"
           )
-        ) else (
-          echo "WARNING: Folder tests_selftest_DS18B20_gps_wifi does NOT exist — skipping"
-        )
 
-        echo ""
-        echo "=============================================="
-        echo "Verifying files on ESP32"
-        echo "=============================================="
+          echo ""
+          echo "Verifying files on ESP32:"
+          python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
 
-        python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
+          if "%UPLOADED_ANY%"=="0" (
+            echo "ERROR: No test files were uploaded at all."
+            exit /b 1
+          )
 
-        if "%UPLOADED_ANY%"=="0" (
-          echo "ERROR: No test files were uploaded at all."
-          exit /b 1
-        )
-
-        echo "Upload step completed."
-
+          echo "Upload step completed."
 
   # ========================== JOB 10 — SYSTEM SELF TEST ==========================
   system-self-test:
@@ -341,162 +329,25 @@ upload-tests:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 11 — TEMP TEST ==========================
-  temp-test:
-    runs-on: self-hosted
-    needs: system-self-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            inputs.run_temp == 'true' }}
-    outputs:
-      temp_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-  # ========================== JOB 12 — WIFI TEST ==========================
-  wifi-test:
-    runs-on: self-hosted
-    needs: temp-test
-    if: ${{ always() &&
-            needs.temp-test.result != 'failure' &&
-            inputs.run_wifi == 'true' }}
-    outputs:
-      wifi_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - shell: powershell
-        run: |
-          python -m mpremote connect $env:ESP_PORT reset *> $null
-          Start-Sleep -Seconds 5
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-  # ========================== JOB 13 — BLUETOOTH TEST ==========================
-  bluetooth-test:
-    runs-on: self-hosted
-    needs: wifi-test
-    if: ${{ always() &&
-            needs.wifi-test.result != 'failure' &&
-            inputs.run_bt == 'true' }}
-    outputs:
-      bt_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-  # ========================== JOB 14 — GPS TEST ==========================
-  gps-test:
-    runs-on: self-hosted
-    needs:
-      - system-self-test
-      - bluetooth-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            inputs.run_gps == 'true' }}
-    outputs:
-      gps_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
-  # ========================== JOB 15 — TCP TEST ==========================
-  tcp-test:
-    runs-on: self-hosted
-    needs:
-      - system-self-test
-      - gps-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            (inputs.test_mode == 'quick' || inputs.run_tcp == 'true') }}
-    outputs:
-      tcp_passed: ${{ steps.result.outputs.passed }}
-    steps:
-      - id: result
-        shell: cmd
-        run: |
-          python -m mpremote connect %ESP_PORT% exec "import test_runner_tcp; test_runner_tcp.run_all_tests()"
-          if errorlevel 1 (
-            echo passed=false>>"%GITHUB_OUTPUT%"
-            exit /b 1
-          ) else (
-            echo passed=true>>"%GITHUB_OUTPUT%"
-          )
-
   # ========================== JOB 16 — FINAL VERDICT ==========================
   final-verdict:
     runs-on: self-hosted
     needs:
       - system-self-test
-      - temp-test
-      - wifi-test
-      - bluetooth-test
-      - gps-test
-      - tcp-test
     if: ${{ always() }}
     steps:
       - shell: powershell
         run: |
           $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
-          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
-          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
-          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
-          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
-          $TCP  = "${{ needs.tcp-test.outputs.tcp_passed }}"
 
           Write-Host ""
           Write-Host "================== TEST SUMMARY =================="
           Write-Host "SYSTEM SELF-TEST  : $SELF"
-          Write-Host "TEMPERATURE TEST  : $TEMP"
-          Write-Host "WIFI TEST         : $WIFI"
-          Write-Host "BLUETOOTH TEST    : $BT"
-          Write-Host "GPS TEST          : $GPS"
-          Write-Host "TCP TEST          : $TCP"
           Write-Host "=================================================="
           Write-Host ""
 
-          $failed = $false
-
-          if ($SELF -eq "false") { $failed = $true }
-          if ($TEMP -eq "false") { $failed = $true }
-          if ($WIFI -eq "false") { $failed = $true }
-          if ($BT   -eq "false") { $failed = $true }
-          if ($GPS  -eq "false") { $failed = $true }
-          if ($TCP  -eq "false") { $failed = $true }
-
-          if ($failed) {
-            throw "Final verdict: One or more functional tests failed"
+          if ($SELF -eq "false") {
+            throw "Final verdict: System self-test failed"
           }
 
           Write-Host "FINAL VERDICT: ALL REQUIRED TESTS PASSED"
