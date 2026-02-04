@@ -1,11 +1,37 @@
+# ============================================================================
+# ESP32 Hardware-in-the-Loop CI Pipeline
+#
+# This workflow treats your ESP32 devkit as a physical test target, not just
+# another build artifact. Think of this as "CI for a real device on your desk."
+#
+# High-level intent of this pipeline:
+#
+# 1) Prepare the runner (clean, install tools, sanity-check the device).
+# 2) Optionally re-flash firmware when you explicitly ask for it.
+# 3) Wait until MicroPython is actually responsive.
+# 4) Upload test code onto the ESP32.
+# 5) Run a system self-test first (your gatekeeper).
+# 6) Run optional functional tests (temp, WiFi, BT, GPS, TCP).
+# 7) Produce a clear, human-readable verdict at the end.
+#
+# This is designed for a SINGLE shared test rig (one ESP32 on COM5),
+# which is why you use concurrency to avoid overlapping runs.
+# ============================================================================
+
 name: ESP32-WROVER DEVKIT CI
 
+# ---------------------------------------------------------------------------
+# WHEN THIS PIPELINE RUNS
+# ---------------------------------------------------------------------------
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]    # Any push to main triggers a full run
 
-  workflow_dispatch:
+  workflow_dispatch:      # Manual runs with control knobs
     inputs:
+      # These inputs let you selectively skip parts of the pipeline
+      # when running manually, without maintaining multiple workflows.
+
       run_init:
         description: "Run JOB 1 — Init CI variables?"
         required: true
@@ -21,6 +47,8 @@ on:
         required: true
         default: "true"
 
+      # Flashing is intentionally manual-only.
+      # You do NOT want every push wiping your ESP32.
       run_flash:
         description: "Flash firmware? (MANUAL ONLY)"
         required: false
@@ -36,6 +64,9 @@ on:
         required: true
         default: "true"
 
+      # Controls whether TCP runs by default.
+      # "quick" = skip TCP unless explicitly enabled.
+      # "full" = include TCP.
       test_mode:
         description: "Test mode: quick or full?"
         required: true
@@ -45,6 +76,7 @@ on:
           - quick
           - full
 
+      # Individual test toggles below
       run_tcp:
         description: "Run TCP/IP tests?"
         required: false
@@ -70,22 +102,53 @@ on:
         required: true
         default: "true"
 
+# ---------------------------------------------------------------------------
+# CONCURRENCY CONTROL
+# ---------------------------------------------------------------------------
+# This is critical for hardware testing:
+# Only ONE pipeline can talk to the ESP32 at a time.
+# If a new run starts, the old one is cancelled.
+# ---------------------------------------------------------------------------
 concurrency:
   group: esp32-wrover-hil
   cancel-in-progress: true
 
+# ---------------------------------------------------------------------------
+# GLOBAL ENVIRONMENT VARIABLES
+# ---------------------------------------------------------------------------
+# These apply to every job unless overridden.
+# ---------------------------------------------------------------------------
 env:
   ESP_PORT: COM5
+
+  # Absolute path to your MicroPython firmware binary.
+  # This lives on the runner machine, not in the repo.
   FIRMWARE: "C:\\ESP32_Wrover\\ebesoh_esp32_wrover_projects\\firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin"
+
+  # Ensures Python output is not buffered (important for live logs).
   PYTHONUNBUFFERED: "1"
 
+# Default to cmd shell unless a step explicitly overrides it.
 defaults:
   run:
     shell: cmd
 
+# ============================================================================
+# JOBS BEGIN HERE
+# ============================================================================
+
 jobs:
 
-  # ========================== JOB 1 — INIT ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 1 — INIT CI VARIABLES
+  #
+  # Purpose:
+  # Create baseline environment variables so later jobs have
+  # predictable placeholders for test results.
+  #
+  # This is not strictly required by GitHub Actions, but it gives you
+  # a clean "known state" at the start of every run.
+  # ---------------------------------------------------------------------------
   init-ci-vars:
     runs-on: self-hosted
     if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
@@ -102,7 +165,16 @@ jobs:
           "TCP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
-  # ========================== JOB 2 — AUTO CLEAN ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 2 — AUTO CLEAN WORKSPACE
+  #
+  # Purpose:
+  # Prevent your self-hosted runner from running out of disk space.
+  #
+  # Important detail:
+  # You CHECK OUT the repo first so that if you do need to clean,
+  # you are not left in an empty or broken workspace.
+  # ---------------------------------------------------------------------------
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
@@ -122,7 +194,16 @@ jobs:
             Write-Host "Disk space OK: $freeGb GB free."
           }
 
-  # ========================== JOB 3 — INSTALL TOOLS ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 3 — INSTALL TOOLS
+  #
+  # Purpose:
+  # Ensure the runner has the two key tools you need:
+  # - esptool   -> for flashing firmware
+  # - mpremote  -> for talking to MicroPython over serial
+  #
+  # Versions are pinned to avoid "it worked yesterday" problems.
+  # ---------------------------------------------------------------------------
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
@@ -132,7 +213,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install esptool==4.7.0 mpremote==1.21.0
 
-  # ========================== JOB 4 — PREFLIGHT ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 4 — PREFLIGHT CHECK
+  #
+  # Purpose:
+  # Before doing anything risky, verify you can actually talk to the ESP32.
+  #
+  # If this fails, the rest of the pipeline is pointless.
+  # ---------------------------------------------------------------------------
   preflight:
     runs-on: self-hosted
     needs: install-tools
@@ -145,7 +233,13 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 5 — WAIT AFTER PREFLIGHT ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 5 — WAIT AFTER PREFLIGHT
+  #
+  # Purpose:
+  # Give the device a moment to settle before doing anything else.
+  # This is often necessary with real hardware.
+  # ---------------------------------------------------------------------------
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -154,7 +248,15 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-  # ========================== JOB 6 — FLASH FIRMWARE ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
+  #
+  # Purpose:
+  # Completely erase and re-flash the ESP32 with a known MicroPython image.
+  #
+  # This only runs on manual workflow_dispatch AND when you explicitly set
+  # run_flash = true. Never runs automatically on push.
+  # ---------------------------------------------------------------------------
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
@@ -162,12 +264,20 @@ jobs:
     steps:
       - run: |
           echo Erasing ESP32 flash...
-          python -m esptool erase-flash --chip esp32 --port %ESP_PORT%
+          python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
 
           echo Flashing firmware...
-          python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 "%FIRMWARE%"
+          python -m esptool --chip esp32 --port %ESP_PORT% write_flash 0x1000 "%FIRMWARE%"
 
-  # ========================== JOB 7 — WAIT AFTER FLASH ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 7 — WAIT AFTER FLASH
+  #
+  # Purpose:
+  # Give the ESP32 time to reboot and initialize after flashing.
+  #
+  # The condition is written so that this job still runs even if
+  # flashing was skipped (which is the normal case on most runs).
+  # ---------------------------------------------------------------------------
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
@@ -177,7 +287,15 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-  # ========================== JOB 8 — WAIT FOR REPL ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 8 — WAIT FOR MICROPYTHON REPL
+  #
+  # Purpose:
+  # Poll until the ESP32 is truly responsive.
+  #
+  # You retry up to 10 times with 3 seconds between attempts.
+  # This prevents flaky failures if the board is slow to boot.
+  # ---------------------------------------------------------------------------
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
@@ -201,7 +319,18 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 9 — UPLOAD TEST FILES (CORRECTED) ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 9 — UPLOAD TEST FILES (CRITICAL STEP)
+  #
+  # Purpose:
+  # Copy all required test scripts from the repo onto the ESP32 filesystem.
+  #
+  # Key design choice:
+  # - The system self-test MUST be uploaded first.
+  # - You explicitly point to:
+  #   tests_selftest_DS18B20_gps_wifi/test_runner_system.py
+  #   because that is where the file actually lives in your repo.
+  # ---------------------------------------------------------------------------
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -237,7 +366,7 @@ jobs:
             )
           )
 
-          REM === Upload test folders (FIXED NAMES) ===
+          REM === Upload test folders (corrected names) ===
           for %%D in (test_tcp test_temp tests_wifi tests_bt tests_gps tests_selftest_DS18B20_gps_wifi) do (
             if exist %%D (
               echo Found folder: %%D
@@ -262,7 +391,14 @@ jobs:
 
           echo Upload step completed.
 
-  # ========================== JOB 10 — SYSTEM SELF TEST ==========================
+  # ---------------------------------------------------------------------------
+  # JOB 10 — SYSTEM SELF TEST (GATEKEEPER)
+  #
+  # Purpose:
+  # This is your most important test.
+  #
+  # If this fails, all other tests are pointless and should not run.
+  # ---------------------------------------------------------------------------
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
@@ -280,7 +416,12 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== OPTIONAL TESTS ==========================
+  # ---------------------------------------------------------------------------
+  # OPTIONAL FUNCTIONAL TESTS
+  # Each of these only runs if:
+  # - system-self-test succeeded, AND
+  # - the corresponding input flag is true.
+  # ---------------------------------------------------------------------------
 
   temp-test:
     runs-on: self-hosted
@@ -375,7 +516,15 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== FINAL VERDICT ==========================
+  # ---------------------------------------------------------------------------
+  # FINAL VERDICT — HUMAN READABLE SUMMARY
+  #
+  # Purpose:
+  # Print a clean summary and fail the workflow if any required test failed.
+  #
+  # You deliberately check job RESULTS (success/failure/skipped),
+  # not raw outputs, which makes this much more reliable.
+  # ---------------------------------------------------------------------------
   final-verdict:
     runs-on: self-hosted
     needs:
