@@ -434,12 +434,40 @@ jobs:
     steps:
       - shell: cmd
         run: |
-          for %%f in (test_tcp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-          for %%f in (tests_gps\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          echo "Uploading test files to ESP32..."
+
+          for %%f in (test_tcp\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          for %%f in (test_temp\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          for %%f in (tests_wifi\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          for %%f in (tests_bt\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          for %%f in (tests_gps\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do (
+            echo Uploading %%f
+            python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          )
+
+          echo "Upload step completed."
+
 
   # ==============================================================================
   # JOB 10 — SYSTEM SELF TEST (HARD GATE)
