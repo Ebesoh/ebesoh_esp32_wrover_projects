@@ -79,19 +79,13 @@ env:
   FIRMWARE: "C:\\ESP32_Wrover\\ebesoh_esp32_wrover_projects\\firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin"
   PYTHONUNBUFFERED: "1"
 
-# ==========================================================
-# REUSABLE DEFAULTS (avoid repetition)
-# ==========================================================
-
 defaults:
   run:
     shell: cmd
 
-# ==========================================================
-# JOB 1 — INIT
-# ==========================================================
-
 jobs:
+
+  # ========================== JOB 1 — INIT ==========================
   init-ci-vars:
     runs-on: self-hosted
     if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
@@ -108,16 +102,13 @@ jobs:
           "TCP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
-# ==========================================================
-# JOB 2 — AUTO CLEAN (safer than before)
-# ==========================================================
-
+  # ========================== JOB 2 — AUTO CLEAN ==========================
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
     if: ${{ inputs.run_autoclean == 'true' || github.event_name == 'push' }}
     steps:
-      - uses: actions/checkout@v4   # <-- important fix
+      - uses: actions/checkout@v4
 
       - shell: powershell
         run: |
@@ -131,10 +122,7 @@ jobs:
             Write-Host "Disk space OK: $freeGb GB free."
           }
 
-# ==========================================================
-# JOB 3 — INSTALL TOOLS (pinned versions)
-# ==========================================================
-
+  # ========================== JOB 3 — INSTALL TOOLS ==========================
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
@@ -144,10 +132,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install esptool==4.7.0 mpremote==1.21.0
 
-# ==========================================================
-# JOB 4 — PREFLIGHT
-# ==========================================================
-
+  # ========================== JOB 4 — PREFLIGHT ==========================
   preflight:
     runs-on: self-hosted
     needs: install-tools
@@ -160,10 +145,7 @@ jobs:
             exit /b 1
           )
 
-# ==========================================================
-# JOB 5 — WAIT AFTER PREFLIGHT
-# ==========================================================
-
+  # ========================== JOB 5 — WAIT AFTER PREFLIGHT ==========================
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -172,10 +154,7 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-# ==========================================================
-# JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
-# ==========================================================
-
+  # ========================== JOB 6 — FLASH FIRMWARE ==========================
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
@@ -188,10 +167,7 @@ jobs:
           echo Flashing firmware...
           python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 "%FIRMWARE%"
 
-# ==========================================================
-# JOB 7 — WAIT AFTER FLASH (cleaner condition)
-# ==========================================================
-
+  # ========================== JOB 7 — WAIT AFTER FLASH ==========================
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
@@ -201,10 +177,7 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-# ==========================================================
-# JOB 8 — WAIT FOR REPL (more retries)
-# ==========================================================
-
+  # ========================== JOB 8 — WAIT FOR REPL ==========================
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
@@ -228,10 +201,7 @@ jobs:
             exit /b 1
           )
 
-# ==========================================================
-# JOB 9 — UPLOAD TEST FILES (same logic, safer loops)
-# ==========================================================
-
+  # ========================== JOB 9 — UPLOAD TEST FILES (CORRECTED) ==========================
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -246,18 +216,18 @@ jobs:
 
           set UPLOADED_ANY=0
 
-          REM Upload system self-test first (must exist)
-          if not exist test_runner_system.py (
-            echo ERROR: test_runner_system.py NOT FOUND in repository
+          REM === CRITICAL: Upload system self-test first ===
+          if not exist tests_selftest_DS18B20_gps_wifi\test_runner_system.py (
+            echo ERROR: test_runner_system.py NOT FOUND in tests_selftest_DS18B20_gps_wifi
             exit /b 1
           )
 
           echo Uploading test_runner_system.py
-          python -m mpremote connect %ESP_PORT% fs cp "test_runner_system.py" :
+          python -m mpremote connect %ESP_PORT% fs cp "tests_selftest_DS18B20_gps_wifi\test_runner_system.py" :
           if errorlevel 1 exit /b 1
           set UPLOADED_ANY=1
 
-          REM Upload other top-level runners (safer pattern)
+          REM Upload other top-level runners (if any)
           for %%f in (test_runner_*.py) do (
             if exist "%%f" if not "%%f"=="test_runner_system.py" (
               echo Uploading %%f
@@ -267,8 +237,8 @@ jobs:
             )
           )
 
-          REM Upload test folders
-          for %%D in (test_tcp test_temp tests_wifi tests_bt tests_gps test_selftest_DS18B20_gps_wifi) do (
+          REM === Upload test folders (FIXED NAMES) ===
+          for %%D in (test_tcp test_temp tests_wifi tests_bt tests_gps tests_selftest_DS18B20_gps_wifi) do (
             if exist %%D (
               echo Found folder: %%D
               for %%f in (%%D\*.py) do (
@@ -286,16 +256,13 @@ jobs:
           python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
 
           if "%UPLOADED_ANY%"=="0" (
-            echo ERROR: No test files were uploaded at all.
+            echo "ERROR: No test files were uploaded at all."
             exit /b 1
           )
 
           echo Upload step completed.
 
-# ==========================================================
-# JOB 10 — SYSTEM SELF TEST
-# ==========================================================
-
+  # ========================== JOB 10 — SYSTEM SELF TEST ==========================
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
@@ -313,9 +280,7 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==========================================================
-# JOB 11 — OPTIONAL TESTS (same logic, cleaner)
-# ==========================================================
+  # ========================== OPTIONAL TESTS ==========================
 
   temp-test:
     runs-on: self-hosted
@@ -410,10 +375,7 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-# ==========================================================
-# JOB 16 — FINAL VERDICT (much cleaner logic)
-# ==========================================================
-
+  # ========================== FINAL VERDICT ==========================
   final-verdict:
     runs-on: self-hosted
     needs:
@@ -458,4 +420,3 @@ jobs:
         with:
           name: esp32-ci-logs
           path: "*.txt"
-
