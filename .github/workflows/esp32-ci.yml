@@ -299,7 +299,7 @@ jobs:
             echo "WARNING: Folder tests_gps does NOT exist — skipping"
           )
 
-          if exist test_selftest_DS18B20_gps_wifi (
+          if exist tests_selftest_DS18B20_gps_wifi (
             echo "Found folder: test_selftest_DS18B20_gps_wifi"
             for %%f in (test_selftest_DS18B20_gps_wifi\*.py) do (
               echo Uploading %%f
