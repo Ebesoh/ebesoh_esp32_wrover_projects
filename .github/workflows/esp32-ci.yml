@@ -199,67 +199,26 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ==========================
-  upload-tests:
-    runs-on: self-hosted
-    needs: wait-for-repl
-    if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
-    steps:
-      - shell: cmd
-        run: |
-          echo "=============================================="
-          echo "Checking test folders before upload..."
-          echo "=============================================="
+  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ========================== 
+upload-tests:
+   runs-on: self-hosted
+   needs: wait-for-repl
+   if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
+   steps:
+    - uses: actions/checkout@v4
+    - shell: cmd
+      run: |
+        echo "=============================================="
+        echo "Checking test folders before upload..."
+        echo "=============================================="
 
-          if not exist test_tcp (
-            echo "ERROR: Folder test_tcp does NOT exist"
-            exit /b 1
-          )
+        set UPLOADED_ANY=0
 
-          if not exist test_temp (
-            echo "ERROR: Folder test_temp does NOT exist"
-            exit /b 1
-          )
+        REM --- Helper macro to check + upload ---
+        REM (Windows batch has no real functions, so we repeat logic)
 
-          if not exist tests_wifi (
-            echo "ERROR: Folder tests_wifi does NOT exist"
-            exit /b 1
-          )
-
-          if not exist tests_bt (
-            echo "ERROR: Folder tests_bt does NOT exist"
-            exit /b 1
-          )
-
-          if not exist tests_gps (
-            echo "ERROR: Folder tests_gps does NOT exist"
-            exit /b 1
-          )
-
-          if not exist tests_selftest_DS18B20_gps_wifi (
-            echo "ERROR: Folder tests_selftest_DS18B20_gps_wifi does NOT exist"
-            exit /b 1
-          )
-
-          echo "All required folders exist."
-          echo ""
-
-          echo "=============================================="
-          echo "Listing files that will be uploaded"
-          echo "=============================================="
-
-          dir test_tcp
-          dir test_temp
-          dir tests_wifi
-          dir tests_bt
-          dir tests_gps
-          dir tests_selftest_DS18B20_gps_wifi
-
-          echo ""
-          echo "=============================================="
-          echo "Uploading test files to ESP32..."
-          echo "=============================================="
-
+        if exist test_tcp (
+          echo "Found folder: test_tcp"
           for %%f in (test_tcp\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -267,8 +226,14 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder test_tcp does NOT exist — skipping"
+        )
 
+        if exist test_temp (
+          echo "Found folder: test_temp"
           for %%f in (test_temp\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -276,8 +241,14 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder test_temp does NOT exist — skipping"
+        )
 
+        if exist tests_wifi (
+          echo "Found folder: tests_wifi"
           for %%f in (tests_wifi\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -285,8 +256,14 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder tests_wifi does NOT exist — skipping"
+        )
 
+        if exist tests_bt (
+          echo "Found folder: tests_bt"
           for %%f in (tests_bt\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -294,8 +271,14 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder tests_bt does NOT exist — skipping"
+        )
 
+        if exist tests_gps (
+          echo "Found folder: tests_gps"
           for %%f in (tests_gps\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -303,8 +286,14 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder tests_gps does NOT exist — skipping"
+        )
 
+        if exist tests_selftest_DS18B20_gps_wifi (
+          echo "Found folder: tests_selftest_DS18B20_gps_wifi"
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
@@ -312,16 +301,26 @@ jobs:
               echo "ERROR: Failed to upload %%f"
               exit /b 1
             )
+            set UPLOADED_ANY=1
           )
+        ) else (
+          echo "WARNING: Folder tests_selftest_DS18B20_gps_wifi does NOT exist — skipping"
+        )
 
-          echo ""
-          echo "=============================================="
-          echo "Verifying files on ESP32"
-          echo "=============================================="
+        echo ""
+        echo "=============================================="
+        echo "Verifying files on ESP32"
+        echo "=============================================="
 
-          python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
+        python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
 
-          echo "All test files uploaded and verified."
+        if "%UPLOADED_ANY%"=="0" (
+          echo "ERROR: No test files were uploaded at all."
+          exit /b 1
+        )
+
+        echo "Upload step completed."
+
 
   # ========================== JOB 10 — SYSTEM SELF TEST ==========================
   system-self-test:
