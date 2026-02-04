@@ -216,7 +216,7 @@ concurrency:
 
 env:
   ESP_PORT: COM5
-  FIRMWARE: firmware/ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
+  FIRMWARE:  C:\ESP32_Wrover\ebesoh_esp32_wrover_projects\firmware\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin
   PYTHONUNBUFFERED: "1"
 
 # ==============================================================================
@@ -352,7 +352,8 @@ jobs:
       - shell: cmd
         run: |
           python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
-          python -m esptool --chip esp32 --port %ESP_PORT% write_flash -z 0x1000 %FIRMWARE%
+          python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 %FIRMWARE%
+
 
   # ==============================================================================
   # JOB 7 — WAIT AFTER FLASH
