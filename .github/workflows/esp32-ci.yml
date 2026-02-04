@@ -299,6 +299,21 @@ jobs:
             echo "WARNING: Folder tests_gps does NOT exist — skipping"
           )
 
+          if exist test_selftest_DS18B20_gps_wifi (
+            echo "Found folder: test_selftest_DS18B20_gps_wifi"
+            for %%f in (test_selftest_DS18B20_gps_wifi\*.py) do (
+              echo Uploading %%f
+              python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+              if errorlevel 1 (
+                echo "ERROR: Failed to upload %%f"
+                exit /b 1
+               )
+              set UPLOADED_ANY=1
+             )
+           ) else (
+             echo "WARNING: Folder test_selftest_DS18B20_gps_wifi does NOT exist — skipping"
+          )
+
           echo ""
           echo "Verifying files on ESP32:"
           python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
