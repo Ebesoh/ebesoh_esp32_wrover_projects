@@ -314,8 +314,11 @@ jobs:
       - shell: cmd
         run: |
           echo Preflight: checking ESP32 on %ESP_PORT%...
-          python -m mpremote connect %ESP_PORT% reset
-          if errorlevel 1 exit /b 1
+          
+          python -m mpremote connect %ESP_PORT% exec "print('OK')" || (
+            echo "Preflight failed: cannot communicate with ESP32"
+            exit /b 1
+          )
 
   # ==============================================================================
   # JOB 5 — WAIT AFTER PREFLIGHT
@@ -398,17 +401,22 @@ jobs:
     steps:
       - shell: cmd
         run: |
+          echo Waiting for MicroPython to be responsive...
+
           set READY=0
           for /L %%i in (1,1,5) do (
-            python -m mpremote connect %ESP_PORT% exec "print('READY')"
-            if not errorlevel 1 (
+            python -m mpremote connect %ESP_PORT% exec "print('READY')" && (
               set READY=1
               goto done
             )
             timeout /t 3 >nul
           )
+
           :done
-          if "%READY%"=="0" exit /b 1
+          if "%READY%"=="0" (
+            echo "ERROR: MicroPython did not respond"
+            exit /b 1
+          )
 
   # ==============================================================================
   # JOB 9 — UPLOAD TEST FILES
