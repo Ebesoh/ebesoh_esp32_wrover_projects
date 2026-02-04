@@ -17,22 +17,22 @@ on:
         default: "true"
 
       run_wait_after_preflight:
-        description: "Run JOB 5 — Wait after preflight?"
+        description: "Wait after preflight?"
         required: true
         default: "true"
 
       run_flash:
-        description: "Run JOB 6 — Flash firmware? (MANUAL ONLY)"
+        description: "Flash firmware? (MANUAL ONLY)"
         required: false
         default: "false"
 
       run_wait_after_flash:
-        description: "Run JOB 7 — Wait after flashing?"
+        description: "Wait after flashing?"
         required: true
         default: "true"
 
       run_wait_for_repl:
-        description: "Run JOB 8 — Wait for MicroPython REPL?"
+        description: "Wait for MicroPython REPL?"
         required: true
         default: "true"
 
@@ -79,9 +79,19 @@ env:
   FIRMWARE: "C:\\ESP32_Wrover\\ebesoh_esp32_wrover_projects\\firmware\\ESP32_GENERIC-SPIRAM-20251209-v1.27.0.bin"
   PYTHONUNBUFFERED: "1"
 
-jobs:
+# ==========================================================
+# REUSABLE DEFAULTS (avoid repetition)
+# ==========================================================
 
-  # ========================== JOB 1 — INIT ==========================
+defaults:
+  run:
+    shell: cmd
+
+# ==========================================================
+# JOB 1 — INIT
+# ==========================================================
+
+jobs:
   init-ci-vars:
     runs-on: self-hosted
     if: ${{ inputs.run_init == 'true' || github.event_name == 'push' }}
@@ -98,38 +108,51 @@ jobs:
           "TCP_TEST_PASSED=unknown" | Out-File -Append $env:GITHUB_ENV
           "FAILED_TESTS=" | Out-File -Append $env:GITHUB_ENV
 
-  # ========================== JOB 2 — AUTO CLEAN ==========================
+# ==========================================================
+# JOB 2 — AUTO CLEAN (safer than before)
+# ==========================================================
+
   auto-clean:
     runs-on: self-hosted
     needs: init-ci-vars
     if: ${{ inputs.run_autoclean == 'true' || github.event_name == 'push' }}
     steps:
+      - uses: actions/checkout@v4   # <-- important fix
+
       - shell: powershell
         run: |
           $drive = Get-PSDrive -Name C
           $freeGb = [math]::Round($drive.Free / 1GB, 2)
+
           if ($freeGb -lt 10) {
+            Write-Host "Low disk space ($freeGb GB). Cleaning workspace..."
             Get-ChildItem -Force | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          } else {
+            Write-Host "Disk space OK: $freeGb GB free."
           }
 
-  # ========================== JOB 3 — INSTALL TOOLS ==========================
+# ==========================================================
+# JOB 3 — INSTALL TOOLS (pinned versions)
+# ==========================================================
+
   install-tools:
     runs-on: self-hosted
     needs: auto-clean
     steps:
-      - shell: cmd
-        run: |
+      - run: |
           python --version
           python -m pip install --upgrade pip
-          python -m pip install esptool mpremote
+          python -m pip install esptool==4.7.0 mpremote==1.21.0
 
-  # ========================== JOB 4 — PREFLIGHT ==========================
+# ==========================================================
+# JOB 4 — PREFLIGHT
+# ==========================================================
+
   preflight:
     runs-on: self-hosted
     needs: install-tools
     steps:
-      - shell: cmd
-        run: |
+      - run: |
           echo Preflight: checking ESP32 on %ESP_PORT%...
 
           python -m mpremote connect %ESP_PORT% exec "print('OK')" || (
@@ -137,7 +160,10 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 5 — WAIT AFTER PREFLIGHT ==========================
+# ==========================================================
+# JOB 5 — WAIT AFTER PREFLIGHT
+# ==========================================================
+
   wait-after-preflight:
     runs-on: self-hosted
     needs: preflight
@@ -146,43 +172,49 @@ jobs:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-  # ========================== JOB 6 — FLASH FIRMWARE (MANUAL) ==========================
+# ==========================================================
+# JOB 6 — FLASH FIRMWARE (MANUAL ONLY)
+# ==========================================================
+
   flash-firmware:
     runs-on: self-hosted
     needs: wait-after-preflight
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_flash == 'true' }}
     steps:
-      - shell: cmd
-        run: |
+      - run: |
           echo Erasing ESP32 flash...
           python -m esptool erase-flash --chip esp32 --port %ESP_PORT%
 
           echo Flashing firmware...
           python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 "%FIRMWARE%"
 
-  # ========================== JOB 7 — WAIT AFTER FLASH ==========================
+# ==========================================================
+# JOB 7 — WAIT AFTER FLASH (cleaner condition)
+# ==========================================================
+
   wait-after-flashing:
     runs-on: self-hosted
     needs: flash-firmware
-    if: ${{ always() && needs.flash-firmware.result != 'failure' &&
-            (inputs.run_wait_after_flash == 'true' || github.event_name == 'push') }}
+    if: ${{ (needs.flash-firmware.result == 'success' || needs.flash-firmware.result == 'skipped')
+            && (inputs.run_wait_after_flash == 'true' || github.event_name == 'push') }}
     steps:
       - shell: powershell
         run: Start-Sleep -Seconds 15
 
-  # ========================== JOB 8 — WAIT FOR REPL ==========================
+# ==========================================================
+# JOB 8 — WAIT FOR REPL (more retries)
+# ==========================================================
+
   wait-for-repl:
     runs-on: self-hosted
     needs: wait-after-flashing
-    if: ${{ always() && needs.wait-after-flashing.result != 'failure' &&
-            (inputs.run_wait_for_repl == 'true' || github.event_name == 'push') }}
+    if: ${{ inputs.run_wait_for_repl == 'true' || github.event_name == 'push' }}
     steps:
-      - shell: cmd
-        run: |
+      - run: |
           echo Waiting for MicroPython to be responsive...
 
           set READY=0
-          for /L %%i in (1,1,5) do (
+          for /L %%i in (1,1,10) do (
             python -m mpremote connect %ESP_PORT% exec "print('READY')" && (
               set READY=1
               goto done
@@ -196,7 +228,10 @@ jobs:
             exit /b 1
           )
 
-  # ========================== JOB 9 — UPLOAD TEST FILES (FIXED) ==========================
+# ==========================================================
+# JOB 9 — UPLOAD TEST FILES (same logic, safer loops)
+# ==========================================================
+
   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
@@ -204,81 +239,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - shell: cmd
-        run: |
-          echo "=============================================="
-          echo "Checking test folders before upload..."
-          echo "=============================================="
+      - run: |
+          echo ==============================================
+          echo Checking test folders before upload...
+          echo ==============================================
 
           set UPLOADED_ANY=0
 
-          REM === CRITICAL: Upload system self-test first ===
-          if exist test_runner_system.py (
-            echo Uploading test_runner_system.py
-            python -m mpremote connect %ESP_PORT% fs cp "test_runner_system.py" :
-            if errorlevel 1 (
-              echo "ERROR: Failed to upload test_runner_system.py"
-              exit /b 1
-            )
-            set UPLOADED_ANY=1
-          ) else (
-            echo "ERROR: test_runner_system.py NOT FOUND in repository"
+          REM Upload system self-test first (must exist)
+          if not exist test_runner_system.py (
+            echo ERROR: test_runner_system.py NOT FOUND in repository
             exit /b 1
           )
 
-          REM Upload other top-level runners
+          echo Uploading test_runner_system.py
+          python -m mpremote connect %ESP_PORT% fs cp "test_runner_system.py" :
+          if errorlevel 1 exit /b 1
+          set UPLOADED_ANY=1
+
+          REM Upload other top-level runners (safer pattern)
           for %%f in (test_runner_*.py) do (
-            if not "%%f"=="test_runner_system.py" (
+            if exist "%%f" if not "%%f"=="test_runner_system.py" (
               echo Uploading %%f
               python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-              if errorlevel 1 (
-                echo "ERROR: Failed to upload %%f"
-                exit /b 1
-              )
+              if errorlevel 1 exit /b 1
               set UPLOADED_ANY=1
             )
           )
 
-          REM === Upload test folders if they exist ===
-
+          REM Upload test folders
           for %%D in (test_tcp test_temp tests_wifi tests_bt tests_gps test_selftest_DS18B20_gps_wifi) do (
             if exist %%D (
-              echo "Found folder: %%D"
+              echo Found folder: %%D
               for %%f in (%%D\*.py) do (
                 echo Uploading %%f
                 python -m mpremote connect %ESP_PORT% fs cp "%%f" :
-                if errorlevel 1 (
-                  echo "ERROR: Failed to upload %%f"
-                  exit /b 1
-                )
+                if errorlevel 1 exit /b 1
                 set UPLOADED_ANY=1
               )
             ) else (
-              echo "WARNING: Folder %%D does NOT exist — skipping"
+              echo WARNING: Folder %%D does NOT exist — skipping
             )
           )
 
-          echo ""
-          echo "Verifying files on ESP32:"
+          echo Verifying files on ESP32:
           python -m mpremote connect %ESP_PORT% exec "import os; print(os.listdir())"
 
           if "%UPLOADED_ANY%"=="0" (
-            echo "ERROR: No test files were uploaded at all."
+            echo ERROR: No test files were uploaded at all.
             exit /b 1
           )
 
-          echo "Upload step completed."
+          echo Upload step completed.
 
-  # ========================== JOB 10 — SYSTEM SELF TEST ==========================
+# ==========================================================
+# JOB 10 — SYSTEM SELF TEST
+# ==========================================================
+
   system-self-test:
     runs-on: self-hosted
     needs: upload-tests
     if: ${{ always() && needs.upload-tests.result != 'failure' }}
     outputs:
-      self_test_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
           if errorlevel 1 (
@@ -288,18 +313,18 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 11 — TEMP TEST ==========================
+# ==========================================================
+# JOB 11 — OPTIONAL TESTS (same logic, cleaner)
+# ==========================================================
+
   temp-test:
     runs-on: self-hosted
     needs: system-self-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            inputs.run_temp == 'true' }}
+    if: ${{ needs.system-self-test.result != 'failure' && inputs.run_temp == 'true' }}
     outputs:
-      temp_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
           if errorlevel 1 (
@@ -309,15 +334,12 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 12 — WIFI TEST ==========================
   wifi-test:
     runs-on: self-hosted
     needs: temp-test
-    if: ${{ always() &&
-            needs.temp-test.result != 'failure' &&
-            inputs.run_wifi == 'true' }}
+    if: ${{ needs.temp-test.result != 'failure' && inputs.run_wifi == 'true' }}
     outputs:
-      wifi_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - shell: powershell
         run: |
@@ -325,7 +347,6 @@ jobs:
           Start-Sleep -Seconds 5
 
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
           if errorlevel 1 (
@@ -335,18 +356,14 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 13 — BLUETOOTH TEST ==========================
   bluetooth-test:
     runs-on: self-hosted
     needs: wifi-test
-    if: ${{ always() &&
-            needs.wifi-test.result != 'failure' &&
-            inputs.run_bt == 'true' }}
+    if: ${{ needs.wifi-test.result != 'failure' && inputs.run_bt == 'true' }}
     outputs:
-      bt_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
           if errorlevel 1 (
@@ -356,20 +373,14 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 14 — GPS TEST ==========================
   gps-test:
     runs-on: self-hosted
-    needs:
-      - system-self-test
-      - bluetooth-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            inputs.run_gps == 'true' }}
+    needs: system-self-test
+    if: ${{ needs.system-self-test.result != 'failure' && inputs.run_gps == 'true' }}
     outputs:
-      gps_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
           if errorlevel 1 (
@@ -379,20 +390,17 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 15 — TCP TEST ==========================
   tcp-test:
     runs-on: self-hosted
     needs:
       - system-self-test
       - gps-test
-    if: ${{ always() &&
-            needs.system-self-test.result != 'failure' &&
-            (inputs.test_mode == 'quick' || inputs.run_tcp == 'true') }}
+    if: ${{ needs.system-self-test.result != 'failure'
+            && (inputs.test_mode == 'quick' || inputs.run_tcp == 'true') }}
     outputs:
-      tcp_passed: ${{ steps.result.outputs.passed }}
+      result: ${{ steps.result.outputs.passed }}
     steps:
       - id: result
-        shell: cmd
         run: |
           python -m mpremote connect %ESP_PORT% exec "import test_runner_tcp; test_runner_tcp.run_all_tests()"
           if errorlevel 1 (
@@ -402,7 +410,10 @@ jobs:
             echo passed=true>>"%GITHUB_OUTPUT%"
           )
 
-  # ========================== JOB 16 — FINAL VERDICT ==========================
+# ==========================================================
+# JOB 16 — FINAL VERDICT (much cleaner logic)
+# ==========================================================
+
   final-verdict:
     runs-on: self-hosted
     needs:
@@ -416,32 +427,25 @@ jobs:
     steps:
       - shell: powershell
         run: |
-          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
-          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
-          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
-          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
-          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
-          $TCP  = "${{ needs.tcp-test.outputs.tcp_passed }}"
-
           Write-Host ""
           Write-Host "================== TEST SUMMARY =================="
-          Write-Host "SYSTEM SELF-TEST  : $SELF"
-          Write-Host "TEMPERATURE TEST  : $TEMP"
-          Write-Host "WIFI TEST         : $WIFI"
-          Write-Host "BLUETOOTH TEST    : $BT"
-          Write-Host "GPS TEST          : $GPS"
-          Write-Host "TCP TEST          : $TCP"
+          Write-Host "SYSTEM SELF-TEST  : ${{ needs.system-self-test.result }}"
+          Write-Host "TEMPERATURE TEST  : ${{ needs.temp-test.result }}"
+          Write-Host "WIFI TEST         : ${{ needs.wifi-test.result }}"
+          Write-Host "BLUETOOTH TEST    : ${{ needs.bluetooth-test.result }}"
+          Write-Host "GPS TEST          : ${{ needs.gps-test.result }}"
+          Write-Host "TCP TEST          : ${{ needs.tcp-test.result }}"
           Write-Host "=================================================="
           Write-Host ""
 
           $failed = $false
 
-          if ($SELF -eq "false") { $failed = $true }
-          if ($TEMP -eq "false") { $failed = $true }
-          if ($WIFI -eq "false") { $failed = $true }
-          if ($BT   -eq "false") { $failed = $true }
-          if ($GPS  -eq "false") { $failed = $true }
-          if ($TCP  -eq "false") { $failed = $true }
+          if ("${{ needs.system-self-test.result }}" -eq "failure") { $failed = $true }
+          if ("${{ needs.temp-test.result }}" -eq "failure") { $failed = $true }
+          if ("${{ needs.wifi-test.result }}" -eq "failure") { $failed = $true }
+          if ("${{ needs.bluetooth-test.result }}" -eq "failure") { $failed = $true }
+          if ("${{ needs.gps-test.result }}" -eq "failure") { $failed = $true }
+          if ("${{ needs.tcp-test.result }}" -eq "failure") { $failed = $true }
 
           if ($failed) {
             throw "Final verdict: One or more functional tests failed"
@@ -454,3 +458,4 @@ jobs:
         with:
           name: esp32-ci-logs
           path: "*.txt"
+
