@@ -1,7 +1,7 @@
 name: ESP32-WROVER DEVKIT CI
 
 # ==============================================================================
-# ESP32-WROVER DEVKIT CI PIPELINE 
+# ESP32-WROVER DEVKIT CI PIPELINE — TOP-LEVEL INTENT
 # ==============================================================================
 #
 # This is not a “normal” software CI pipeline.
@@ -408,4 +408,288 @@ jobs:
 
   # ==============================================================================
   # JOB 9 — UPLOAD TEST FILES
-  # ==========
+  # ==============================================================================
+  #
+  # Push all test runners onto the ESP32 filesystem.
+  #
+  # Even if some tests will later be skipped,
+  # it’s simpler to upload everything once.
+  # ==============================================================================
+  upload-tests:
+    runs-on: self-hosted
+    needs: wait-for-repl
+    if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
+    steps:
+      - shell: cmd
+        run: |
+          for %%f in (test_tcp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (test_temp\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_bt\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_gps\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+          for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+
+  # ==============================================================================
+  # JOB 10 — SYSTEM SELF TEST (HARD GATE)
+  # ==============================================================================
+  #
+  # This is the single, non-negotiable gate.
+  #
+  # If this fails:
+  # - GPS is blocked,
+  # - Wi-Fi is blocked,
+  # - Bluetooth is blocked,
+  # - Temperature is blocked,
+  # - TCP is blocked.
+  #
+  # I treat this as:
+  # “Is the system fundamentally healthy?”
+  # ==============================================================================
+  system-self-test:
+    runs-on: self-hosted
+    needs: upload-tests
+    if: ${{ always() && needs.upload-tests.result != 'failure' }}
+    outputs:
+      self_test_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_system; test_runner_system.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 11 — TEMPERATURE TEST
+  # ==============================================================================
+  #
+  # Clean rule:
+  #   false = skip, always.
+  #   true  = run.
+  #
+  # Full mode does NOT force this test.
+  # ==============================================================================
+  temp-test:
+    runs-on: self-hosted
+    needs: system-self-test
+    if: ${{ always() &&
+            needs.system-self-test.result != 'failure' &&
+            inputs.run_temp == 'true' }}
+    outputs:
+      temp_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_ds18b20; test_runner_ds18b20.main()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 12 — WIFI TEST
+  # ==============================================================================
+  #
+  # I reset the board right before Wi-Fi tests.
+  #
+  # Why?
+  # - Wi-Fi state can persist across resets,
+  # - stale connections can make tests flaky,
+  # - this gives me a clean baseline.
+  # ==============================================================================
+  wifi-test:
+    runs-on: self-hosted
+    needs: temp-test
+    if: ${{ always() &&
+            needs.temp-test.result != 'failure' &&
+            inputs.run_wifi == 'true' }}
+    outputs:
+      wifi_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - shell: powershell
+        run: |
+          python -m mpremote connect $env:ESP_PORT reset *> $null
+          Start-Sleep -Seconds 5
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_wifi_runner; test_wifi_runner.run_all_wifi_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 13 — BLUETOOTH TEST
+  # ==============================================================================
+  #
+  # Same philosophy as temperature and Wi-Fi:
+  # if it’s false, it is skipped — no exceptions.
+  # ==============================================================================
+  bluetooth-test:
+    runs-on: self-hosted
+    needs: wifi-test
+    if: ${{ always() &&
+            needs.wifi-test.result != 'failure' &&
+            inputs.run_bt == 'true' }}
+    outputs:
+      bt_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_bt; test_runner_bt.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 14 — GPS TEST (SPECIAL BEHAVIOR)
+  # ==============================================================================
+  #
+  # Exact behavior I designed:
+  #
+  # QUICK MODE:
+  #   GPS runs right after system self-test.
+  #
+  # FULL MODE:
+  #   GPS waits for Bluetooth ONLY IF Bluetooth actually ran.
+  #
+  # Critical rules:
+  # - Only system self-test failure can block GPS.
+  # - Skipped Bluetooth must NOT block GPS.
+  #
+  # The “needs: bluetooth-test” line is intentional.
+  # GitHub marks it as “skipped” if not enabled,
+  # and that will NOT block GPS due to the if-condition.
+  # ==============================================================================
+  gps-test:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - bluetooth-test
+    if: ${{ always() &&
+            needs.system-self-test.result != 'failure' &&
+            inputs.run_gps == 'true' }}
+    outputs:
+      gps_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_gps; test_runner_gps.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 15 — TCP TEST (PART OF QUICK MODE BY DEFAULT)
+  # ==============================================================================
+  #
+  # My current choice:
+  #
+  # QUICK MODE → TCP runs after GPS by default.
+  # FULL MODE  → TCP runs only if explicitly enabled.
+  #
+  # Only a real system self-test failure can block TCP.
+  # ==============================================================================
+  tcp-test:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - gps-test
+    if: ${{ always() &&
+            needs.system-self-test.result != 'failure' &&
+            (inputs.test_mode == 'quick' || inputs.run_tcp == 'true') }}
+    outputs:
+      tcp_passed: ${{ steps.result.outputs.passed }}
+    steps:
+      - id: result
+        shell: cmd
+        run: |
+          python -m mpremote connect %ESP_PORT% exec "import test_runner_tcp; test_runner_tcp.run_all_tests()"
+          if errorlevel 1 (
+            echo passed=false>>"%GITHUB_OUTPUT%"
+            exit /b 1
+          ) else (
+            echo passed=true>>"%GITHUB_OUTPUT%"
+          )
+
+  # ==============================================================================
+  # JOB 16 — FINAL VERDICT + SUMMARY
+  # ==============================================================================
+  #
+  # This job:
+  # 1) Prints a clear summary.
+  # 2) Decides pass/fail.
+  #
+  # Key idea:
+  # I only fail if a test actually RAN and returned false.
+  # “skipped” is implicitly acceptable.
+  # ==============================================================================
+  final-verdict:
+    runs-on: self-hosted
+    needs:
+      - system-self-test
+      - temp-test
+      - wifi-test
+      - bluetooth-test
+      - gps-test
+      - tcp-test
+    if: ${{ always() }}
+    steps:
+      - shell: powershell
+        run: |
+          $SELF = "${{ needs.system-self-test.outputs.self_test_passed }}"
+          $TEMP = "${{ needs.temp-test.outputs.temp_passed }}"
+          $WIFI = "${{ needs.wifi-test.outputs.wifi_passed }}"
+          $BT   = "${{ needs.bluetooth-test.outputs.bt_passed }}"
+          $GPS  = "${{ needs.gps-test.outputs.gps_passed }}"
+          $TCP  = "${{ needs.tcp-test.outputs.tcp_passed }}"
+
+          Write-Host ""
+          Write-Host "================== TEST SUMMARY =================="
+          Write-Host "SYSTEM SELF-TEST  : $SELF"
+          Write-Host "TEMPERATURE TEST  : $TEMP"
+          Write-Host "WIFI TEST         : $WIFI"
+          Write-Host "BLUETOOTH TEST    : $BT"
+          Write-Host "GPS TEST          : $GPS"
+          Write-Host "TCP TEST          : $TCP"
+          Write-Host "=================================================="
+          Write-Host ""
+
+          $failed = $false
+
+          if ($SELF -eq "false") { $failed = $true }
+          if ($TEMP -eq "false") { $failed = $true }
+          if ($WIFI -eq "false") { $failed = $true }
+          if ($BT   -eq "false") { $failed = $true }
+          if ($GPS  -eq "false") { $failed = $true }
+          if ($TCP  -eq "false") { $failed = $true }
+
+          if ($failed) {
+            throw "Final verdict: One or more functional tests failed"
+          }
+
+          Write-Host "FINAL VERDICT: ALL REQUIRED TESTS PASSED"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: esp32-ci-logs
+          path: "*.txt"
