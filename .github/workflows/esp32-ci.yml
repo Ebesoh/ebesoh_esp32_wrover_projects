@@ -427,7 +427,7 @@ jobs:
   # Even if some tests will later be skipped,
   # it’s simpler to upload everything once.
   # ==============================================================================
-  upload-tests:
+   upload-tests:
     runs-on: self-hosted
     needs: wait-for-repl
     if: ${{ always() && needs.wait-for-repl.result != 'failure' }}
@@ -439,34 +439,58 @@ jobs:
           for %%f in (test_tcp\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
           for %%f in (test_temp\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
           for %%f in (tests_wifi\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
           for %%f in (tests_bt\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
           for %%f in (tests_gps\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
           for %%f in (tests_selftest_DS18B20_gps_wifi\*.py) do (
             echo Uploading %%f
             python -m mpremote connect %ESP_PORT% fs cp "%%f" :
+            if errorlevel 1 (
+              echo "ERROR: Failed to upload %%f"
+              exit /b 1
+            )
           )
 
-          echo "Upload step completed."
+          echo "All test files uploaded successfully."
 
 
   # ==============================================================================
