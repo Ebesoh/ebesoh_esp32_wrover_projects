@@ -351,8 +351,11 @@ jobs:
     steps:
       - shell: cmd
         run: |
-          python -m esptool --chip esp32 --port %ESP_PORT% erase_flash
-          python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 %FIRMWARE%
+          echo Erasing ESP32 flash...
+          python -m esptool erase-flash --chip esp32 --port %ESP_PORT%
+          
+          echo Flashing firmware...
+          python -m esptool write-flash --chip esp32 --port %ESP_PORT% -z 0x1000 "%FIRMWARE%"
 
 
   # ==============================================================================
