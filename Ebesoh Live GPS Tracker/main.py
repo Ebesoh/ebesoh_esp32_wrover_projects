@@ -1,16 +1,16 @@
 """
-main.py — SILENT VERSION (no console spam)
+main.py — FINAL WORKING SILENT VERSION
 
-What this does:
-- Reads NMEA from ESP32 (GT-UT GPS) over serial.
-- Parses $GPRMC (position, speed, UTC time).
-- Parses $GPGGA (HDOP, sats, altitude, fix).
-- Converts lat/lon → local meters and runs 2D Kalman filter.
-- Smooths speed with 1D Kalman filter.
-- Synchronizes PC time to GPS UTC correctly.
-- Logs everything to CSV (including time offset).
-- Streams data to Flask for live map.
-- Updates raw vs filtered Matplotlib plot.
+- Reads raw NMEA from ESP32 over USB serial
+- Buffers data so we never miss or split sentences
+- Parses $GPRMC / $GNRMC and $GPGGA
+- Runs 2D Kalman filter on position
+- Smooths speed with 1D Kalman filter
+- Scales raw uncertainty using HDOP
+- Syncs GPS (UTC) to PC time correctly
+- Logs everything to CSV
+- Streams data to Flask for live map
+- Sends the FIRST valid point (no “Waiting for data…”)
 """
 
 import math
@@ -34,10 +34,10 @@ from plotter import LiveLatLonPlot
 SERIAL_PORT = "COM5"
 BAUD = 115200
 
-dt = 0.2                 # GPS update period (approx)
+dt = 0.2                 # GPS update period
 BASE_GPS_SIGMA = 2.5     # datasheet accuracy (1σ, meters)
-TIME_SYNC_WINDOW = 10    # rolling window for time offset
-LOOP_SLEEP = 0.05        # 20 Hz cap to keep Thonny stable
+TIME_SYNC_WINDOW = 10
+LOOP_SLEEP = 0.05
 
 # ===========================
 # 1D KALMAN FILTER FOR SPEED
@@ -73,15 +73,10 @@ class SpeedKalman:
         return float(self.x[0, 0])
 
 # ===========================
-# GPS → PC TIME SYNC (CORRECT UTC)
+# GPS → PC TIME SYNC (UTC SAFE)
 # ===========================
 
 def gprmc_utc_to_epoch(fields):
-    """
-    Convert $GPRMC UTC time + date to Unix epoch seconds (correct UTC).
-    fields[1] = hhmmss.sss
-    fields[9] = DDMMYY
-    """
     try:
         t = fields[1]
         hh = int(t[0:2])
@@ -111,7 +106,7 @@ def update_time_offset(gps_epoch):
     return sum(time_offsets) / len(time_offsets)
 
 # ===========================
-# CSV LOGGER (QUIET)
+# CSV LOGGER
 # ===========================
 
 log_dir = Path("logs")
@@ -139,7 +134,7 @@ csv_writer.writerow([
     "fix_quality"
 ])
 
-# Only four startup prints — then silence
+# Startup messages only
 print(f"Logging to: {csv_path}")
 print("Starting live map server at http://127.0.0.1:5000")
 print("Opening serial...")
@@ -152,7 +147,7 @@ print("Running...")
 start_in_background()
 
 # ===========================
-# SERIAL CONNECTION
+# OPEN SERIAL
 # ===========================
 
 ser = serial.Serial(SERIAL_PORT, BAUD, timeout=1)
@@ -176,138 +171,132 @@ alt_unc_m = BASE_GPS_SIGMA * 1.5
 fix_quality = 0
 fix_meaning = "Unknown"
 
-gps_time_offset = 0.0
+# ===========================
+# BUFFERED SERIAL READER
+# ===========================
 
-# ===========================
-# MAIN LOOP (QUIET + THROTTLED)
-# ===========================
+buffer = b""
 
 while True:
-    line = ser.readline().decode(errors="ignore").strip()
-    if not line:
+    chunk = ser.read(64)
+    if not chunk:
         time.sleep(LOOP_SLEEP)
         continue
 
-    fields = line.split(",")
+    buffer += chunk
 
-    # --- GPGGA ---
-    if "$GPGGA" in line:
-        try:
-            sats_used = int(fields[7])
-            hdop = float(fields[8])
-            altitude_m = float(fields[9])
-            fix_quality = int(fields[6])
-        except:
-            sats_used = 0
-            hdop = 99.9
-            altitude_m = 0.0
-            fix_quality = 0
+    while b"\n" in buffer:
+        line_bytes, buffer = buffer.split(b"\n", 1)
+        line = line_bytes.decode(errors="ignore").strip()
+        fields = line.split(",")
 
-        sats_in_view = sats_used
-        raw_sigma_m = BASE_GPS_SIGMA * max(1.0, hdop)
-        alt_unc_m = raw_sigma_m * 1.5
+        # --- GPGGA ---
+        if "$GPGGA" in line:
+            try:
+                sats_used = int(fields[7])
+                hdop = float(fields[8])
+                altitude_m = float(fields[9])
+                fix_quality = int(fields[6])
+            except:
+                sats_used = 0
+                hdop = 99.9
+                altitude_m = 0.0
+                fix_quality = 0
 
-        fix_meaning = {
-            0: "No fix",
-            1: "GPS fix",
-            2: "DGPS fix",
-            4: "RTK fixed",
-            5: "RTK float"
-        }.get(fix_quality, "Unknown")
+            sats_in_view = sats_used
+            raw_sigma_m = BASE_GPS_SIGMA * max(1.0, hdop)
+            alt_unc_m = raw_sigma_m * 1.5
 
-        time.sleep(LOOP_SLEEP)
-        continue
+            fix_meaning = {
+                0: "No fix",
+                1: "GPS fix",
+                2: "DGPS fix",
+                4: "RTK fixed",
+                5: "RTK float"
+            }.get(fix_quality, "Unknown")
 
-    # --- GPRMC ---
-    if "$GPRMC" in line:
-        lat = dms_to_decimal(fields[3], fields[4])
-        lon = dms_to_decimal(fields[5], fields[6])
+        # --- GPRMC / GNRMC ---
+        if "$GPRMC" in line or "$GNRMC" in line:
+            lat = dms_to_decimal(fields[3], fields[4])
+            lon = dms_to_decimal(fields[5], fields[6])
 
-        # --- TIME SYNC ---
-        gps_epoch = gprmc_utc_to_epoch(fields)
-        pc_now = time.time()
+            gps_epoch = gprmc_utc_to_epoch(fields)
+            pc_now = time.time()
 
-        if gps_epoch is not None:
-            gps_time_offset = update_time_offset(gps_epoch)
+            if gps_epoch is not None:
+                update_time_offset(gps_epoch)
 
-        time_offset_ms = (pc_now - gps_epoch) * 1000.0 if gps_epoch else 0.0
+            time_offset_ms = (pc_now - gps_epoch) * 1000.0 if gps_epoch else 0.0
 
-        # --- SPEED ---
-        try:
-            sog_knots = float(fields[7])
-        except:
-            sog_knots = 0.0
+            try:
+                sog_knots = float(fields[7])
+            except:
+                sog_knots = 0.0
 
-        raw_speed_kmh = sog_knots * 1.852
-        smooth_speed_kmh = speed_filter.step(raw_speed_kmh)
+            raw_speed_kmh = sog_knots * 1.852
+            smooth_speed_kmh = speed_filter.step(raw_speed_kmh)
 
-        # --- DIRECTION ---
-        try:
-            cog_deg = float(fields[8])
-        except:
-            cog_deg = 0.0
+            try:
+                cog_deg = float(fields[8])
+            except:
+                cog_deg = 0.0
 
-        direction = "Forward" if cog_deg >= 180 else "Reverse"
+            direction = "Forward" if cog_deg >= 180 else "Reverse"
 
-        if lat0 is None and lat is not None:
-            lat0, lon0 = lat, lon
-            time.sleep(LOOP_SLEEP)
-            continue
+            if lat0 is None and lat is not None:
+                lat0, lon0 = lat, lon  # set origin once
 
-        if lat is None:
-            time.sleep(LOOP_SLEEP)
-            continue
+            if lat is None:
+                continue
 
-        # --- FILTERING ---
-        x_raw, y_raw = latlon_to_xy(lat, lon, lat0, lon0)
+            # --- FILTERING ---
+            x_raw, y_raw = latlon_to_xy(lat, lon, lat0, lon0)
 
-        kf.predict()
-        kf.update([x_raw, y_raw])
+            kf.predict()
+            kf.update([x_raw, y_raw])
 
-        x_f, y_f = kf.get_state()
-        sx, sy = kf.get_uncertainty()
+            x_f, y_f = kf.get_state()
+            sx, sy = kf.get_uncertainty()
 
-        lat_raw_disp, lon_raw_disp = xy_to_latlon(x_raw, y_raw, lat0, lon0)
-        lat_filt_disp, lon_filt_disp = xy_to_latlon(x_f, y_f, lat0, lon0)
+            lat_raw_disp, lon_raw_disp = xy_to_latlon(x_raw, y_raw, lat0, lon0)
+            lat_filt_disp, lon_filt_disp = xy_to_latlon(x_f, y_f, lat0, lon0)
 
-        # Update plot (no prints)
-        plotter.add_point(x_raw, y_raw, x_f, y_f)
+            plotter.add_point(x_raw, y_raw, x_f, y_f)
 
-        # --- LOG TO CSV ---
-        csv_writer.writerow([
-            round(gps_epoch if gps_epoch else 0, 3),
-            round(pc_now, 3),
-            round(time_offset_ms, 1),
-            lat_raw_disp, lon_raw_disp,
-            lat_filt_disp, lon_filt_disp,
-            raw_sigma_m,
-            sx, sy,
-            smooth_speed_kmh,
-            sats_used, sats_in_view,
-            direction,
-            altitude_m,
-            alt_unc_m,
-            fix_quality
-        ])
-        csv_file.flush()
+            # --- LOG TO CSV ---
+            csv_writer.writerow([
+                round(gps_epoch if gps_epoch else 0, 3),
+                round(pc_now, 3),
+                round(time_offset_ms, 1),
+                lat_raw_disp, lon_raw_disp,
+                lat_filt_disp, lon_filt_disp,
+                raw_sigma_m,
+                sx, sy,
+                smooth_speed_kmh,
+                sats_used, sats_in_view,
+                direction,
+                altitude_m,
+                alt_unc_m,
+                fix_quality
+            ])
+            csv_file.flush()
 
-        # --- SEND TO MAP ---
-        add_point(
-            lat_raw_disp, lon_raw_disp,
-            lat_filt_disp, lon_filt_disp,
-            raw_sigma_m,
-            sx, sy,
-            smooth_speed_kmh,
-            sats_used, sats_in_view,
-            direction,
-            altitude_m,
-            alt_unc_m,
-            fix_quality,
-            fix_meaning,
-            pc_now,
-            gps_epoch,
-            time_offset_ms
-        )
+            # --- SEND TO MAP (FIRST POINT INCLUDED) ---
+            add_point(
+                lat_raw_disp, lon_raw_disp,
+                lat_filt_disp, lon_filt_disp,
+                raw_sigma_m,
+                sx, sy,
+                smooth_speed_kmh,
+                sats_used, sats_in_view,
+                direction,
+                altitude_m,
+                alt_unc_m,
+                fix_quality,
+                fix_meaning,
+                pc_now,
+                gps_epoch,
+                time_offset_ms
+            )
 
     time.sleep(LOOP_SLEEP)
-
