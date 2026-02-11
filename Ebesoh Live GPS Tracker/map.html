@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Live GPS Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+    #info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      max-width: 280px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="info">Live GPS: Waiting for data…</div>
+
+<script>
+const BASE_URL = window.location.origin;
+
+// Create map
+const map = L.map('map').setView([0, 0], 15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Tracks
+const rawLine = L.polyline([], {color: 'red'}).addTo(map);
+const filtLine = L.polyline([], {color: 'blue'}).addTo(map);
+
+// Markers
+const rawMarker = L.circleMarker([0,0], {color: 'red', radius: 6}).addTo(map);
+const filtMarker = L.circleMarker([0,0], {color: 'blue', radius: 6}).addTo(map);
+
+// Uncertainty circles (meters)
+const rawCircle = L.circle([0,0], {color: 'red', fillOpacity: 0.1}).addTo(map);
+const filtCircle = L.circle([0,0], {color: 'blue', fillOpacity: 0.1}).addTo(map);
+
+function updateMap() {
+  fetch(BASE_URL + "/points")
+    .then(r => r.json())
+    .then(data => {
+      if (!data.raw || data.raw.length === 0) {
+        return;
+      }
+
+      const rawPoints = data.raw.map(p => [p[0], p[1]]);
+      const filtPoints = data.filtered.map(p => [p[0], p[1]]);
+
+      rawLine.setLatLngs(rawPoints);
+      filtLine.setLatLngs(filtPoints);
+
+      const lastRaw = rawPoints[rawPoints.length - 1];
+      const lastFilt = filtPoints[filtPoints.length - 1];
+
+      rawMarker.setLatLng(lastRaw);
+      filtMarker.setLatLng(lastFilt);
+
+      rawCircle.setLatLng(lastRaw);
+      rawCircle.setRadius(data.uncertainty.raw || 5);
+
+      const filtRadius = Math.max(
+        data.uncertainty.filt_x || 2.5,
+        data.uncertainty.filt_y || 2.5
+      );
+
+      filtCircle.setLatLng(lastFilt);
+      filtCircle.setRadius(filtRadius);
+
+      map.setView(lastFilt, 18);
+
+      // ----- TIME FORMATTING (FIXED & IPHONE-SAFE) -----
+
+      const gpsUtc = new Date(data.gps_time * 1000);
+      const pcLocal = new Date(data.pc_time * 1000);
+
+      // Clean GPS (UTC) string
+      const gpsStr = gpsUtc.toISOString().slice(11, 23);
+
+      // Manual PC (Local) formatter (works on iPhone)
+      const pcStr =
+        String(pcLocal.getHours()).padStart(2, "0") + ":" +
+        String(pcLocal.getMinutes()).padStart(2, "0") + ":" +
+        String(pcLocal.getSeconds()).padStart(2, "0") + "." +
+        String(pcLocal.getMilliseconds()).padStart(3, "0");
+
+      const offset = data.time_offset_ms || 0;
+      const inSync = Math.abs(offset) < 100;   // 100 ms threshold
+      const syncColor = inSync ? "green" : "red";
+      const syncText = inSync ? "IN SYNC ✅" : "OUT OF SYNC ⚠️";
+
+      // ----- INFO PANEL -----
+      document.getElementById("info").innerHTML =
+        "<b>Live GPS</b><br>" +
+
+        "<b>Time</b><br>" +
+        "GPS (UTC): " + gpsStr + "<br>" +
+        "PC (Local): " + pcStr + "<br>" +
+
+        "Sync offset: " + offset.toFixed(1) + " ms<br>" +
+
+        "<span style='color:" + syncColor + "; font-weight:bold'>" +
+        syncText + "</span><br><br>" +
+
+        "<span style='color:red'><b>Raw Position</b></span><br>" +
+        lastRaw[0].toFixed(6) + ", " + lastRaw[1].toFixed(6) +
+        " ± " + (data.uncertainty.raw || 0).toFixed(1) + " m<br><br>" +
+
+        "<span style='color:blue'><b>Filtered Position</b></span><br>" +
+        lastFilt[0].toFixed(6) + ", " + lastFilt[1].toFixed(6) +
+        " ± " + filtRadius.toFixed(1) + " m<br><br>" +
+
+        "<b>Speed:</b> " + data.speed_kmh.toFixed(1) + " km/h<br>" +
+
+        "<b>Altitude:</b> " + data.altitude_m.toFixed(1) +
+        " m ± " + data.uncertainty.alt.toFixed(1) + " m<br>" +
+
+        "<b>Satellites:</b> " +
+        data.sats_used + " used / " +
+        data.sats_in_view + " available<br>" +
+
+        "<b>Fix Quality:</b> " +
+        data.fix_quality + " — " + data.fix_meaning + "<br>" +
+
+        "<b>Direction:</b> " + data.direction;
+    })
+    .catch(err => console.error("Map fetch error:", err));
+}
+
+// Refresh every 500 ms
+setInterval(updateMap, 500);
+updateMap();
+</script>
+
+</body>
+</html>
+
